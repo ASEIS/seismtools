@@ -1,4 +1,6 @@
 
+from seism import *
+
 def load_smc_v1(filename):
     
     # loads station into a string
@@ -27,7 +29,7 @@ def load_smc_v1(filename):
             return channels, 0
 
         tmp = channels[i][27].split()
-        samples = int(tmp1[0])
+        samples = int(tmp[0])
 
         tmp = channels[i][28:]
         signal = str()
@@ -35,7 +37,9 @@ def load_smc_v1(filename):
             signal += s
         signal = signal.split()
 
-        print samples, len(tmp2), len(signal), signal[0], signal[len(signal)-1]
+        record = seism_record(samples=samples, dt=0.005, data=signal, type='a')
+        print record
+        pass
 
     return channels, 1
 

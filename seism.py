@@ -1,6 +1,7 @@
 __author__ = 'rtaborda'
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class seism_record():
@@ -27,44 +28,51 @@ class seism_record():
         self.dt = delta_t
     #end set_dt
 
-    def set_data(self, sdata):
-        if not isinstance(sdata, np.array):
-            print "\nError with signal data: not a numpy array.\n"
-            return 3
-        self.sdata = sdata
+    def set_data(self, data):
+        #TODO: Figure how to check if the data passed is a numpy array
+        # if not isinstance(sdata, np.array):
+        #     print "\nError with signal data: not a numpy array.\n"
+        #     return 3
+        self.data = data
     #end set_data
 
     def set_type(self, stype):
         if not isinstance(stype, str) or stype not in self.record_type:
             print "\nError with signal type (must be: a, v, or d).\n"
-        self.stype = stype
+        self.type = stype
     #end set_type
 
     def __init__(self, *args, **kwargs):
         """
         Initialize the record structure with all attributes empty.
-        If no parameters then all attributes set to None
         Can be initialize with unlabeled and labeld arguments
         Correct order for unlabeled arguments is: samples, dt, data, and signal type
+        If no parameters, samples set to 0, dt set to 0.01, type is accelerogram and array is empty
         Acceptable
         """
 
-        # Initialize to default values
-        self.samples = None
-        self.dt = None
-        self.sdata = None
-        self.stype = None
+        # lines used for debugging
+        # print 'args:   ', args
+        # print 'kwargs: ', kwargs
 
-        if len(args) < 2:
-            self.set_samples(args[0])
-        if len(args) < 3:
-            self.set_dt(args[1])
-        if len(args) < 4:
-            self.set_data(args[2])
-        if len(args) < 5:
-            self.set_type(args[3])
-            # all arguments were given in unlabled format
-            return
+        # Initialize to default values
+        self.samples = 0
+        self.dt = 0.01
+        self.data = np.array([],float)
+        self.type = 'a'
+
+        if len(args) > 0:
+            args_range = range(len(args))
+            if 0 in args_range:
+                self.set_samples(args[0])
+            if 1 in args_range:
+                self.set_dt(args[1])
+            if 2 in args_range:
+                self.set_data(args[2])
+            if 3 in args_range:
+                self.set_type(args[3])
+                # all arguments were given in unlabled format
+                return
 
         if len(kwargs) > 0:
             if 'samples' in kwargs:
@@ -80,9 +88,20 @@ class seism_record():
     #end __init__
 
     def __repr__(self):
-        print self.record_type[self.stype]
-        print "Samples: "
-        print "Delta t: %f" % self.dt
-        print "Data:"
-        print self.sdata
+        return "Seismic record: " + \
+            self.record_type[self.type] + "\n" + \
+            "Samples: %i" % self.samples + "\n" + \
+            "Delta t: %.3f" % self.dt + "\n" + \
+            "Data:\n" + '\n'.join(map(str, self.data))
     #end __repr__
+
+    def plot(self, flag):
+        t = np.arange(0, self.samples*self.dt, self.dt)
+        plt.plot(t, self.data)
+        if flag == 's':
+            plt.show()
+        elif flag == 'p':
+            #TODO: print vector file
+            pass
+        return
+    #end plot

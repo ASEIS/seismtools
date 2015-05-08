@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-class signal():
+class seism_signal():
     """
     This class implements attributes and methods related to
     a single seismic record. Here, a record is understood as
@@ -108,14 +108,14 @@ class signal():
 #end signal class
 
 
-class record(signal):
-    """
-    This class extends the signal class to have addtitional
-    attributes regarding time stamp and orientation
-    """
-    def set_tstamp(self, hour, minute, seconds, tzone):
-        self.hour = float(hour)
-        self.minute = float(minute)
-        self.seconds = float(seconds)
-        self.tzone =
+# class record(signal):
+#     """
+#     This class extends the signal class to have addtitional
+#     attributes regarding time stamp and orientation
+#     """
+#     def set_tstamp(self, hour, minute, seconds, tzone):
+#         self.hour = float(hour)
+#         self.minute = float(minute)
+#         self.seconds = float(seconds)
+#         self.tzone =
 #end record class

@@ -36,8 +36,10 @@ def load_smc_v1(filename):
         for s in tmp:
             signal += s
         signal = signal.split()
+        #TODO: make the signal a numpy array of float numbers
 
-        record = seism_record(samples=samples, dt=0.005, data=signal, type='a')
+        record = seism_signal(samples=samples, dt=0.005, data=signal, type='a')
+        record.plot('s')
         print record
         pass
 

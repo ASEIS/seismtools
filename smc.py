@@ -1,4 +1,5 @@
-
+#!/usr/bin/env python
+from __future__ import division
 from seism import *
 
 def load_smc_v1(filename):
@@ -28,20 +29,95 @@ def load_smc_v1(filename):
         if ctype != "uncorrected accelerogram":
             return channels, 0
 
+
+        # get location's latitude and longitude 
+        tmp = channels[i][4].split()
+        location_lati = tmp[3][:-1]
+        location_longi = tmp[4]
+        # depth = ? 
+
+
+        # get station name
+        station = channels[i][5][0:40]
+        # get data type 
+        tmp = channels[i][5].split()
+        dtype = tmp[-1]
+        if dtype == "Acceleration": 
+        	dtype = 'a'
+        elif dtype == "Velocity": 
+        	dtype = 'v'
+        elif dtype == "Displacement": 
+        	dtype = 'd'
+        else: 
+        	dtype = "Unknown"
+
+
+        # get orientation 
+        tmp = channels[i][6].split()
+        orientation = tmp[2]
+
+        # get time 
+        start_time = channels[i][3][37:80]
+        tmp = channels[i][14].split()
+        hour = tmp[0]
+        minute = tmp[1]
+        seconds = tmp[2]
+        fraction = tmp[4]
+        # tzone = ? 
+
+        # get number of samples 
         tmp = channels[i][27].split()
         samples = int(tmp[0])
+        dt = 1/int(tmp[4])
 
+        # get signals' data 
         tmp = channels[i][28:]
         signal = str()
         for s in tmp:
             signal += s
         signal = signal.split()
-        #TODO: make the signal a numpy array of float numbers
+         
+         # make the signal a numpy array of float numbers
+        data = []
+        for s in signal: 
+        	data.append(float(s)) 
+        # print data 
+        data = np.array(data)
 
-        record = seism_signal(samples=samples, dt=0.005, data=signal, type='a')
-        record.plot('s')
-        print record
+
+
+        # record = seism_signal(samples=samples, dt=dt, data=data, type=dtype)
+        # record.plot('s')
+        # print record
+
+        print "====================================================="
+        print "channel: " + ctype
+        print "samples: " + str(samples)
+        print "dt: " + str(dt) 
+        print "data type: " + dtype 
+        print "station name: " + station
+        print "station latitude: " + location_lati
+        print "station longitude: " + location_longi
+        print "depth: ??" 
+        print "statr time: " + start_time
+        print "hour: "+hour + " minute: " + minute + " seconds: " + seconds + " fraction: " + fraction 
+        print "tzone: ??" 
+        print "orientation: " + orientation
+
+        # print data
         pass
 
     return channels, 1
+
+# test with two files 
+load_smc_v1('CIQ0028.V1')
+load_smc_v1('NCNHC.V1')
+
+# TODO: 
+# 1. check fraction second 
+# 2. convert hour, minute, second into int? 
+# 3. another way finding time zone? 
+# 4. depth
+# 5. convert orientation degree to directions? or convert up/down to int? 
+# 6. data? 
 

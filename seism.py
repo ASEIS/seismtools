@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 __author__ = 'rtaborda'
 
 import numpy as np
@@ -113,9 +115,15 @@ class seism_signal():
 #     This class extends the signal class to have addtitional
 #     attributes regarding time stamp and orientation
 #     """
+#     # station name 
+#     # location 
+#     # time 
+#     # orientation 
+    
 #     def set_tstamp(self, hour, minute, seconds, tzone):
-#         self.hour = float(hour)
-#         self.minute = float(minute)
-#         self.seconds = float(seconds)
-#         self.tzone =
-#end record class
+#     	pass 
+#         # self.hour = float(hour)
+#         # self.minute = float(minute)
+#         # self.seconds = float(seconds)
+#         # self.tzone =
+# # end record class

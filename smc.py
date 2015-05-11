@@ -39,6 +39,7 @@ def load_smc_v1(filename):
 
         # get station name
         station = channels[i][5][0:40]
+
         # get data type 
         tmp = channels[i][5].split()
         dtype = tmp[-1]
@@ -57,15 +58,16 @@ def load_smc_v1(filename):
         orientation = tmp[2]
 
         # get time 
-        start_time = channels[i][3][37:80]
+        # start_time = channels[i][3][37:80]
         tmp = channels[i][14].split()
-        hour = tmp[0]
-        minute = tmp[1]
-        seconds = tmp[2]
-        fraction = tmp[4]
-        # tzone = ? 
+        hour = float(tmp[0])
+        minute = float(tmp[1])
+        seconds = float(tmp[2])
+        fraction = float(tmp[4])
+        tzone = channels[i][3].split()[-2]
+   
 
-        # get number of samples 
+        # get number of samples and dt 
         tmp = channels[i][27].split()
         samples = int(tmp[0])
         dt = 1/int(tmp[4])
@@ -98,10 +100,12 @@ def load_smc_v1(filename):
         print "station name: " + station
         print "station latitude: " + location_lati
         print "station longitude: " + location_longi
+        print "tzone: " + tzone
+        print "hour: " + str(hour) 
+        print "minute: " + str(minute) 
+        print "seconds: " + str(seconds) 
+        print "fraction: " + str(fraction)
         print "depth: ??" 
-        print "statr time: " + start_time
-        print "hour: "+hour + " minute: " + minute + " seconds: " + seconds + " fraction: " + fraction 
-        print "tzone: ??" 
         print "orientation: " + orientation
 
         # print data
@@ -115,7 +119,6 @@ load_smc_v1('NCNHC.V1')
 
 # TODO: 
 # 1. check fraction second 
-# 3. another way finding time zone? 
 # 4. depth
 # 5. convert orientation degree to directions? or convert up/down to int? 
 # 6. data? 

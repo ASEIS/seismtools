@@ -110,20 +110,26 @@ class seism_signal():
 #end signal class
 
 
-# class record(signal):
-#     """
-#     This class extends the signal class to have addtitional
-#     attributes regarding time stamp and orientation
-#     """
-#     # station name 
-#     # location 
-#     # time 
-#     # orientation 
+class record(seism_signal):
+    """
+    This class extends the signal class to have addtitional
+    attributes regarding time stamp and orientation
+    """
+    def __init__(self):
+    	pass 
     
-#     def set_tstamp(self, hour, minute, seconds, tzone):
-#     	pass 
-#         # self.hour = float(hour)
-#         # self.minute = float(minute)
-#         # self.seconds = float(seconds)
-#         # self.tzone =
-# # end record class
+    def set_tstamp(self, hour, minute, seconds, tzone):
+        self.hour = float(hour)
+        self.minute = float(minute)
+        self.seconds = float(seconds)
+        self.tzone = tzone
+
+    def set_station(station, location_lati, location_longi):
+    	self.station = station 
+    	self.location_lati = location_lati
+    	self.location_longi = location_longi
+
+    def set_orientation(orientation):
+    	self.orientation = orientation
+
+# end record class

@@ -115,7 +115,6 @@ load_smc_v1('NCNHC.V1')
 
 # TODO: 
 # 1. check fraction second 
-# 2. convert hour, minute, second into int? 
 # 3. another way finding time zone? 
 # 4. depth
 # 5. convert orientation degree to directions? or convert up/down to int? 

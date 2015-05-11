@@ -31,9 +31,10 @@ class seism_signal():
     #end set_dt
 
     def set_data(self, data):
-        #TODO: Figure how to check if the data passed is a numpy array
+        # check if the data passed is a numpy array
         # if not isinstance(sdata, np.array):
-        #     print "\nError with signal data: not a numpy array.\n"
+        if not isinstance(data, np.ndarray): 
+            print "\nError with signal data: not a numpy array.\n"
         #     return 3
         self.data = data
     #end set_data
@@ -115,15 +116,61 @@ class record(seism_signal):
     This class extends the signal class to have addtitional
     attributes regarding time stamp and orientation
     """
-
-    def __init__(self):
-    	pass 
+    # TODO: to improve
+    def __init__(self, station, location_lati, location_longi, hour, minute, seconds, fraction, tzone, orientation):
+        self.set_tstamp(hour, minute, seconds, fraction, tzone)
+        self.set_station(station, location_lati, location_longi)
+        self.set_orientation(orientation)
     
+    def set_station(self, station, location_lati, location_longi):
+        # checking station name 
+        if not isinstance(station, str): 
+            print "\n**Error with station name.**\n"
+
+        # checking latitude format being float+S/N
+        if not isinstance(location_lati, str): 
+            print "\n**Error with location latitude (Invalid instance type).**\n"
+        elif location_lati[-1] not in ["N", "S"]: 
+            print "\nError with location latitude (Invalid format).\n"
+        else: 
+            try:
+                float(location_lati[0:-2])
+            except ValueError:
+                print "\nError with location latitude (Invalid format).\n"
+
+        # checking longitude format being float+E/W
+        if not isinstance(location_longi, str): 
+            print "\n**Error with location longitude (Invalid instance type).**\n"
+        elif location_longi[-1] not in ["E", "W"]: 
+            print "\n**Error with location longitude (Invalid format).**\n"
+        else: 
+            try:
+                float(location_longi[0:-2])
+            except ValueError:
+                print "\n**Error with location longitude (Invalid format).**\n"
+
+        self.station = station 
+        self.location_lati = location_lati 
+        self.location_longi = location_longi
+    #end set_station
+
+
+    def set_orientation(self, orientation):
+        # if the orientation is string, it should be either Up or Down 
+        # if the orientation is int, it should between 0 and 360 
+        if isinstance(orientation, str) and orientation in ["Up", "Down"]: 
+            self.orientation = orientation
+        elif isinstance(orientation, int) and orientation <= 360 and orientation >= 0:
+            self.orientation = orientation
+        else: 
+            print "\n**Error with orientation (Invalid orientation).**\n"
+    #end set_orientation
+
     def set_tstamp(self, hour, minute, seconds, fraction, tzone):
     	if not isinstance(hour, float):
     		print "\n**Error with record start time: hour.**\n"
-    	if not isinstance(minute, float):
-    		print "\n**Error with record start time: minute.**\n"
+        if not isinstance(minute, float):
+            print "\n**Error with record start time: minute.**\n"
     	if not isinstance(seconds, float):
     		print "\n**Error with record start time: seconds.**\n"
     	if not isinstance(fraction, float):
@@ -138,34 +185,16 @@ class record(seism_signal):
         self.tzone = tzone
     # end set_tstamp
 
-	def set_station(station, location_lati, location_longi):
-		# checking station name 
-		if not isinstance(station, str): 
-			print "\n**Error with station name.**\n"
-
-		# checking latitude format 
-		if not isinstance(location_lati, str): 
-			print "\n**Error with location latitude (Invalid instance type).**\n"
-		elif location_lati[-1] not in ["N", "S"] or location_lati[0:-2].isdigit(): 
-			print "\nError with location latitude (Invalid format).\n"
-
-		# checking longitude format 
-		if not isinstance(location_longi, str): 
-			print "\n**Error with location longitude (Invalid instance type).**\n"
-		elif location_longi[-1] not in ["E", "W"] or location_longi[0:-2].isdigit(): 
-			print "\n**Error with location longitude (Invalid format).**\n"
-
-    	self.station = station 
-    	self.location_lati = location_lati
-    	self.location_longi = location_longi
-    #end set_station
-
-	def set_orientation(orientation):
-		if not isinstance(orientation, str): 
-			print "\n**Error with orientation (Invalid instance type).**\n"
-		elif orientation not in ["Up", "Down"] and (int(orientation) > 360 or int(orientation) < 0): 
-			print "\n**Error with orientation (Invalid orientation).**\n"
-
-		self.orientation = orientation
-	#end set_orientation
+    # to test with record object
+    def print_attr(self):
+        print "station name: " + self.station
+        print "station latitude: " + self.location_lati
+        print "station longitude: " + self.location_longi
+        print "tzone: " + self.tzone
+        print "hour: " + str(self.hour) 
+        print "minute: " + str(self.minute) 
+        print "seconds: " + str(self.seconds) 
+        print "fraction: " + str(self.fraction)
+        print "depth: ??" 
+        print "orientation: " + str(self.orientation)
 # end record class

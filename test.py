@@ -1,3 +1,2 @@
 #!/usr/bin/env python
-
-print "7.0".isdigit()
+print int("90")

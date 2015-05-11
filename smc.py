@@ -53,9 +53,11 @@ def load_smc_v1(filename):
         	dtype = "Unknown"
 
 
-        # get orientation 
+        # get orientation, convert to int if it's digit 
         tmp = channels[i][6].split()
         orientation = tmp[2]
+        if orientation.isdigit():
+            orientation = int(orientation)
 
         # get time 
         # start_time = channels[i][3][37:80]
@@ -88,27 +90,28 @@ def load_smc_v1(filename):
 
 
 
-        # record = seism_signal(samples=samples, dt=dt, data=data, type=dtype)
-        # record.plot('s')
-        # print record
+        signal = seism_signal(samples=samples, dt=dt, data=data, type=dtype)
+        signal.plot('s')
 
-        print "====================================================="
+        # =================For Testing============================================
+        print "==================================================================="
         print "channel: " + ctype
         print "samples: " + str(samples)
-        print "dt: " + str(dt) 
+        print "dt: " + str(dt)
         print "data type: " + dtype 
-        print "station name: " + station
-        print "station latitude: " + location_lati
-        print "station longitude: " + location_longi
-        print "tzone: " + tzone
-        print "hour: " + str(hour) 
-        print "minute: " + str(minute) 
-        print "seconds: " + str(seconds) 
-        print "fraction: " + str(fraction)
-        print "depth: ??" 
-        print "orientation: " + orientation
-
-        # print data
+        print data
+        # print "station name: " + station
+        # print "station latitude: " + location_lati
+        # print "station longitude: " + location_longi
+        # print "tzone: " + tzone
+        # print "hour: " + str(hour) 
+        # print "minute: " + str(minute) 
+        # print "seconds: " + str(seconds) 
+        # print "fraction: " + str(fraction)
+        # print "depth: ??" 
+        # print "orientation: " + orientation
+        record_obj = record(station, location_lati, location_longi, hour, minute, seconds, fraction, tzone, orientation)
+        record_obj.print_attr()
         pass
 
     return channels, 1

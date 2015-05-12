@@ -1,2 +1,3 @@
 #!/usr/bin/env python
-print int("90")
+print len("fhrfiohreihri   ")
+print len("fhrfiohreihri   ".strip())

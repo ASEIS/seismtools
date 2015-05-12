@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-class seism_signal():
+class seism_signal(object):
     """
     This class implements attributes and methods related to
     a single seismic record. Here, a record is understood as
@@ -75,7 +75,7 @@ class seism_signal():
             if 3 in args_range:
                 self.set_type(args[3])
                 # all arguments were given in unlabled format
-                return
+                # return
 
         if len(kwargs) > 0:
             if 'samples' in kwargs:
@@ -111,22 +111,75 @@ class seism_signal():
 #end signal class
 
 
-class record(seism_signal):
+class seism_record(seism_signal):
     """
     This class extends the signal class to have addtitional
     attributes regarding time stamp and orientation
     """
-    # TODO: to improve
-    def __init__(self, station, location_lati, location_longi, hour, minute, seconds, fraction, tzone, orientation):
-        self.set_tstamp(hour, minute, seconds, fraction, tzone)
-        self.set_station(station, location_lati, location_longi)
-        self.set_orientation(orientation)
     
-    def set_station(self, station, location_lati, location_longi):
+    def __init__(self, *args, **kwargs):
+        """
+        Correct order for unlabeled arguments is: samples, dt, data, signal type, station, 
+        location_lati, location_longi, depth, hour, minute, seconds, fraction, tzone, orientation
+        """
+        super(seism_record, self).__init__(*args, **kwargs)
+
+        # initialize instances
+        self.station = " "
+        self.location_lati = " "
+        self.location_longi = " "
+        self.depth = 0 
+        self.hour = 0 
+        self.minute = 0 
+        self.seconds = 0 
+        self.fraction = 0 
+        self.tzone = " "
+        self.orientation = " "
+
+        if len(args) > 0:
+            args_range = range(len(args))
+            # setting location 
+            if 4 in args_range: 
+                self.set_station(args[4])
+            if 5 in args_range: 
+                self.set_latitude(args[5])
+            if 6 in args_range: 
+                self.set_longitude(args[6])
+            if 7 in args_range: 
+                self.set_depth(args[7])
+            # setting time 
+            if 8 and 9 and 10 and 11 and 12 in args_range:
+                print args[8], args[9], args[10], args[11], args[12]
+                self.set_tstamp(args[8], args[9], args[10], args[11], args[12])
+            # setting orientation
+            if 13 in args_range:
+                self.set_orientation(args[13])
+                # all arguments were given in unlabled format
+
+        if len(kwargs) > 0:
+            if 'station' in kwargs:
+                self.set_samples(kwargs['station'])
+            if 'latitude' in kwargs:
+                self.set_latitude(kwargs['latitude'])
+            if 'longitude' in kwargs:
+                self.set_longitude(kwargs['longitude'])
+            if 'depth' in kwargs:
+                self.set_depth(kwargs['depth'])
+            if 'orientation' in kwargs:
+                self.set_orientation(kwargs['orientation'])
+            if 'hour' and 'minute' and 'seconds' and 'fraction' and 'tzone' in kwargs:
+                self.set_tstamp(kwargs['hour'], kwargs['minute'], kwargs['seconds'], kwargs['fraction'], kwargs['tzone'])
+        return 
+    #end __init__
+    
+    def set_station(self, station):
         # checking station name 
         if not isinstance(station, str): 
             print "\n**Error with station name.**\n"
+        self.station = station 
+    #end set_station
 
+    def set_latitude(self, location_lati):
         # checking latitude format being float+S/N
         if not isinstance(location_lati, str): 
             print "\n**Error with location latitude (Invalid instance type).**\n"
@@ -137,7 +190,10 @@ class record(seism_signal):
                 float(location_lati[0:-2])
             except ValueError:
                 print "\nError with location latitude (Invalid format).\n"
+        self.location_lati = location_lati 
+    #end set_latitude
 
+    def set_longitude(self, location_longi):
         # checking longitude format being float+E/W
         if not isinstance(location_longi, str): 
             print "\n**Error with location longitude (Invalid instance type).**\n"
@@ -149,16 +205,20 @@ class record(seism_signal):
             except ValueError:
                 print "\n**Error with location longitude (Invalid format).**\n"
 
-        self.station = station 
-        self.location_lati = location_lati 
         self.location_longi = location_longi
-    #end set_station
+    #end set_longitude
 
+    def set_depth(self, depth):
+        # checking depth 
+        if not isinstance(depth, int): 
+            print "\n**Error with depth.**\n"
+        self.depth = depth 
+    #end set_depth
 
     def set_orientation(self, orientation):
         # if the orientation is string, it should be either Up or Down 
         # if the orientation is int, it should between 0 and 360 
-        if isinstance(orientation, str) and orientation in ["Up", "Down"]: 
+        if isinstance(orientation, str) and orientation.upper() in ["UP", "DOWN"]: 
             self.orientation = orientation
         elif isinstance(orientation, int) and orientation <= 360 and orientation >= 0:
             self.orientation = orientation
@@ -177,13 +237,11 @@ class record(seism_signal):
     		print "\n**Error with record start time: fraction.**\n"
     	if not isinstance(tzone, str):
     		print "\n**Error with record start time: tzone.**\n"
-
-        self.hour = hour
-        self.minute = minute
+        self.hour = hour 
+        self.minute = minute 
         self.seconds = seconds 
         self.fraction = fraction 
-        self.tzone = tzone
-    # end set_tstamp
+        self.tzone = tzone 
 
     # to test with record object
     def print_attr(self):

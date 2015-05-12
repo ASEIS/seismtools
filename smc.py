@@ -3,6 +3,7 @@ from __future__ import division
 from seism import *
 
 def load_smc_v1(filename):
+    record_list = []
     
     # loads station into a string
     fp = open(filename, 'r')
@@ -34,11 +35,11 @@ def load_smc_v1(filename):
         tmp = channels[i][4].split()
         location_lati = tmp[3][:-1]
         location_longi = tmp[4]
-        # depth = ? 
+        depth = 0
 
 
         # get station name
-        station = channels[i][5][0:40]
+        station = channels[i][5][0:40].strip()
 
         # get data type 
         tmp = channels[i][5].split()
@@ -65,7 +66,9 @@ def load_smc_v1(filename):
         hour = float(tmp[0])
         minute = float(tmp[1])
         seconds = float(tmp[2])
-        fraction = float(tmp[4])
+        # fraction = float(tmp[4])
+        fraction = float(tmp[3])
+
         tzone = channels[i][3].split()[-2]
    
 
@@ -90,39 +93,40 @@ def load_smc_v1(filename):
 
 
 
-        signal = seism_signal(samples=samples, dt=dt, data=data, type=dtype)
-        signal.plot('s')
-
         # =================For Testing============================================
         print "==================================================================="
-        print "channel: " + ctype
-        print "samples: " + str(samples)
-        print "dt: " + str(dt)
-        print "data type: " + dtype 
-        print data
-        # print "station name: " + station
-        # print "station latitude: " + location_lati
-        # print "station longitude: " + location_longi
-        # print "tzone: " + tzone
-        # print "hour: " + str(hour) 
-        # print "minute: " + str(minute) 
-        # print "seconds: " + str(seconds) 
-        # print "fraction: " + str(fraction)
-        # print "depth: ??" 
-        # print "orientation: " + orientation
-        record_obj = record(station, location_lati, location_longi, hour, minute, seconds, fraction, tzone, orientation)
-        record_obj.print_attr()
-        pass
+        # print "channel: " + ctype
+        # print "samples: " + str(samples)
+        # print "dt: " + str(dt)
+        # print "data type: " + dtype 
+        # print data
+        # record = seism_record(samples, dt, data, dtype, station, location_lati, location_longi, depth, hour, minute, seconds, fraction, tzone, orientation)
+        record = seism_record(samples, dt, data, dtype, station, location_lati, location_longi, depth = depth, orientation = orientation, tzone = tzone, fraction = fraction, 
+            minute = minute, seconds = seconds, hour = hour)
+        record.print_attr()
+        # signal = seism_signal(dt=dt, samples=samples, data=data, type=dtype)
+        # signal = seism_signal(samples,dt,data,dtype)
+        # signal = seism_signal(samples,dt,type=dtype,data=data)
 
-    return channels, 1
+        # signal.plot('s')
+        # record.plot('s')
+        # return a list of records 
+        record_list.append(record)
+
+    # return channels, 1
+    # print record_list
+    return record_list
+
+
 
 # test with two files 
 load_smc_v1('CIQ0028.V1')
 load_smc_v1('NCNHC.V1')
 
-# TODO: 
-# 1. check fraction second 
-# 4. depth
-# 5. convert orientation degree to directions? or convert up/down to int? 
-# 6. data? 
 
+
+# process record: convertion, multiply; output same list with correct g and orientation 
+# print record: take list and create files; take output of process record as input 
+
+# 1. improve construction 
+# 2. implemente two functions 

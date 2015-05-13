@@ -120,7 +120,7 @@ class seism_record(seism_signal):
     def __init__(self, *args, **kwargs):
         """
         Correct order for unlabeled arguments is: samples, dt, data, signal type, station, 
-        location_lati, location_longi, depth, hour, minute, seconds, fraction, tzone, orientation
+        location_lati, location_longi, depth, date, time, orientation
         """
         super(seism_record, self).__init__(*args, **kwargs)
 
@@ -129,10 +129,12 @@ class seism_record(seism_signal):
         self.location_lati = " "
         self.location_longi = " "
         self.depth = 0 
-        self.hour = 0 
-        self.minute = 0 
-        self.seconds = 0 
-        self.fraction = 0 
+        self.date = " "
+        self.time = " "
+        self.hour = 0.0 
+        self.minute = 0.0
+        self.seconds = 0.0
+        self.fraction = 0.0
         self.tzone = " "
         self.orientation = " "
 
@@ -147,13 +149,14 @@ class seism_record(seism_signal):
                 self.set_longitude(args[6])
             if 7 in args_range: 
                 self.set_depth(args[7])
-            # setting time 
-            if 8 and 9 and 10 and 11 and 12 in args_range:
-                print args[8], args[9], args[10], args[11], args[12]
-                self.set_tstamp(args[8], args[9], args[10], args[11], args[12])
-            # setting orientation
-            if 13 in args_range:
-                self.set_orientation(args[13])
+            if 8 in args_range:
+                self.set_date(args[8])
+            if 9 in args_range:
+                self.set_time(args[9])
+                self.set_tstamp(self.time)
+            if 10 in args_range:
+                self.set_orientation(args[10])
+                return 
                 # all arguments were given in unlabled format
 
         if len(kwargs) > 0:
@@ -165,10 +168,14 @@ class seism_record(seism_signal):
                 self.set_longitude(kwargs['longitude'])
             if 'depth' in kwargs:
                 self.set_depth(kwargs['depth'])
+            if 'date' in kwargs:
+                self.set_date(kwargs['date'])
+            if 'time' in kwargs:
+                self.set_time(kwargs['time'])
+                self.set_tstamp(self.time)
             if 'orientation' in kwargs:
                 self.set_orientation(kwargs['orientation'])
-            if 'hour' and 'minute' and 'seconds' and 'fraction' and 'tzone' in kwargs:
-                self.set_tstamp(kwargs['hour'], kwargs['minute'], kwargs['seconds'], kwargs['fraction'], kwargs['tzone'])
+
         return 
     #end __init__
     
@@ -226,17 +233,46 @@ class seism_record(seism_signal):
             print "\n**Error with orientation (Invalid orientation).**\n"
     #end set_orientation
 
-    def set_tstamp(self, hour, minute, seconds, fraction, tzone):
-    	if not isinstance(hour, float):
-    		print "\n**Error with record start time: hour.**\n"
-        if not isinstance(minute, float):
-            print "\n**Error with record start time: minute.**\n"
-    	if not isinstance(seconds, float):
-    		print "\n**Error with record start time: seconds.**\n"
-    	if not isinstance(fraction, float):
-    		print "\n**Error with record start time: fraction.**\n"
-    	if not isinstance(tzone, str):
-    		print "\n**Error with record start time: tzone.**\n"
+    def set_date(self, date):
+        # check the format of date string being #/#/#
+        if not isinstance(date, str):
+            print "\n**Error with date.**\n"
+        else: 
+            for x in date.split('/'):
+                if x.isdigit() == False:
+                    print "\n**Error with date.**\n"
+                    break 
+        self.date = date 
+
+    def set_time(self, time):
+        if not isinstance(time, str):
+            print "\n**Error with date.**\n"
+        self.time = time 
+
+    # the function is to split time string into hour, minute, seconds, fraction, and tzone 
+    def set_tstamp(self, time):
+        hour = self.time.split(':')[0]
+        minute = self.time.split(':')[1]
+        seconds = time.split(':')[2].split()[0].split('.')[0]
+        fraction = time.split(':')[2].split()[0].split('.')[1]
+        tzone = self.time.split()[-1]
+
+        try:
+            hour = float(hour)
+        except ValueError:
+            print "\n**Error with record start time.**\n"
+        try:
+            minute = float(minute)
+        except ValueError:
+            print "\n**Error with record start time.**\n"
+        try:
+            seconds = float(seconds)
+        except ValueError:
+            print "\n**Error with record start time.**\n"
+        try:
+            fraction = float(fraction)
+        except ValueError:
+            print "\n**Error with record start time.**\n"
         self.hour = hour 
         self.minute = minute 
         self.seconds = seconds 
@@ -245,14 +281,21 @@ class seism_record(seism_signal):
 
     # to test with record object
     def print_attr(self):
+        print "==================================================================="
+        print "samples: " + str(self.samples)
+        print "dt: " + str(self.dt)
+        print "data type: " + self.type 
+        print self.data
         print "station name: " + self.station
         print "station latitude: " + self.location_lati
         print "station longitude: " + self.location_longi
-        print "tzone: " + self.tzone
+        print "depth: ??" 
+        print "date: " + self.date
+        print "time: " + self.time
         print "hour: " + str(self.hour) 
         print "minute: " + str(self.minute) 
         print "seconds: " + str(self.seconds) 
         print "fraction: " + str(self.fraction)
-        print "depth: ??" 
+        print "tzone: " + self.tzone
         print "orientation: " + str(self.orientation)
 # end record class

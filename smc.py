@@ -64,16 +64,18 @@ def load_smc_v1(filename):
         if orientation.isdigit():
             orientation = int(orientation)
 
-        # get time 
-        # start_time = channels[i][3][37:80]
-        tmp = channels[i][14].split()
-        hour = float(tmp[0])
-        minute = float(tmp[1])
-        seconds = float(tmp[2])
-        # fraction = float(tmp[4])
-        fraction = float(tmp[3])
+        # get date and time; set to fixed format 
+        start_time = channels[i][3][37:80].split()
+        date = start_time[2][:-1]
 
+        tmp = channels[i][14].split()
+        hour = tmp[0]
+        minute = tmp[1]
+        seconds = tmp[2]
+        # fraction = tmp[4]
+        fraction = tmp[3]
         tzone = channels[i][3].split()[-2]
+        time = hour + ":" + minute + ":" + seconds + "." + fraction + " " + tzone
    
 
         # get number of samples and dt 
@@ -96,30 +98,20 @@ def load_smc_v1(filename):
         data = np.array(data)
 
 
-
-        # =================For Testing==================================================
-        # print "==================================================================="
-        # print "channel: " + ctype
-        # print "samples: " + str(samples)
-        # print "dt: " + str(dt)
-        # print "data type: " + dtype 
-        # print data
         # record = seism_record(samples, dt, data, dtype, station, location_lati, location_longi, depth, hour, 
         #     minute, seconds, fraction, tzone, orientation)
         record = seism_record(samples, dt, data, dtype, station, location_lati, location_longi, depth = depth, 
-            orientation = orientation, tzone = tzone, fraction = fraction, minute = minute, seconds = seconds, hour = hour)
-        # record.print_attr()
+            orientation = orientation, date = date, time = time)
+        record.print_attr()
         # signal = seism_signal(dt=dt, samples=samples, data=data, type=dtype)
         # signal = seism_signal(samples,dt,data,dtype)
         # signal = seism_signal(samples,dt,type=dtype,data=data)
 
         # signal.plot('s')
-        record.plot('s')
+        # record.plot('s')
         record_list.append(record)
 
     # return channels, 1
-    # print record_list
-    # print station_id
     # return a list of records and corresponding network code and station id 
     return record_list, network, station_id
 
@@ -130,12 +122,13 @@ def process_smc_v1(record_list, network, station_id):
     """
     # if there are more than three channels, save for later 
     if len(record_list) > 3:
-        print "==[The function is processing files with three channels only.]=="
+        print "==[The function is processing files with 3 channels only.]=="
         return 
 
     else: 
         for record in record_list:
-            # process orientation **modify later**: multiply by -1 and convert  
+            # process orientation 
+            # TODO: multiply by -1 and convert ??? 
             if record.orientation == 180 or record.orientation == 360:
                 orientation = 'N'
 
@@ -145,20 +138,16 @@ def process_smc_v1(record_list, network, station_id):
             elif record.orientation == "Up" or record.orientation == "Down":
                 orientation = 'Z'
 
-            # header = "# " + str(record.hour) + ":" + str(record.minute) + ":" + str(record.seconds) + ":" + str(record.fraction) + " Samples: " 
-            # + str(record.samples) + " dt: " + str(record.dt) + "\n"
-
-            # TODO: add time string to header 
-            header = "#Samples: " + str(record.samples) + " dt: " + str(record.dt) + "\n"
-
+            # TODO: check file existence ? 
             # generate a text file 
+            header = "# " + record.date + " " + record.time + " Samples: " + str(record.samples) + " dt: " + str(record.dt) + "\n"
             filename = network + "." + station_id + "." + orientation + ".txt"
-            fp = open(filename, 'a')
-            fp.write(header)
+            f = open(filename, 'a')
+            f.write(header)
             # process data and write into file  
             for d in np.nditer(record.data):
-                fp.write(str(d*981)+"\n")
-            fp.close()
+                f.write(str(d*981)+"\n")
+            f.close()
         return 
     return
 
@@ -171,6 +160,7 @@ def print_smc_v1(filename, data):
     # open(filename, 'a').close()
     pass 
 
+
 # test with two files 
 record_list, network, station_id = load_smc_v1('NCNHC.V1')
 process_smc_v1(record_list, network, station_id)
@@ -179,5 +169,4 @@ record_list, network, station_id = load_smc_v1('CIQ0028.V1')
 process_smc_v1(record_list, network, station_id)
 
 
-# TODO: 
-# 1. change time parameters to an array of float number; or pass a single string as parameter, then process within subclass? 
+# TODO: check file existence ? 

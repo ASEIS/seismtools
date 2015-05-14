@@ -128,7 +128,7 @@ class seism_record(seism_signal):
         self.station = " "
         self.location_lati = " "
         self.location_longi = " "
-        self.depth = 0 
+        self.depth = 0.0
         self.date = " "
         self.time = " "
         self.hour = 0.0 
@@ -217,7 +217,7 @@ class seism_record(seism_signal):
 
     def set_depth(self, depth):
         # checking depth 
-        if not isinstance(depth, int): 
+        if not isinstance(depth, float): 
             print "\n**Error with depth.**\n"
         self.depth = depth 
     #end set_depth

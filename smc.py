@@ -39,7 +39,7 @@ def load_smc_v1(filename):
         tmp = channels[i][4].split()
         location_lati = tmp[3][:-1]
         location_longi = tmp[4]
-        depth = 0
+        depth = 0.0
 
 
         # get station name
@@ -98,8 +98,7 @@ def load_smc_v1(filename):
         data = np.array(data)
 
 
-        # record = seism_record(samples, dt, data, dtype, station, location_lati, location_longi, depth, hour, 
-        #     minute, seconds, fraction, tzone, orientation)
+        # record = seism_record(samples, dt, data, dtype, station, location_lati, location_longi, depth, date, time, orientation)
         record = seism_record(samples, dt, data, dtype, station, location_lati, location_longi, depth = depth, 
             orientation = orientation, date = date, time = time)
         record.print_attr()
@@ -108,7 +107,7 @@ def load_smc_v1(filename):
         # signal = seism_signal(samples,dt,type=dtype,data=data)
 
         # signal.plot('s')
-        # record.plot('s')
+        record.plot('s')
         record_list.append(record)
 
     # return channels, 1
@@ -127,38 +126,52 @@ def process_smc_v1(record_list, network, station_id):
 
     else: 
         for record in record_list:
-            # process orientation 
-            # TODO: multiply by -1 and convert ??? 
-            if record.orientation == 180 or record.orientation == 360:
+            # process orientation  
+            # If the orientation was not set properly, it would be empty string by default 
+            if record.orientation == " ":
+                print "[ERROR]: missing orientation"
+                orientation = " "
+            elif record.orientation in [0, 360]:
                 orientation = 'N'
-
-            elif record.orientation == 270 or record.orientation == 90: 
+            elif record.orientation in [180, -180]:
+                orientation = 'N'
+                record.data = record.data*-1
+            elif record.orientation in [90, -270]:
                 orientation = 'E'
- 
+            elif record.data in [-90, 270]:
+                orientation = 'E'
+                record.orientation = record.data*-1
             elif record.orientation == "Up" or record.orientation == "Down":
                 orientation = 'Z'
+            else: 
+                # handling degrees such as 60, 120 etc. 
+                pass
 
-            # TODO: check file existence ? 
-            # generate a text file 
-            header = "# " + record.date + " " + record.time + " Samples: " + str(record.samples) + " dt: " + str(record.dt) + "\n"
+            # process data  
+            # filter data 
+            # minus average 
+
+            record.data = record.data*981
             filename = network + "." + station_id + "." + orientation + ".txt"
-            f = open(filename, 'a')
-            f.write(header)
-            # process data and write into file  
-            for d in np.nditer(record.data):
-                f.write(str(d*981)+"\n")
-            f.close()
+            print_smc_v1(filename, record)
         return 
     return
 
 
-# NOT USING
-def print_smc_v1(filename, data):
+def print_smc_v1(filename, record):
     """
     The function generate files for each channel/record 
     """
-    # open(filename, 'a').close()
-    pass 
+    # generate a text file (header + data)
+    header = "# " + record.date + " " + record.time + " Samples: " + str(record.samples) + " dt: " + str(record.dt) + "\n"
+    f = open(filename, 'w')
+    f.write(header)
+    for d in np.nditer(record.data):
+        f.write(str(d)+"\n")
+    f.close()
+#end of print_smc_v1()
+
+
 
 
 # test with two files 
@@ -167,6 +180,3 @@ process_smc_v1(record_list, network, station_id)
 
 record_list, network, station_id = load_smc_v1('CIQ0028.V1')
 process_smc_v1(record_list, network, station_id)
-
-
-# TODO: check file existence ? 

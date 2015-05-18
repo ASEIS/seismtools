@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 from __future__ import division
 from seism import *
+from scipy.io import loadmat
+from scipy.signal import butter, filtfilt
+from matplotlib.pyplot import plot
+from scipy import signal
 
 def load_smc_v1(filename):
     record_list = []
@@ -101,13 +105,13 @@ def load_smc_v1(filename):
         # record = seism_record(samples, dt, data, dtype, station, location_lati, location_longi, depth, date, time, orientation)
         record = seism_record(samples, dt, data, dtype, station, location_lati, location_longi, depth = depth, 
             orientation = orientation, date = date, time = time)
-        record.print_attr()
+        # record.print_attr()
         # signal = seism_signal(dt=dt, samples=samples, data=data, type=dtype)
         # signal = seism_signal(samples,dt,data,dtype)
         # signal = seism_signal(samples,dt,type=dtype,data=data)
 
         # signal.plot('s')
-        record.plot('s')
+        # record.plot('s')
         record_list.append(record)
 
     # return channels, 1
@@ -126,7 +130,7 @@ def process_smc_v1(record_list, network, station_id):
 
     else: 
         for record in record_list:
-            # process orientation  
+            # ======================================= processing orientation ========================================== 
             # If the orientation was not set properly, it would be empty string by default 
             if record.orientation == " ":
                 print "[ERROR]: missing orientation"
@@ -138,7 +142,7 @@ def process_smc_v1(record_list, network, station_id):
                 record.data = record.data*-1
             elif record.orientation in [90, -270]:
                 orientation = 'E'
-            elif record.data in [-90, 270]:
+            elif record.orientation in [-90, 270]:
                 orientation = 'E'
                 record.orientation = record.data*-1
             elif record.orientation == "Up" or record.orientation == "Down":
@@ -147,11 +151,34 @@ def process_smc_v1(record_list, network, station_id):
                 # handling degrees such as 60, 120 etc. 
                 pass
 
-            # process data  
-            # filter data 
-            # minus average 
+            # ======================================= processing data ================================================  
+            # filtering data 
+            # filter type = elliptic 
+            # high pass filter 
+            # 0.05Hz 
+            # zero phrase 
+            # matlab function filtfilt 
+            # y = signal.filtfilt(b, a, record, padtype = None)
+            # input_signal = record.data['input_signal'][0]
 
-            record.data = record.data*981
+            passband = [0.05*2/30, 5.0*2/30]
+            # b, a = butter(5, passband, 'bandpass')
+            print record.data.size
+            b, a = butter(3, 0.05, 'low')
+            record.data = filtfilt(b, a, record.data)
+
+            # y = filtfilt(b, a, record.data)
+            # y = filtfilt(b, a, record.data, axis=-1, padtype='even', padlen=None)
+            print record.data.size 
+
+            record.plot('s')
+            # plot(y)
+
+            # minus average and multiply by 981 
+            # record.data = 981*(record.data - np.average(record.data))
+            record.data = record.data - np.average(record.data)
+            record.plot('s')
+
             filename = network + "." + station_id + "." + orientation + ".txt"
             print_smc_v1(filename, record)
         return 
@@ -175,8 +202,126 @@ def print_smc_v1(filename, record):
 
 
 # test with two files 
-record_list, network, station_id = load_smc_v1('NCNHC.V1')
-process_smc_v1(record_list, network, station_id)
+# record_list, network, station_id = load_smc_v1('NCNHC.V1')
+# process_smc_v1(record_list, network, station_id)
 
-record_list, network, station_id = load_smc_v1('CIQ0028.V1')
-process_smc_v1(record_list, network, station_id)
+# record_list, network, station_id = load_smc_v1('CIQ0028.V1')
+# process_smc_v1(record_list, network, station_id)
+
+
+def load_smc_v2(filename):
+    record_list = []
+    
+    # loads station into a string
+    fp = open(filename, 'r')
+    channels = fp.read()
+    fp.close()
+
+    # splits the string by channels
+    channels = channels.split('/&')
+    del(channels[len(channels)-1])
+
+    # splits the channels
+    for i in range(len(channels)):
+        channels[i] = channels[i].split('\r\n')
+
+    # clean the first row in all but the first channel
+    # this row corresponds to the channel delimiter
+    for i in range(1,len(channels)):
+        del channels[i][0]
+
+    for i in range(len(channels)):
+
+        tmp = channels[i][0].split()
+
+        # check this is the uncorrected acceleration data
+        ctype = (tmp[0] + " " + tmp[1]).lower()
+        if ctype != "corrected accelerogram":
+            return channels, 0
+
+        # get network code and station id 
+        network = tmp[2].split('.')[1]
+        station_id = tmp[2].split('.')[2]
+
+        # get orientation, convert to int if it's digit 
+        orientation = tmp[5]
+        if orientation.isdigit():
+            orientation = int(orientation)
+
+
+        # get location's latitude and longitude 
+        tmp = channels[i][5].split()
+        location_lati = tmp[3][:-1]
+        location_longi = tmp[4]
+        depth = 0.0
+
+
+        # get station name
+        station = channels[i][6][0:40].strip()
+
+        # get data type 
+        tmp = channels[i][6].split()
+        dtype = tmp[-1]
+        if dtype == "Acceleration": 
+            dtype = 'a'
+        elif dtype == "Velocity": 
+            dtype = 'v'
+        elif dtype == "Displacement": 
+            dtype = 'd'
+        else: 
+            dtype = "Unknown"
+
+
+        # get date and time; set to fixed format 
+        start_time = channels[i][4][37:80].split()
+        date = start_time[2][:-1]
+
+        tmp = channels[i][26].split()
+        hour = tmp[0]
+        minute = tmp[1]
+        seconds = tmp[2]
+        # fraction = tmp[4]
+        fraction = tmp[3]
+        tzone = channels[i][4].split()[-2]
+        time = hour + ":" + minute + ":" + seconds + "." + fraction + " " + tzone
+   
+
+        # get number of samples and dt 
+        tmp = channels[i][45].split()
+        samples = int(tmp[0])
+        dt = float(tmp[8])
+
+        # get signals' data 
+        tmp = channels[i][46]
+        signal = str()
+        for s in tmp:
+            signal += s
+        # avoid negative number being stacked 
+        signal = signal.replace('-', ' -')
+        signal = signal.split()
+         
+         # make the signal a numpy array of float numbers
+        data = []
+        for s in signal: 
+            data.append(float(s))
+        data = np.array(data)
+        print data 
+
+
+        # record = seism_record(samples, dt, data, dtype, station, location_lati, location_longi, depth, date, time, orientation)
+        record = seism_record(samples, dt, data, dtype, station, location_lati, location_longi, depth = depth, 
+            orientation = orientation, date = date, time = time)
+        record.print_attr()
+
+        # record.plot('s')
+        record_list.append(record)
+
+    # return a list of records and corresponding network code and station id 
+    return record_list, network, station_id
+
+load_smc_v2('NCNHC.V2')
+
+# TODO: 
+# 1. dt 
+# 2. error with plot 
+# 3. 

@@ -2,7 +2,7 @@
 from __future__ import division
 from seism import *
 from scipy.io import loadmat
-from scipy.signal import butter, filtfilt
+from scipy.signal import butter, filtfilt, ellip
 from matplotlib.pyplot import plot
 from scipy import signal
 
@@ -158,26 +158,17 @@ def process_smc_v1(record_list, network, station_id):
             # 0.05Hz 
             # zero phrase 
             # matlab function filtfilt 
-            # y = signal.filtfilt(b, a, record, padtype = None)
-            # input_signal = record.data['input_signal'][0]
 
-            passband = [0.05*2/30, 5.0*2/30]
-            # b, a = butter(5, passband, 'bandpass')
+
             print record.data.size
-            b, a = butter(3, 0.05, 'low')
-            record.data = filtfilt(b, a, record.data)
-
-            # y = filtfilt(b, a, record.data)
-            # y = filtfilt(b, a, record.data, axis=-1, padtype='even', padlen=None)
-            print record.data.size 
-
-            record.plot('s')
-            # plot(y)
+            b, a = ellip(N = 17, rp = 0.01, rs = 60, Wn = 0.05/((1.0/record.dt)/2.0), btype = 'highpass', analog=False)
+            # b, a = ellip(N = 1, rp = 4, rs = 6, Wn = 0.075, btype = 'highpass', analog=False)
+            filtered_signal = filtfilt(b, a, record.data)
+            print filtered_signal.size 
 
             # minus average and multiply by 981 
-            # record.data = 981*(record.data - np.average(record.data))
-            record.data = record.data - np.average(record.data)
-            record.plot('s')
+            record.data = 981*(record.data - np.average(record.data))
+            # record.plot('s')
 
             filename = network + "." + station_id + "." + orientation + ".txt"
             print_smc_v1(filename, record)
@@ -202,11 +193,11 @@ def print_smc_v1(filename, record):
 
 
 # test with two files 
-# record_list, network, station_id = load_smc_v1('NCNHC.V1')
-# process_smc_v1(record_list, network, station_id)
+record_list, network, station_id = load_smc_v1('NCNHC.V1')
+process_smc_v1(record_list, network, station_id)
 
-# record_list, network, station_id = load_smc_v1('CIQ0028.V1')
-# process_smc_v1(record_list, network, station_id)
+record_list, network, station_id = load_smc_v1('CIQ0028.V1')
+process_smc_v1(record_list, network, station_id)
 
 
 def load_smc_v2(filename):
@@ -292,10 +283,13 @@ def load_smc_v2(filename):
         dt = float(tmp[8])
 
         # get signals' data 
-        tmp = channels[i][46]
+        tmp = channels[i][46:]
         signal = str()
         for s in tmp:
-            signal += s
+            # excluding separate line 
+            if not "points" in s: 
+                signal += s
+
         # avoid negative number being stacked 
         signal = signal.replace('-', ' -')
         signal = signal.split()
@@ -305,7 +299,12 @@ def load_smc_v2(filename):
         for s in signal: 
             data.append(float(s))
         data = np.array(data)
-        print data 
+
+
+        # for d in np.nditer(data):
+        #     print d 
+            # pass
+        # print data 
 
 
         # record = seism_record(samples, dt, data, dtype, station, location_lati, location_longi, depth, date, time, orientation)
@@ -319,7 +318,7 @@ def load_smc_v2(filename):
     # return a list of records and corresponding network code and station id 
     return record_list, network, station_id
 
-load_smc_v2('NCNHC.V2')
+# load_smc_v2('NCNHC.V2')
 
 # TODO: 
 # 1. dt 

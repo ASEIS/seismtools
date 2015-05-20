@@ -3,7 +3,7 @@ from __future__ import division
 from seism import *
 from scipy.io import loadmat
 from scipy.signal import butter, filtfilt, ellip
-from matplotlib.pyplot import plot
+import matplotlib.pyplot as plt
 from scipy import signal
 
 def load_smc_v1(filename):
@@ -92,29 +92,16 @@ def load_smc_v1(filename):
         signal = str()
         for s in tmp:
             signal += s
-        signal = signal.split()
-         
-         # make the signal a numpy array of float numbers
-        data = []
-        for s in signal: 
-        	data.append(float(s)) 
-        # print data 
-        data = np.array(data)
+        data = process_signal(signal)
 
 
         # record = seism_record(samples, dt, data, dtype, station, location_lati, location_longi, depth, date, time, orientation)
         record = seism_record(samples, dt, data, dtype, station, location_lati, location_longi, depth = depth, 
             orientation = orientation, date = date, time = time)
         # record.print_attr()
-        # signal = seism_signal(dt=dt, samples=samples, data=data, type=dtype)
-        # signal = seism_signal(samples,dt,data,dtype)
-        # signal = seism_signal(samples,dt,type=dtype,data=data)
 
-        # signal.plot('s')
-        # record.plot('s')
         record_list.append(record)
 
-    # return channels, 1
     # return a list of records and corresponding network code and station id 
     return record_list, network, station_id
 
@@ -152,31 +139,25 @@ def process_smc_v1(record_list, network, station_id):
                 pass
 
             # ======================================= processing data ================================================  
-            # filtering data 
-            # filter type = elliptic 
-            # high pass filter 
-            # 0.05Hz 
-            # zero phrase 
-            # matlab function filtfilt 
-
-
-            print record.data.size
-            b, a = ellip(N = 17, rp = 0.01, rs = 60, Wn = 0.05/((1.0/record.dt)/2.0), btype = 'highpass', analog=False)
-            # b, a = ellip(N = 1, rp = 4, rs = 6, Wn = 0.075, btype = 'highpass', analog=False)
+            # create highpass elliptic filter 
+            b, a = ellip(N = 5, rp = 0.1, rs = 100, Wn = 0.05/((1.0/record.dt)/2.0), btype = 'highpass', analog=False)
             filtered_signal = filtfilt(b, a, record.data)
-            print filtered_signal.size 
+            filtered_record = seism_record(record.samples, record.dt, filtered_signal, record.type, record.station, record.location_lati, record.location_longi, depth = record.depth, 
+            orientation = record.orientation, date = record.date, time = record.time)
+
+            # record.plot('s')
+            # filtered_record.plot('s')
 
             # minus average and multiply by 981 
-            record.data = 981*(record.data - np.average(record.data))
-            # record.plot('s')
+            filtered_record.data = 981*(filtered_record.data - np.average(filtered_record.data))
 
-            filename = network + "." + station_id + "." + orientation + ".txt"
-            print_smc_v1(filename, record)
+            filename = network + "." + station_id + ".V1" + orientation + ".txt"
+            print_smc(filename, filtered_record)
         return 
     return
 
 
-def print_smc_v1(filename, record):
+def print_smc(filename, record):
     """
     The function generate files for each channel/record 
     """
@@ -189,15 +170,6 @@ def print_smc_v1(filename, record):
     f.close()
 #end of print_smc_v1()
 
-
-
-
-# test with two files 
-record_list, network, station_id = load_smc_v1('NCNHC.V1')
-process_smc_v1(record_list, network, station_id)
-
-record_list, network, station_id = load_smc_v1('CIQ0028.V1')
-process_smc_v1(record_list, network, station_id)
 
 
 def load_smc_v2(filename):
@@ -250,18 +222,6 @@ def load_smc_v2(filename):
         # get station name
         station = channels[i][6][0:40].strip()
 
-        # get data type 
-        tmp = channels[i][6].split()
-        dtype = tmp[-1]
-        if dtype == "Acceleration": 
-            dtype = 'a'
-        elif dtype == "Velocity": 
-            dtype = 'v'
-        elif dtype == "Displacement": 
-            dtype = 'd'
-        else: 
-            dtype = "Unknown"
-
 
         # get date and time; set to fixed format 
         start_time = channels[i][4][37:80].split()
@@ -283,44 +243,78 @@ def load_smc_v2(filename):
         dt = float(tmp[8])
 
         # get signals' data 
-        tmp = channels[i][46:]
-        signal = str()
-        for s in tmp:
-            # excluding separate line 
-            if not "points" in s: 
-                signal += s
+        tmp = channels[i][45:]
+        a_signal = str()
+        v_signal = str()
+        d_signal = str()
+        for s in tmp: 
+            # detecting separate line and get data type 
+            if "points" in s: 
+                line = s.split()
+                if line[3] == "accel": 
+                    dtype = 'a'
+                elif line[3] == "veloc":
+                    dtype = 'v'
+                elif line[3] == "displ":
+                    dtype = 'd'
+                else:
+                    dtype = "Unknown"
 
-        # avoid negative number being stacked 
-        signal = signal.replace('-', ' -')
-        signal = signal.split()
-         
-         # make the signal a numpy array of float numbers
-        data = []
-        for s in signal: 
-            data.append(float(s))
-        data = np.array(data)
+            # processing data 
+            else: 
+                if dtype == 'a':
+                    a_signal += s
+                elif dtype == 'v':
+                    v_signal += s
+                elif dtype == 'd':
+                    d_signal += s 
+
+        v_data = process_signal(a_signal)
+        a_data = process_signal(v_signal)
+        d_data = process_signal(d_signal)
+
+        # Objects for current testing 
+        record1 = seism_record(samples, dt, a_data, dtype, station, location_lati, location_longi, depth, date, time, orientation)
+        # record2 = seism_record(samples, dt, v_data, dtype, station, location_lati, location_longi, depth, date, time, orientation)
+        # record3 = seism_record(samples, dt, d_data, dtype, station, location_lati, location_longi, depth, date, time, orientation)
+        if orientation in [0, 360, 180, -180]:
+            orientation = 'N'
+        elif orientation in [90, 270, -90, -270]:
+            orientation = 'E'
+        elif orientation in ['Up', 'Down']:
+            orientation = 'Z'
+        else:
+            orientation = ' '
+        filename = network + "." + station_id + ".V2" + orientation + ".txt"
+        print_smc(filename, record1)
 
 
-        # for d in np.nditer(data):
-        #     print d 
-            # pass
-        # print data 
+def process_signal(signal):
+    """
+    The function is to convert signal into an numpy array of float numbers 
+    """
+    # avoid negative number being stuck  
+    signal = signal.replace('-', ' -')
+    signal = signal.split()
+
+    data = []
+    for s in signal:
+        data.append(float(s))
+    data = np.array(data)
+    return data 
 
 
-        # record = seism_record(samples, dt, data, dtype, station, location_lati, location_longi, depth, date, time, orientation)
-        record = seism_record(samples, dt, data, dtype, station, location_lati, location_longi, depth = depth, 
-            orientation = orientation, date = date, time = time)
-        record.print_attr()
+load_smc_v2('NCNHC.V2')
 
-        # record.plot('s')
-        record_list.append(record)
+# test with two files 
+record_list, network, station_id = load_smc_v1('NCNHC.V1')
+process_smc_v1(record_list, network, station_id)
 
-    # return a list of records and corresponding network code and station id 
-    return record_list, network, station_id
+record_list, network, station_id = load_smc_v1('CIQ0028.V1')
+process_smc_v1(record_list, network, station_id)
 
-# load_smc_v2('NCNHC.V2')
 
-# TODO: 
-# 1. dt 
-# 2. error with plot 
-# 3. 
+# TODO:  
+# 3. three column array 
+# seism-psignal: sub of signal 
+# seism-precord: check station, orientation etc; sub of record 

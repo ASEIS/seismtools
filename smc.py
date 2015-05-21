@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 from seism import *
-from scipy.io import loadmat
-from scipy.signal import butter, filtfilt, ellip
-import matplotlib.pyplot as plt
-from scipy import signal
+from scipy.signal import filtfilt, ellip
 
 def load_smc_v1(filename):
     record_list = []
@@ -310,8 +307,8 @@ load_smc_v2('NCNHC.V2')
 record_list, network, station_id = load_smc_v1('NCNHC.V1')
 process_smc_v1(record_list, network, station_id)
 
-record_list, network, station_id = load_smc_v1('CIQ0028.V1')
-process_smc_v1(record_list, network, station_id)
+# record_list, network, station_id = load_smc_v1('CIQ0028.V1')
+# process_smc_v1(record_list, network, station_id)
 
 
 # TODO:  

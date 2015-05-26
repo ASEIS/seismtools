@@ -20,6 +20,7 @@ def read_file(filename):
 			dt = float(tmp[7])
 		# get data 
 		else:
+			# print line.split()[0]
 			data.append(float(line))
 	data = np.array(data)
 	f.close()

@@ -266,14 +266,20 @@ def load_smc_v2(filename):
                 elif dtype == 'd':
                     d_signal += s 
 
-        v_data = process_signal(a_signal)
-        a_data = process_signal(v_signal)
+        a_data = process_signal(a_signal)
+        v_data = process_signal(v_signal)
         d_data = process_signal(d_signal)
+        data = np.c_[a_data, v_data, d_data]
 
         # Objects for current testing 
         record1 = seism_record(samples, dt, a_data, dtype, station, location_lati, location_longi, depth, date, time, orientation)
         # record2 = seism_record(samples, dt, v_data, dtype, station, location_lati, location_longi, depth, date, time, orientation)
         # record3 = seism_record(samples, dt, d_data, dtype, station, location_lati, location_longi, depth, date, time, orientation)
+        psignal = seism_psignal(samples, dt, data, dtype, accel = a_data, displ = d_data, velo = v_data)
+        # psignal.print_attr()
+        precord = seism_precord(samples, dt, data, dtype, accel = a_data, displ = d_data, velo = v_data, orientation = orientation, date = date, time = time, depth = depth,
+            latitude = location_lati, longitude = location_longi)
+        precord.print_attr()
         if orientation in [0, 360, 180, -180]:
             orientation = 'N'
         elif orientation in [90, 270, -90, -270]:
@@ -311,7 +317,6 @@ process_smc_v1(record_list, network, station_id)
 # process_smc_v1(record_list, network, station_id)
 
 
-# TODO:  
-# 3. three column array 
-# seism-psignal: sub of signal 
-# seism-precord: check station, orientation etc; sub of record 
+# TODO: 
+# print_smc for V2: use only record or precord object 
+

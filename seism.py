@@ -299,3 +299,161 @@ class seism_record(seism_signal):
         print "tzone: " + self.tzone
         print "orientation: " + str(self.orientation)
 # end record class
+
+
+
+# ========================================= Classes for processed data (V2) ==============================================
+class seism_psignal(seism_signal):
+    # accel
+    # velocity
+    # displacement
+    # data 
+    """
+    This class extends the seism_signal class to have addtitional
+    attributes for acceleration, velocity, and displacement data 
+    """
+    
+    def __init__(self, *args, **kwargs):
+        """
+        Correct order for unlabeled arguments is: samples, dt, data, acceleration, velocity, displacement 
+        """
+        super(seism_psignal, self).__init__(*args, **kwargs)
+
+        # initialize accel, velo, displ
+        self.accel = np.array([],float)
+        self.velo = np.array([],float)
+        self.displ = np.array([],float)
+
+
+        if len(args) > 0:
+            args_range = range(len(args))
+            if 4 in args_range: 
+                self.set_accel(args[4])
+            if 5 in args_range: 
+                self.set_velo(args[5])
+            if 6 in args_range: 
+                self.set_displ(args[6])
+                return 
+
+        if len(kwargs) > 0:
+            if 'accel' in kwargs:
+                self.set_accel(kwargs['accel'])
+            if 'velo' in kwargs:
+                self.set_velo(kwargs['velo'])
+            if 'displ' in kwargs:
+                self.set_displ(kwargs['displ'])
+        return 
+    #end __init__
+
+    def set_accel(self, accel):
+        # check if the data passed is a numpy array
+        if not isinstance(accel, np.ndarray): 
+            print "\n[ERROR]: signal acceleration data - not a numpy array.\n"
+        self.accel = accel
+    #end set_accel
+
+    def set_velo(self, velo):
+        if not isinstance(velo, np.ndarray): 
+            print "\n[ERROR]: signal velocity data - not a numpy array.\n"
+        self.velo = velo
+    #end set_velo
+
+    def set_displ(self, displ):
+        if not isinstance(displ, np.ndarray): 
+            print "\n[ERROR]: signal displacement data - not a numpy array.\n"
+        self.displ = displ
+    #end set_displ
+
+    def print_attr(self):
+        print "===========================psignal========================================"
+        print "samples: " + str(self.samples)
+        print "dt: " + str(self.dt)
+        print "data type: " + self.type 
+        print self.data
+        print self.accel
+        print self.velo
+        print self.displ
+
+#end seism_psignal class 
+
+
+
+class seism_precord(seism_record):
+    """
+    This class extends the seism_record class to have addtitional
+    attributes for acceleration, velocity, and displacement data 
+    """
+    
+    def __init__(self, *args, **kwargs):
+        """
+        Correct order for unlabeled arguments is: samples, dt, data, signal type, station, 
+        location_lati, location_longi, depth, date, time, orientation, acceleration, velocity, displacement
+        """
+        super(seism_precord, self).__init__(*args, **kwargs)
+
+        # initialize accel, velo, displ
+        self.accel = np.array([],float)
+        self.velo = np.array([],float)
+        self.displ = np.array([],float)
+
+        if len(args) > 0:
+            args_range = range(len(args))
+            if 11 in args_range: 
+                self.set_accel(args[11])
+            if 12 in args_range: 
+                self.set_velo(args[12])
+            if 13 in args_range: 
+                self.set_displ(args[13])
+                return 
+
+        if len(kwargs) > 0:
+            if 'accel' in kwargs:
+                self.set_accel(kwargs['accel'])
+            if 'velo' in kwargs:
+                self.set_velo(kwargs['velo'])
+            if 'displ' in kwargs:
+                self.set_displ(kwargs['displ'])
+        return 
+    #end __init__
+    
+    def set_accel(self, accel):
+        # check if the data passed is a numpy array
+        if not isinstance(accel, np.ndarray): 
+            print "\n[ERROR]: signal acceleration data - not a numpy array.\n"
+        self.accel = accel
+    #end set_accel
+
+    def set_velo(self, velo):
+        if not isinstance(velo, np.ndarray): 
+            print "\n[ERROR]: signal velocity data - not a numpy array.\n"
+        self.velo = velo
+    #end set_velo
+
+    def set_displ(self, displ):
+        if not isinstance(displ, np.ndarray): 
+            print "\n[ERROR]: signal displacement data - not a numpy array.\n"
+        self.displ = displ
+    #end set_displ
+
+    def print_attr(self):
+        print "=============================precord======================================"
+        print "samples: " + str(self.samples)
+        print "dt: " + str(self.dt)
+        print "data type: " + self.type 
+        print "station name: " + self.station
+        print "station latitude: " + self.location_lati
+        print "station longitude: " + self.location_longi
+        print "depth: ??" 
+        print "date: " + self.date
+        print "time: " + self.time
+        print "hour: " + str(self.hour) 
+        print "minute: " + str(self.minute) 
+        print "seconds: " + str(self.seconds) 
+        print "fraction: " + str(self.fraction)
+        print "tzone: " + self.tzone
+        print "orientation: " + str(self.orientation)
+        print self.accel
+        print self.velo
+        print self.displ
+#end seism_precord class
+

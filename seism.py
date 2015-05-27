@@ -116,7 +116,10 @@ class seism_signal(object):
         v = v0 + at
         """
         velocity = np.cumsum(self.data*self.dt)
-        # print velocity
+        # create highpass elliptic filter 
+        b, a = ellip(N = 5, rp = 0.1, rs = 100, Wn = 0.05/((1.0/self.dt)/2.0), btype = 'highpass', analog=False)
+        velocity = filtfilt(b, a, velocity)
+
         return velocity
     #end integrate_accel
 
@@ -126,7 +129,9 @@ class seism_signal(object):
         d = d0 + vt 
         """
         displacement = np.cumsum(velocity*self.dt)
-        # print displacement
+        # create highpass elliptic filter 
+        b, a = ellip(N = 5, rp = 0.1, rs = 100, Wn = 0.05/((1.0/self.dt)/2.0), btype = 'highpass', analog=False)
+        displacement = filtfilt(b, a, displacement)
         return displacement
     #end integrate_velo 
 #end signal class

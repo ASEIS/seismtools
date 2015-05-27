@@ -10,7 +10,7 @@ def load_smc_v1(filename):
     record_list = []
     
     # loads station into a string
-    fp = open(filename, 'r')
+    fp = open('SampleFiles/' + filename, 'r')
     channels = fp.read()
     fp.close()
 
@@ -164,7 +164,7 @@ def load_smc_v2(filename):
     record_list = []
     
     # loads station into a string
-    fp = open(filename, 'r')
+    fp = open('SampleFiles/' + filename, 'r')
     channels = fp.read()
     fp.close()
 
@@ -302,7 +302,7 @@ def print_smc(filename, record):
     """
     # generate a text file (header + data)
     header = "#" + record.date + " " + record.time + " Samples: " + str(record.samples) + " dt: " + str(record.dt) + "\n"
-    f = open(filename, 'w')
+    f = open('SampleOutputs/' + filename, 'w')
     f.write(header)
     for d in np.nditer(record.data):
         f.write(str(d)+"\n")
@@ -318,7 +318,7 @@ def print_her(filename, record_list):
         print "==[The function is processing files with 3 channels only.]=="
         return 
     # header = "#time\tdis_ns\tdis_ew\tdis_up\tvel_ns\tvel_ew\tvel_up\tacc_ns\tacc_ew\tacc_up\n"
-    f = open(filename, 'w')
+    f = open('SampleOutputs/' + filename, 'w')
     # f.write(header)
     dis_ns = []
     vel_ns = []
@@ -431,4 +431,5 @@ print_her(filename, record_list)
 
 # TODO:
 # 1. 9 columns are too long to print ==> round to 7 decimals
+# 2. move all processing data function to class
 # 2. caller for input filenames 

@@ -4,6 +4,7 @@ __author__ = 'rtaborda'
 
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.signal import filtfilt, ellip
 
 
 class seism_signal(object):
@@ -108,6 +109,26 @@ class seism_signal(object):
             pass
         return
     #end plot
+
+    def integrate_accel(self):
+        """
+        The function is to integrate acceleration data to get the velocity data 
+        v = v0 + at
+        """
+        velocity = np.cumsum(self.data*self.dt)
+        # print velocity
+        return velocity
+    #end integrate_accel
+
+    def integrate_velo(self, velocity):
+        """
+        The function is to integrate velocity data to get the displacement data 
+        d = d0 + vt 
+        """
+        displacement = np.cumsum(velocity*self.dt)
+        # print displacement
+        return displacement
+    #end integrate_velo 
 #end signal class
 
 
@@ -298,6 +319,46 @@ class seism_record(seism_signal):
         print "fraction: " + str(self.fraction)
         print "tzone: " + self.tzone
         print "orientation: " + str(self.orientation)
+    #end print_attr 
+
+    def process_smc_v1(self, network, station_id):
+        """
+        The function process record by converting orientation and multiplying data 
+        """
+    # ======================================= processing orientation ========================================== 
+        # If the orientation was not set properly, it would be empty string by default 
+        if self.orientation == " ":
+            print "[ERROR]: missing orientation"
+            orientation = " "
+        elif self.orientation in [0, 360]:
+            orientation = 'N'
+        elif self.orientation in [180, -180]:
+            orientation = 'N'
+            record.data = record.data*-1
+        elif self.orientation in [90, -270]:
+            orientation = 'E'
+        elif self.orientation in [-90, 270]:
+            orientation = 'E'
+            record.orientation = record.data*-1
+        elif self.orientation == "Up" or self.orientation == "Down":
+            orientation = 'Z'
+        else: 
+             # handling degrees such as 60, 120 etc. 
+             pass
+
+    # ======================================= processing data ================================================  
+        # create highpass elliptic filter 
+        b, a = ellip(N = 5, rp = 0.1, rs = 100, Wn = 0.05/((1.0/self.dt)/2.0), btype = 'highpass', analog=False)
+        self.data = filtfilt(b, a, self.data)
+
+        # minus average and multiply by 981 
+        self.data = 981*(self.data - np.average(self.data))
+
+        filename = network + "." + station_id + ".V1" + orientation + ".txt"
+        # print_smc(filename, filtered_record)
+        return filename
+    #end process_smc_V1 
+
 # end record class
 
 

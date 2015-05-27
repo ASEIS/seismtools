@@ -16,8 +16,8 @@ def read_file(filename):
 		# get header 
 		if "#" in line: 
 			tmp = line.split()
-			samples = int(tmp[5])
-			dt = float(tmp[7])
+			samples = int(tmp[4])
+			dt = float(tmp[6])
 		# get data 
 		else:
 			# print line.split()[0]
@@ -25,6 +25,9 @@ def read_file(filename):
 	data = np.array(data)
 	f.close()
 	return samples, dt, data 
+
+def read_her_file(filename):
+	pass 
 
 
 def plot(samples1, dt1, data1, samples2, dt2, data2):

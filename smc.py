@@ -105,57 +105,6 @@ def load_smc_v1(filename):
     # return a list of records and corresponding network code and station id 
     return record_list, network, station_id
 
-# def process_smc_v1(record_list, network, station_id):
-#     """
-#     The function process a list of records by converting orientation and multiplying data 
-#     """
-#     # if there are more than three channels, save for later 
-#     if len(record_list) > 3:
-#         print "==[The function is processing files with 3 channels only.]=="
-#         return 
-
-#     else: 
-#         for record in record_list:
-#             # ======================================= processing orientation ========================================== 
-#             # If the orientation was not set properly, it would be empty string by default 
-#             if record.orientation == " ":
-#                 print "[ERROR]: missing orientation"
-#                 orientation = " "
-#             elif record.orientation in [0, 360]:
-#                 orientation = 'N'
-#             elif record.orientation in [180, -180]:
-#                 orientation = 'N'
-#                 record.data = record.data*-1
-#             elif record.orientation in [90, -270]:
-#                 orientation = 'E'
-#             elif record.orientation in [-90, 270]:
-#                 orientation = 'E'
-#                 record.orientation = record.data*-1
-#             elif record.orientation == "Up" or record.orientation == "Down":
-#                 orientation = 'Z'
-#             else: 
-#                 # handling degrees such as 60, 120 etc. 
-#                 pass
-
-#             # ======================================= processing data ================================================  
-#             # create highpass elliptic filter 
-#             b, a = ellip(N = 5, rp = 0.1, rs = 100, Wn = 0.05/((1.0/record.dt)/2.0), btype = 'highpass', analog=False)
-#             filtered_signal = filtfilt(b, a, record.data)
-#             filtered_record = seism_record(record.samples, record.dt, filtered_signal, record.type, record.station, record.location_lati, record.location_longi, depth = record.depth, 
-#             orientation = record.orientation, date = record.date, time = record.time)
-
-#             # record.plot('s')
-#             # filtered_record.plot('s')
-
-#             # minus average and multiply by 981 
-#             filtered_record.data = 981*(filtered_record.data - np.average(filtered_record.data))
-
-#             filename = network + "." + station_id + ".V1" + orientation + ".txt"
-#             print_smc(filename, filtered_record)
-#         return 
-#     return
-
-
 def load_smc_v2(filename):
     if not filename.endswith(".V2"):
         print "[ERROR]: Invalid file name."
@@ -336,50 +285,43 @@ def print_her(filename, record_list):
             print "[ERROR]: missing orientation"
             orientation = " "
         elif precord.orientation in [0, 360, 180, -180]:
-            dis_ns = np.around(precord.displ, decimals=7).tolist()
-            vel_ns = np.around(precord.velo, decimals=7).tolist()
-            acc_ns = np.around(precord.accel, decimals=7).tolist()
-            # dis_ns = precord.displ.tolist()
-            # vel_ns = precord.velo.tolist()
-            # acc_ns = precord.accel.tolist()
+            # dis_ns = np.around(precord.displ, decimals=7).tolist()
+            # vel_ns = np.around(precord.velo, decimals=7).tolist()
+            # acc_ns = np.around(precord.accel, decimals=7).tolist()
+            dis_ns = precord.displ.tolist()
+            vel_ns = precord.velo.tolist()
+            acc_ns = precord.accel.tolist()
         elif precord.orientation in [90, -270, -90, 270]:
-            dis_ew = np.around(precord.displ, decimals=7).tolist()
-            vel_ew = np.around(precord.velo, decimals=7).tolist()
-            acc_ew = np.around(precord.accel, decimals=7).tolist()
+            # dis_ew = np.around(precord.displ, decimals=7).tolist()
+            # vel_ew = np.around(precord.velo, decimals=7).tolist()
+            # acc_ew = np.around(precord.accel, decimals=7).tolist()
 
-            # dis_ew = precord.displ.tolist()
-            # vel_ew = precord.velo.tolist()
-            # acc_ew = precord.accel.tolist()
+            dis_ew = precord.displ.tolist()
+            vel_ew = precord.velo.tolist()
+            acc_ew = precord.accel.tolist()
         elif precord.orientation == "Up" or precord.orientation == "Down":
-            dis_up = np.around(precord.displ, decimals=7).tolist()
-            vel_up = np.around(precord.velo, decimals=7).tolist()
-            acc_up = np.around(precord.accel, decimals=7).tolist()
+            # dis_up = np.around(precord.displ, decimals=7).tolist()
+            # vel_up = np.around(precord.velo, decimals=7).tolist()
+            # acc_up = np.around(precord.accel, decimals=7).tolist()
 
-            # dis_up = precord.displ.tolist()
-            # vel_up = precord.velo.tolist()
-            # acc_up = precord.accel.tolist()
+            dis_up = precord.displ.tolist()
+            vel_up = precord.velo.tolist()
+            acc_up = precord.accel.tolist()
         else: 
              # handling degrees such as 60, 120 etc. 
              pass
 
     # get a list of time incremented by dt 
-    time = ["#time", 0]
+    time = [0.000]
     samples = precord.samples 
     while samples > 1:
         time.append(time[len(time)-1] + precord.dt)
         samples -= 1 
-    dis_ns.insert(0,"dis_ns")
-    dis_ew.insert(0,"dis_ew")
-    dis_up.insert(0,"dis_up")
-    vel_ns.insert(0,"vel_ns")
-    vel_ew.insert(0,"vel_ew")
-    vel_up.insert(0,"vel_up")
-    acc_ns.insert(0,"acc_ns")
-    acc_ew.insert(0,"acc_ew")
-    acc_up.insert(0,"acc_up")
-
+        descriptor = '{:>12}' + '  {:>12}'*9 + '\n'
+    f.write(descriptor.format("time", "dis_ns", "dis_ew", "dis_up", "vel_ns", "vel_ew", "vel_up", "acc_ns", "acc_ew", "acc_up")) # header 
+    descriptor = '{:>12.3f}' + '  {:>12.7f}'*9 + '\n'
     for c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 in zip(time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up):
-        f.write("%-9s\t%-9s\t%-9s\t%-9s\t%-9s\t%9s\t%-9s\t%-9s\t%-9s\t%-9s\n" % (str(c0), str(c1), str(c2), str(c3), str(c4), str(c5), str(c6), str(c7), str(c8), str(c9)))
+        f.write(descriptor.format(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 ))
     f.close()
 #end of print_her 
 
@@ -397,8 +339,8 @@ def process_record_list(record_list):
         print_smc(filename, record)
 
         # get velocity and displacement
-        velocity = record.integrate_accel()
-        displacement = record.integrate_velo(velocity)
+        velocity = record.integrate(record.data)
+        displacement = record.integrate(velocity)
         precord = seism_precord(record.samples, record.dt, record.data, record.type, accel = record.data, displ = displacement, velo = velocity, 
             orientation = record.orientation, date = record.date, time = record.time, depth = record.depth, latitude = record.location_lati, longitude = record.location_longi)
 
@@ -414,6 +356,9 @@ print_her(filename, process_record_list(record_list))
 record_list, network, station_id = load_smc_v2('NCNHC.V2')
 filename = network + "." + station_id + ".V2.her"
 print_her(filename, record_list)
+record_list, network, station_id = load_smc_v1('CIQ0028.V1')
+filename = network + "." + station_id + ".V1.her"
+print_her(filename, process_record_list(record_list))
 
 
 

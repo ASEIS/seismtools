@@ -33,44 +33,10 @@ def read_her_file(filename):
 	"""
 	The function is to read 10-column .her files. 
 	"""
-	f = open('SampleOutputs/' + filename, 'r')
-	dt = 0.0 
-	dis_ns = []
-	dis_ew = []
-	dis_up = []
-	vel_ns = []
-	vel_ew = []
-	vel_up = []
-	acc_ns = []
-	acc_ew = []
-	acc_up = []
-	line_num = -1 
-	for line in f:
-		line_num += 1 
-		if line_num == 2: 
-			dt = float(line.split()[0])
-		if not "#" in line: 
-			tmp = line.split()
-			dis_ns.append(float(tmp[1]))
-			dis_ew.append(float(tmp[2]))
-			dis_up.append(float(tmp[3]))
-			vel_ns.append(float(tmp[4]))
-			vel_ew.append(float(tmp[5]))
-			vel_up.append(float(tmp[6]))
-			acc_ns.append(float(tmp[7]))
-			acc_ew.append(float(tmp[8]))
-			acc_up.append(float(tmp[9]))
-	dis_ns = np.array(dis_ns)
-	dis_ew = np.array(dis_ew)
-	dis_up = np.array(dis_up)
-	vel_ns = np.array(vel_ns)
-	vel_ew = np.array(vel_ew)
-	vel_up = np.array(vel_up)
-	acc_ns = np.array(acc_ns)
-	acc_ew = np.array(acc_ew)
-	acc_up = np.array(acc_up)
-	f.close()
-	samples = int(line_num)
+	time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up = np.loadtxt('SampleOutputs/' + filename, skiprows = 1, unpack = True)
+	samples = dis_ns.size 
+	dt = time[1]
+	# TODO: return list of records or station object 
 	return samples, dt, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up
 
 

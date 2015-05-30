@@ -110,30 +110,13 @@ class seism_signal(object):
         return
     #end plot
 
-    def integrate_accel(self):
+    def integrate(self, data):
         """
-        The function is to integrate acceleration data to get the velocity data 
-        v = v0 + at
+        The function is to integrate to get the other type of data. 
         """
-        velocity = np.cumsum(self.data*self.dt)
-        # create highpass elliptic filter 
-        b, a = ellip(N = 5, rp = 0.1, rs = 100, Wn = 0.05/((1.0/self.dt)/2.0), btype = 'highpass', analog=False)
-        velocity = filtfilt(b, a, velocity)
-
-        return velocity
-    #end integrate_accel
-
-    def integrate_velo(self, velocity):
-        """
-        The function is to integrate velocity data to get the displacement data 
-        d = d0 + vt 
-        """
-        displacement = np.cumsum(velocity*self.dt)
-        # create highpass elliptic filter 
-        b, a = ellip(N = 5, rp = 0.1, rs = 100, Wn = 0.05/((1.0/self.dt)/2.0), btype = 'highpass', analog=False)
-        displacement = filtfilt(b, a, displacement)
-        return displacement
-    #end integrate_velo 
+        data = ellip_filter(np.cumsum(data*self.dt), self.dt)
+        # data = ellip_filter(np.cumsum(data*self.dt), self.dt, Wn = 0.075/((1.0/self.dt)/2.0), N = 7)
+        return data
 #end signal class
 
 
@@ -339,28 +322,30 @@ class seism_record(seism_signal):
             orientation = 'N'
         elif self.orientation in [180, -180]:
             orientation = 'N'
-            record.data = record.data*-1
+            self.data = self.data*-1
         elif self.orientation in [90, -270]:
             orientation = 'E'
         elif self.orientation in [-90, 270]:
             orientation = 'E'
-            record.orientation = record.data*-1
-        elif self.orientation == "Up" or self.orientation == "Down":
+            self.data = self.data*-1
+        elif self.orientation == "Up":
             orientation = 'Z'
+        elif self.orientation == "Down":
+            orientation = 'Z'
+            self.data = self.data*-1
         else: 
              # handling degrees such as 60, 120 etc. 
              pass
 
     # ======================================= processing data ================================================  
-        # create highpass elliptic filter 
-        b, a = ellip(N = 5, rp = 0.1, rs = 100, Wn = 0.05/((1.0/self.dt)/2.0), btype = 'highpass', analog=False)
-        self.data = filtfilt(b, a, self.data)
+        # filter data 
+        self.data = ellip_filter(self.data, self.dt) 
 
-        # minus average and multiply by 981 
-        self.data = 981*(self.data - np.average(self.data))
+        # make average on first 10% of samples; minus average and multiply by 981 
+        # self.data = 981*(self.data - np.average(self.data))
+        self.data = 981*(self.data - np.average(self.data[0:int(self.samples*0.1)]))
 
         filename = network + "." + station_id + ".V1" + orientation + ".txt"
-        # print_smc(filename, filtered_record)
         return filename
     #end process_smc_V1 
 
@@ -370,10 +355,6 @@ class seism_record(seism_signal):
 
 # ========================================= Classes for processed data (V2) ==============================================
 class seism_psignal(seism_signal):
-    # accel
-    # velocity
-    # displacement
-    # data 
     """
     This class extends the seism_signal class to have addtitional
     attributes for acceleration, velocity, and displacement data 
@@ -485,19 +466,19 @@ class seism_precord(seism_record):
     def set_accel(self, accel):
         # check if the data passed is a numpy array
         if not isinstance(accel, np.ndarray): 
-            print "\n[ERROR]: signal acceleration data - not a numpy array.\n"
+            print "\n[ERROR]: signal acceleration data - not an numpy array.\n"
         self.accel = accel
     #end set_accel
 
     def set_velo(self, velo):
         if not isinstance(velo, np.ndarray): 
-            print "\n[ERROR]: signal velocity data - not a numpy array.\n"
+            print "\n[ERROR]: signal velocity data - not an numpy array.\n"
         self.velo = velo
     #end set_velo
 
     def set_displ(self, displ):
         if not isinstance(displ, np.ndarray): 
-            print "\n[ERROR]: signal displacement data - not a numpy array.\n"
+            print "\n[ERROR]: signal displacement data - not an numpy array.\n"
         self.displ = displ
     #end set_displ
 
@@ -523,3 +504,43 @@ class seism_precord(seism_record):
         print self.displ
 #end seism_precord class
 
+# ===================================================Global Functions=======================================================
+def ellip_filter(data, dt, *args, **kwargs):
+    """
+    Correct order for unlabeled arguments is: data, dt, order N, rp, rs, Wn 
+    """
+    if not isinstance(data, np.ndarray): 
+        print "\n[ERROR]: data is not an numpy array.\n"
+        return 
+    data = data 
+    dt = dt
+    N = 5
+    rp = 0.1
+    rs = 100 
+    Wn = 0.05/((1.0/dt)/2.0)
+
+    if len(args) > 0:
+        args_range = range(len(args))
+        if 0 in args_range:
+            N = args[0]
+        if 1 in args_range:
+            rp = args[1]
+        if 2 in args_range:
+            rs = args[2]
+        if 3 in args_range:
+            Wn = args[3]
+
+    if len(kwargs) > 0:
+        if 'N' in kwargs:
+            N = kwargs['N']
+        if 'rp' in kwargs:
+            rp = kwargs['rp']
+        if 'rs' in kwargs:
+            rs = kwargs['rs']
+        if 'Wn' in kwargs:
+            Wn = kwargs['Wn']
+
+    # create highpass elliptic filter 
+    b, a = ellip(N = N, rp = rp, rs = rs, Wn = Wn, btype = 'highpass', analog=False)
+    data = filtfilt(b, a, data)
+    return data 

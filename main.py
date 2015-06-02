@@ -22,8 +22,8 @@ def read_list(file_list):
 	The function is to read a list of files/directory and check their 
 	types/contents to call corresponding functions. 
 	"""
-	new_file_list = []
-	compare_list = []
+	compare_list1 = []
+	compare_list2 = []
 	for f in file_list:
 		# if is a directory; read all files\directories in the directory and append them to file_list
 		if os.path.isdir(f):
@@ -37,41 +37,78 @@ def read_list(file_list):
 			if f.endswith(".V1") or f.endswith(".raw"):
 				record_list, network, station_id = load_smc_v1(f)
 				filename = network + "." + station_id + ".V1.her"
-				print_her(filename, process_record_list(network, station_id, record_list)) 
+				precord_list = process_record_list(network, station_id, record_list)
+				if precord_list == False:
+					pass 
+					# TODO: append the filename to unprocessed files 
+				else: 
+					print_her(filename, precord_list) 
 
 			# if the file is V2/processed data file; generate a list of precords, text file for acceleration, and .her file 
 			elif f.endswith(".V2"):
 				record_list, network, station_id = load_smc_v2(f)
 				filename = network + "." + station_id + ".V2.her"
-				print_her(filename, record_list) 
+				if print_her(filename, record_list) == False:
+					pass 
+					# TODO: append the filename to unprocessed files 
 
 			# if the file is .her file 
 			elif f.endswith(".her"):
-				compare_list.append(f)
+				compare_list1.append(f)
 				# TODO: waiting for another her file to call compare()
 				pass 
 
-			fp = open(f, 'r')
-			ftype = ' '
-			for line in fp:
-				# if the file contains a list of filenames 
-				if '#filelist' in line: ftype = 'list'
-				elif ftype == 'list': 
-					file_list = file_list + line.split()
-				else:
-					# TODO: check for acceleration data text file 
-					# TODO: waiting for another her file to call compare()
-					pass
+			else: 
 
-			print file_list
+				fp = open(f, 'r')
+				ftype = ' '
+				for line in fp:
+					# if the file contains a list of filenames 
+					if '#filelist' in line: ftype = 'list'
+					# if the file contains acceleration data 
+					elif '#' and 'Samples:' and 'dt:' in line: 
+						ftype = 'txt' 
+						break 
+					elif ftype == 'list': 
+						file_list = file_list + line.split()
+					else: 
+						print "[ERROR]: unable to recognize file type."
+						break 
+				if ftype == 'txt':
+					compare_list2.append(f)
+					# TODO: waiting for another her file to call compare()
+
+
 
 		else:
 			print "[ERROR]: no such file or directory."
 			return 
+	# return a list of her files and a list of txt files that may be used for comparison 
+	return compare_list1, compare_list2
+
+def compare1(compare_list):
+	"""
+	The function is to call comparison between .HER files 
+	"""
+	for f1 in compare_list:
+		for f2 in compare_list:
+			if f2 != f1 and f2[0:-5] == f1[0:-5]: 
+				compare_her(f1, f2)
+
+def compare2(compare_list):
+	"""
+	The function is to call comparison between .TXT files 
+	"""
+	for f1 in compare_list:
+		for f2 in compare_list:
+			if f2 != f1 and f2[:-6] == f1[:-6] and f1[-5:] == f2[-5:]: 
+				# print f1, f2 
+				compare_txt(f1, f2)
 
 
-	return new_file_list
+
+list1, list2 = read_list(file_list) 
+compare1(list1)
+compare2(list2)
 
 
-newlist = read_list(file_list)
-print newlist

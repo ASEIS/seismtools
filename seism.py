@@ -335,6 +335,7 @@ class seism_record(seism_signal):
             self.data = self.data*-1
         else: 
              # handling degrees such as 60, 120 etc. 
+             # return False 
              pass
 
     # ======================================= processing data ================================================  

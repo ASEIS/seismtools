@@ -12,7 +12,7 @@ def read_file(filename):
 	"""
 	The function is to read general 1-column text files. Return a signal object. 
 	"""
-	f = open('SampleOutputs/' + filename, 'r')
+	f = open(filename, 'r')
 	samples = 0 
 	dt = 0.0 
 	data = []
@@ -35,7 +35,7 @@ def read_her_file(filename):
 	"""
 	The function is to read 10-column .her files. Return a list of psignals for each orientation/channel. 
 	"""
-	time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up = np.loadtxt('SampleOutputs/' + filename, skiprows = 1, unpack = True)
+	time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up = np.loadtxt(filename, skiprows = 1, unpack = True)
 	samples = dis_ns.size 
 	dt = time[1]
 
@@ -59,6 +59,8 @@ def read_her_file(filename):
 # 	samples1 = signal1.samples
 # 	data1 = signal1.data
 # 	dt1 = signal1.dt
+
+
 # 	samples2 = signal2.samples
 # 	data2 = signal2.data
 # 	dt2 = signal2.dt
@@ -79,6 +81,12 @@ def plot(title, samples1, dt1, data1, samples2, dt2, data2):
 
 
 def compare_txt(file1, file2):
+	# revert the order of files to V1, V2
+	if 'V1' not in file1.split('.')[-2]: 
+		tmp = file1
+		file1 = file2 
+		file2 = tmp 
+
 	signal1 = read_file(file1)
 	signal2 = read_file(file2)
 	if (not isinstance(signal1, seism_signal)) or (not isinstance(signal2, seism_signal)):
@@ -90,11 +98,16 @@ def compare_txt(file1, file2):
 	samples2 = signal2.samples
 	data2 = signal2.data
 	dt2 = signal2.dt
-	plot('Acceleration: ' + file1 + ' ' + file2, samples1, dt1, data1, samples2, dt2, data2)
+	plot('Acceleration: \n' + file1 + ' ' + file2, samples1, dt1, data1, samples2, dt2, data2)
 # end of compare_txt
 
 
 def compare_her(file1, file2):
+	# revert the order of files to V1, V2
+	if 'V1' not in file1.split('.')[-2]: 
+		tmp = file1
+		file1 = file2 
+		file2 = tmp 
 	# station = [psignal_ns, psignal_ew, psignal_up]
 	station1 = read_her_file(file1) 
 	station2 = read_her_file(file2)
@@ -109,17 +122,17 @@ def compare_her(file1, file2):
 			print "[ERROR]: Invalid instance type: can only compare psignal objects."
 			return 
 
-	plot('Displacement in N/S: ' + file1 + ' ' + file2, samples1, dt1, station1[0].displ, samples2, dt2, station2[0].displ) #displacement 
-	plot('Displacement in E/W: ' + file1 + ' ' + file2, samples1, dt1, station1[1].displ, samples2, dt2, station2[1].displ) 
-	plot('Displacement in Up/Down: ' + file1 + ' ' + file2, samples1, dt1, station1[2].displ, samples2, dt2, station2[2].displ) 
+	plot('Displacement in N/S: \n' + file1 + ' ' + file2, samples1, dt1, station1[0].displ, samples2, dt2, station2[0].displ) #displacement 
+	plot('Displacement in E/W: \n' + file1 + ' ' + file2, samples1, dt1, station1[1].displ, samples2, dt2, station2[1].displ) 
+	plot('Displacement in Up/Down: \n' + file1 + ' ' + file2, samples1, dt1, station1[2].displ, samples2, dt2, station2[2].displ) 
 
-	plot('Velocity in N/S: ' + file1 + ' ' + file2, samples1, dt1, station1[0].velo, samples2, dt2, station2[0].velo) #velocity 
-	plot('Velocity in E/W: ' + file1 + ' ' + file2, samples1, dt1, station1[1].velo, samples2, dt2, station2[1].velo) 
-	plot('Velocity in Up/Down: ' + file1 + ' ' + file2, samples1, dt1, station1[2].velo, samples2, dt2, station2[2].velo) 
+	plot('Velocity in N/S: \n' + file1 + ' ' + file2, samples1, dt1, station1[0].velo, samples2, dt2, station2[0].velo) #velocity 
+	plot('Velocity in E/W: \n' + file1 + ' ' + file2, samples1, dt1, station1[1].velo, samples2, dt2, station2[1].velo) 
+	plot('Velocity in Up/Down: \n' + file1 + ' ' + file2, samples1, dt1, station1[2].velo, samples2, dt2, station2[2].velo) 
 
-	plot('Acceleration in N/S: ' + file1 + ' ' + file2, samples1, dt1, station1[0].accel, samples2, dt2, station2[0].accel) #acceleration  
-	plot('Acceleration in E/W: ' + file1 + ' ' + file2, samples1, dt1, station1[1].accel, samples2, dt2, station2[1].accel) 
-	plot('Acceleration in Up/Down: ' + file1 + ' ' + file2, samples1, dt1, station1[2].accel, samples2, dt2, station2[2].accel) 
+	plot('Acceleration in N/S: \n' + file1 + ' ' + file2, samples1, dt1, station1[0].accel, samples2, dt2, station2[0].accel) #acceleration  
+	plot('Acceleration in E/W: \n' + file1 + ' ' + file2, samples1, dt1, station1[1].accel, samples2, dt2, station2[1].accel) 
+	plot('Acceleration in Up/Down: \n' + file1 + ' ' + file2, samples1, dt1, station1[2].accel, samples2, dt2, station2[2].accel) 
 # end of compare_her
 
 
@@ -138,9 +151,9 @@ def compare_her(file1, file2):
 	# plot('Acceleration in Up/Down (HER)', samples1, dt1, acc_up1, samples2, dt2, acc_up2) 
 
 
-compare_her('NC.NHC.V2.her', 'NC.NHC.V1.her')
+# compare_her('NC.NHC.V2.her', 'NC.NHC.V1.her')
 
 
-compare_txt('NC.NHC.V1N.txt', 'NC.NHC.V2N.txt')
-compare_txt('NC.NHC.V1E.txt', 'NC.NHC.V2E.txt')
-compare_txt('NC.NHC.V1Z.txt', 'NC.NHC.V2Z.txt')
+# compare_txt('NC.NHC.V1N.txt', 'NC.NHC.V2N.txt')
+# compare_txt('NC.NHC.V1E.txt', 'NC.NHC.V2E.txt')
+# compare_txt('NC.NHC.V1Z.txt', 'NC.NHC.V2Z.txt')

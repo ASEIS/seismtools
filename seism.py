@@ -362,7 +362,7 @@ class seism_psignal(seism_signal):
     
     def __init__(self, *args, **kwargs):
         """
-        Correct order for unlabeled arguments is: samples, dt, data, acceleration, velocity, displacement 
+        Correct order for unlabeled arguments is: samples, dt, data, signal type (eliminate), acceleration, velocity, displacement 
         """
         super(seism_psignal, self).__init__(*args, **kwargs)
 
@@ -433,7 +433,7 @@ class seism_precord(seism_record):
     
     def __init__(self, *args, **kwargs):
         """
-        Correct order for unlabeled arguments is: samples, dt, data, signal type, station, 
+        Correct order for unlabeled arguments is: samples, dt, data, signal type (eliminate), station, 
         location_lati, location_longi, depth, date, time, orientation, acceleration, velocity, displacement
         """
         super(seism_precord, self).__init__(*args, **kwargs)
@@ -504,6 +504,13 @@ class seism_precord(seism_record):
         print self.displ
 #end seism_precord class
 
+# =========================================================Class for Station===============================================================
+class seism_station(object):
+    """
+    The station object contains either a list of psignals: three channels/orientations
+    """
+    
+#end signal class
 # ===================================================Global Functions=======================================================
 def ellip_filter(data, dt, *args, **kwargs):
     """

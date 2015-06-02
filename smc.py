@@ -4,13 +4,13 @@ from seism import *
 from scipy.signal import filtfilt, ellip
 
 def load_smc_v1(filename):
-    if not filename.endswith(".V1"):
-        print "[ERROR]: Invalid file name."
-        return 
+    # if not filename.endswith(".V1"):
+    #     print "[ERROR]: Invalid file name."
+    #     return 
     record_list = []
     
     # loads station into a string
-    fp = open('SampleFiles/' + filename, 'r')
+    fp = open(filename, 'r')
     channels = fp.read()
     fp.close()
 
@@ -106,14 +106,14 @@ def load_smc_v1(filename):
     return record_list, network, station_id
 
 def load_smc_v2(filename):
-    if not filename.endswith(".V2"):
-        print "[ERROR]: Invalid file name."
-        return 
+    # if not filename.endswith(".V2"):
+    #     print "[ERROR]: Invalid file name."
+    #     return 
 
     record_list = []
     
     # loads station into a string
-    fp = open('SampleFiles/' + filename, 'r')
+    fp = open(filename, 'r')
     channels = fp.read()
     fp.close()
 
@@ -327,7 +327,7 @@ def print_her(filename, record_list):
 
 
 
-def process_record_list(record_list):
+def process_record_list(network, station_id, record_list):
     """
     The function is to take a list of V1 records, then use their data to get velocity and displacement,
     then create precord objects, finally return a list of processed records. 
@@ -350,31 +350,25 @@ def process_record_list(record_list):
 
 
 
-record_list, network, station_id = load_smc_v1('NCNHC.V1')
-filename = network + "." + station_id + ".V1.her"
-print_her(filename, process_record_list(record_list))
-record_list, network, station_id = load_smc_v2('NCNHC.V2')
-filename = network + "." + station_id + ".V2.her"
-print_her(filename, record_list)
-record_list, network, station_id = load_smc_v1('CIQ0028.V1')
-filename = network + "." + station_id + ".V1.her"
-print_her(filename, process_record_list(record_list))
-
-
-
-# process_smc_v1(record_list, network, station_id)
-
-# velocity = record_list[0].integrate_accel()
-# record_list[0].integrate_velo(velocity)
-# record_list[0].print_attr()
-
-
+# record_list, network, station_id = load_smc_v1('NCNHC.V1')
+# filename = network + "." + station_id + ".V1.her"
+# print_her(filename, process_record_list(network, station_id, record_list))
+# record_list, network, station_id = load_smc_v2('NCNHC.V2')
+# filename = network + "." + station_id + ".V2.her"
+# print_her(filename, record_list)
 # record_list, network, station_id = load_smc_v1('CIQ0028.V1')
-# process_smc_v1(record_list, network, station_id)
+# filename = network + "." + station_id + ".V1.her"
+# print_her(filename, process_record_list(network, station_id, record_list))
+
+
+
+
 
 
 
 # TODO:
-# 1. 9 columns are too long to print ==> round to 7 decimals
-# 2. move all processing data function to class
-# 2. caller for input filenames 
+# try:
+#     fp = open("nother")
+# except IOError, e:
+#     print e.errno
+#     print e

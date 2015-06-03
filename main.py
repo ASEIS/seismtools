@@ -29,10 +29,11 @@ def read_list(file_list):
 		if os.path.isdir(f):
 			for fp in os.listdir(f):
 				file_list.append(f + '/' + fp)
-			print file_list
+			# print file_list
 
 		# if is a file 
 		elif os.path.isfile(f):
+			# print f 
 			# if the file is V1/raw data file: generate a list of records, text file for acceleration, and .her file 
 			if f.endswith(".V1") or f.endswith(".raw"):
 				record_list, network, station_id = load_smc_v1(f)
@@ -87,22 +88,33 @@ def compare1(compare_list):
 	The function is to call comparison between .HER files 
 
 	"""
-	for f1 in compare_list:
-		for f2 in compare_list:
-			# EXAMPLE: CI.Q0028.V1.her v.s. CI.Q0028.V2.her 
-			if f2 != f1 and f2[0:-5] == f1[0:-5]: 
-				compare_her(f1, f2)
+	while compare_list:
+		for f1 in compare_list:
+			for f2 in compare_list:
+				# EXAMPLE: CI.Q0028.V1.her v.s. CI.Q0028.V2.her 
+				if f2 != f1 and f2[0:-5] == f1[0:-5]: 
+					compare_her(f1, f2)
+					# compare_list.remove(f1)
+					compare_list.remove(f2)
+					break 
+			compare_list.remove(f1)
+			print compare_list
 
 def compare2(compare_list):
 	"""
 	The function is to call comparison between .TXT files 
-	"""
-	for f1 in compare_list:
-		for f2 in compare_list:
-			# EXAMPLE: CI.Q0028.V1N.txt v.s. CI.Q0028.V2N.txt 
-			if f2 != f1 and f2[:-6] == f1[:-6] and f1[-5:] == f2[-5:]: 
-				# print f1, f2 
-				compare_txt(f1, f2)
+	""" 
+	while compare_list:
+		for f1 in compare_list:
+			for f2 in compare_list:
+				# EXAMPLE: CI.Q0028.V1N.txt v.s. CI.Q0028.V2N.txt 
+				if f2 != f1 and f2[:-6] == f1[:-6] and f1[-5:] == f2[-5:]: 
+					compare_txt(f1, f2)
+					# compare_list.remove(f1)
+					compare_list.remove(f2)
+					break 
+			compare_list.remove(f1)
+			# print compare_list
 
 def print_unprocessed(filename):
     """
@@ -116,7 +128,8 @@ def print_unprocessed(filename):
 
 
 list1, list2 = read_list(file_list) 
-compare1(list1)
-compare2(list2)
+print list1, list2 
+# compare1(list1)
+# compare2(list2)
 
 

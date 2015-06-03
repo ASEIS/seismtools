@@ -35,9 +35,12 @@ def load_smc_v1(filename):
             return channels, 0
 
 
-        tmp = channels[i][3].split('.')
-        network = tmp[1]
-        station_id = tmp[2]
+        # tmp = channels[i][3].split('.')
+        # network = tmp[1]
+        # station_id = tmp[2]
+        network = filename.split('/')[-1].split('.')[0][0:2]
+        station_id = filename.split('/')[-1].split('.')[0][2:]
+
 
         # get location's latitude and longitude 
         tmp = channels[i][4].split()
@@ -102,7 +105,7 @@ def load_smc_v1(filename):
 
         record_list.append(record)
 
-    # return a list of records and corresponding network code and station id 
+    # return a list of records, and corresponding network code and station id 
     return record_list, network, station_id
 
 def load_smc_v2(filename):
@@ -140,8 +143,10 @@ def load_smc_v2(filename):
             return channels, 0
 
         # get network code and station id 
-        network = tmp[2].split('.')[1]
-        station_id = tmp[2].split('.')[2]
+        # network = tmp[2].split('.')[1]
+        # station_id = tmp[2].split('.')[2]
+        network = filename.split('/')[-1].split('.')[0][0:2]
+        station_id = filename.split('/')[-1].split('.')[0][2:]
 
         # get orientation, convert to int if it's digit 
         orientation = tmp[5]
@@ -222,8 +227,8 @@ def load_smc_v2(filename):
             orientation = 'Z'
         else:
             orientation = ' '
-        filename = network + "." + station_id + ".V2" + orientation + ".txt"
-        print_smc(filename, record)
+        # filename = network + "." + station_id + ".V2" + orientation + ".txt"
+        print_smc(network + "." + station_id + ".V2" + orientation + ".txt", record)
         record_list.append(precord)
 
     return record_list, network, station_id
@@ -259,6 +264,7 @@ def print_smc(filename, record):
         # f.write(str(d)+"\n")
         f.write(descriptor.format(float(d)))
     f.close()
+    print "*Generated .txt file at: " + "SampleOutputs/" + filename
 
 #end of print_smc
 
@@ -327,6 +333,7 @@ def print_her(filename, record_list):
     for c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 in zip(time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up):
         f.write(descriptor.format(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 ))
     f.close()
+    print "*Generated .her file at: " + "SampleOutputs/" + filename
 #end of print_her 
 
 

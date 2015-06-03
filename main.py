@@ -39,8 +39,8 @@ def read_list(file_list):
 				filename = network + "." + station_id + ".V1.her"
 				precord_list = process_record_list(network, station_id, record_list)
 				if precord_list == False:
-					pass 
-					# TODO: append the filename to unprocessed files 
+					print_unprocessed(f)
+					# append the filename to unprocessed files 
 				else: 
 					print_her(filename, precord_list) 
 
@@ -49,15 +49,12 @@ def read_list(file_list):
 				record_list, network, station_id = load_smc_v2(f)
 				filename = network + "." + station_id + ".V2.her"
 				if print_her(filename, record_list) == False:
-					pass 
-					# TODO: append the filename to unprocessed files 
+					print_unprocessed(f)
+					# append the filename to unprocessed files 
 
-			# if the file is .her file 
+			# if the file is .her file; append to list. save for comparison. 
 			elif f.endswith(".her"):
 				compare_list1.append(f)
-				# TODO: waiting for another her file to call compare()
-				pass 
-
 			else: 
 
 				fp = open(f, 'r')
@@ -74,9 +71,8 @@ def read_list(file_list):
 					else: 
 						print "[ERROR]: unable to recognize file type."
 						break 
-				if ftype == 'txt':
+				if ftype == 'txt': # append to list. save for comparison 
 					compare_list2.append(f)
-					# TODO: waiting for another her file to call compare()
 
 
 
@@ -89,9 +85,11 @@ def read_list(file_list):
 def compare1(compare_list):
 	"""
 	The function is to call comparison between .HER files 
+
 	"""
 	for f1 in compare_list:
 		for f2 in compare_list:
+			# EXAMPLE: CI.Q0028.V1.her v.s. CI.Q0028.V2.her 
 			if f2 != f1 and f2[0:-5] == f1[0:-5]: 
 				compare_her(f1, f2)
 
@@ -101,10 +99,20 @@ def compare2(compare_list):
 	"""
 	for f1 in compare_list:
 		for f2 in compare_list:
+			# EXAMPLE: CI.Q0028.V1N.txt v.s. CI.Q0028.V2N.txt 
 			if f2 != f1 and f2[:-6] == f1[:-6] and f1[-5:] == f2[-5:]: 
 				# print f1, f2 
 				compare_txt(f1, f2)
 
+def print_unprocessed(filename):
+    """
+    The function generates a file containing a list of files that were not processed by this program. 
+    """
+    # generate a text file (header + data)
+    f = open('unprocessed_files.txt', 'a')
+    f.write(filename +"\n")
+    f.close()
+# end of print_unprocessed 
 
 
 list1, list2 = read_list(file_list) 

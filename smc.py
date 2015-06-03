@@ -253,9 +253,13 @@ def print_smc(filename, record):
     header = "#" + record.date + " " + record.time + " Samples: " + str(record.samples) + " dt: " + str(record.dt) + "\n"
     f = open('SampleOutputs/' + filename, 'w')
     f.write(header)
+    # descriptor = '{:>12.7f}' + '\n'
+    descriptor = '{:>f}' + '\n'
     for d in np.nditer(record.data):
-        f.write(str(d)+"\n")
+        # f.write(str(d)+"\n")
+        f.write(descriptor.format(float(d)))
     f.close()
+
 #end of print_smc
 
 def print_her(filename, record_list):
@@ -265,8 +269,8 @@ def print_her(filename, record_list):
         # if there are more than three channels, save for later 
     if len(record_list) > 3:
         print "==[The function is processing files with 3 channels only.]=="
-        return 
-    # header = "#time\tdis_ns\tdis_ew\tdis_up\tvel_ns\tvel_ew\tvel_up\tacc_ns\tacc_ew\tacc_up\n"
+        return False 
+
     f = open('SampleOutputs/' + filename, 'w')
     # f.write(header)
     dis_ns = []
@@ -332,10 +336,15 @@ def process_record_list(network, station_id, record_list):
     The function is to take a list of V1 records, then use their data to get velocity and displacement,
     then create precord objects, finally return a list of processed records. 
     """
+    if len(record_list) > 3:
+        print "==[The function is processing files with 3 channels only.]=="
+        return False 
     processed_list = []
     for record in record_list:
         # generate file for record 
         filename = record.process_smc_v1(network, station_id)
+        if filename == False: # if contains channel with orientation 60 etc. 
+            return False 
         print_smc(filename, record)
 
         # get velocity and displacement

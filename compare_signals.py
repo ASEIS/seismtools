@@ -12,7 +12,12 @@ def read_file(filename):
 	"""
 	The function is to read general 1-column text files. Return a signal object. 
 	"""
-	f = open(filename, 'r')
+	try:
+		f = open(filename, 'r')
+	except IOError, e:
+		print e
+		return 
+	
 	samples = 0 
 	dt = 0.0 
 	data = []
@@ -35,11 +40,10 @@ def read_her_file(filename):
 	"""
 	The function is to read 10-column .her files. Return a list of psignals for each orientation/channel. 
 	"""
+	# TODO: add exception 
 	time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up = np.loadtxt(filename, skiprows = 1, unpack = True)
 	samples = dis_ns.size 
 	dt = time[1]
-
-	# TODO: return list of records or station object 
 
 	# samples, dt, data, acceleration, velocity, displacement 
 	psignal_ns = seism_psignal(samples, dt, np.c_[acc_ns, vel_ns, dis_ns], 'a', acc_ns, vel_ns, dis_ns)

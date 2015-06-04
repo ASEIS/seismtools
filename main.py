@@ -29,7 +29,6 @@ def read_list(file_list):
 		if os.path.isdir(f):
 			for fp in os.listdir(f):
 				file_list.append(f + '/' + fp)
-			# print file_list
 
 		# if is a file 
 		elif os.path.isfile(f):
@@ -57,8 +56,11 @@ def read_list(file_list):
 			elif f.endswith(".her"):
 				compare_list1.append(f)
 			else: 
+				try:
+					fp = open(f, 'r')
+				except IOError, e:
+					print e
 
-				fp = open(f, 'r')
 				ftype = ' '
 				for line in fp:
 					# if the file contains a list of filenames 
@@ -128,8 +130,9 @@ def print_unprocessed(filename):
 
 
 list1, list2 = read_list(file_list) 
-print list1, list2 
+# print list1, list2 
 # compare1(list1)
 # compare2(list2)
 
 
+# TODO: update exception 

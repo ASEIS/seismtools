@@ -10,7 +10,12 @@ def load_smc_v1(filename):
     record_list = []
     
     # loads station into a string
-    fp = open(filename, 'r')
+    try:
+        fp = open(filename, 'r')
+    except IOError, e:
+        print e
+        # return 
+        
     channels = fp.read()
     fp.close()
 
@@ -116,7 +121,12 @@ def load_smc_v2(filename):
     record_list = []
     
     # loads station into a string
-    fp = open(filename, 'r')
+    try:
+        fp = open(filename, 'r')
+    except IOError, e:
+        print e
+        # return 
+
     channels = fp.read()
     fp.close()
 
@@ -256,7 +266,12 @@ def print_smc(filename, record):
     """
     # generate a text file (header + data)
     header = "#" + record.date + " " + record.time + " Samples: " + str(record.samples) + " dt: " + str(record.dt) + "\n"
-    f = open('SampleOutputs/' + filename, 'w')
+    try:
+        f = open('SampleOutputs/' + filename, 'w')
+    except IOError, e:
+        print e
+        # return 
+    
     f.write(header)
     # descriptor = '{:>12.7f}' + '\n'
     descriptor = '{:>f}' + '\n'
@@ -277,8 +292,12 @@ def print_her(filename, record_list):
         print "==[The function is processing files with 3 channels only.]=="
         return False 
 
-    f = open('SampleOutputs/' + filename, 'w')
-    # f.write(header)
+    try:
+        f = open('SampleOutputs/' + filename, 'w')
+    except IOError, e:
+        print e
+        # return 
+
     dis_ns = []
     vel_ns = []
     acc_ns = []
@@ -382,9 +401,3 @@ def process_record_list(network, station_id, record_list):
 
 
 
-# TODO:
-# try:
-#     fp = open("nother")
-# except IOError, e:
-#     print e.errno
-#     print e

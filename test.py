@@ -1,7 +1,3 @@
 #!/usr/bin/env python
-try:
-    fp = open("nother")
-except IOError, e:
-    # print e.errno
-    print e
-
+import os 
+print os.stat("SampleFiles/foo").st_size == 0

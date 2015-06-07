@@ -43,8 +43,8 @@ def load_smc_v1(filename):
         # tmp = channels[i][3].split('.')
         # network = tmp[1]
         # station_id = tmp[2]
-        network = filename.split('/')[-1].split('.')[0][0:2]
-        station_id = filename.split('/')[-1].split('.')[0][2:]
+        network = filename.split('/')[-1].split('.')[0][0:2].upper()
+        station_id = filename.split('/')[-1].split('.')[0][2:].upper()
 
 
         # get location's latitude and longitude 
@@ -155,8 +155,8 @@ def load_smc_v2(filename):
         # get network code and station id 
         # network = tmp[2].split('.')[1]
         # station_id = tmp[2].split('.')[2]
-        network = filename.split('/')[-1].split('.')[0][0:2]
-        station_id = filename.split('/')[-1].split('.')[0][2:]
+        network = filename.split('/')[-1].split('.')[0][0:2].upper()
+        station_id = filename.split('/')[-1].split('.')[0][2:].upper()
 
         # get orientation, convert to int if it's digit 
         orientation = tmp[5]

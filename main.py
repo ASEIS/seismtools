@@ -8,22 +8,30 @@ import os
 from smc import *
 from compare_signals import *
 
-# if filenam is not given with command 
-if len(sys.argv) == 1:
-	file_list = raw_input('== Enter the file\directory name: ')
-	file_list = file_list.split()
+file_list = []
+compare_list1 = []
+compare_list2 = []
 
-# one or more filenames are given; get a list of them
-else: 
-	file_list = sys.argv[1:]
+def get_filename(): 
+	global file_list
+	# if filenam is not given with command 
+	if len(sys.argv) == 1:
+		file_list = raw_input('== Enter the file\directory name: ')
+		file_list = file_list.split()
+
+	# one or more filenames are given; get a list of them
+	else: 
+		file_list = sys.argv[1:]
+
 
 def read_list(file_list):
 	"""
 	The function is to read a list of files/directory and check their 
 	types/contents to call corresponding functions. 
 	"""
-	compare_list1 = []
-	compare_list2 = []
+	global compare_list1
+	global compare_list2
+
 	for f in file_list:
 		# if is a directory; read all files\directories in the directory and append them to file_list
 		if os.path.isdir(f):
@@ -56,11 +64,12 @@ def read_list(file_list):
 			elif f.endswith(".her"):
 				compare_list1.append(f)
 			else: 
+				# fp = open()
 				try:
 					fp = open(f, 'r')
 				except IOError, e:
 					print e
-
+					pass 
 				ftype = ' '
 				for line in fp:
 					# if the file contains a list of filenames 
@@ -83,7 +92,7 @@ def read_list(file_list):
 			print "[ERROR]: no such file or directory."
 			return 
 	# return a list of her files and a list of txt files that may be used for comparison 
-	return compare_list1, compare_list2
+	# return compare_list1, compare_list2
 
 def compare1(compare_list):
 	"""
@@ -100,7 +109,7 @@ def compare1(compare_list):
 					compare_list.remove(f2)
 					break 
 			compare_list.remove(f1)
-			print compare_list
+			# print compare_list
 
 def compare2(compare_list):
 	"""
@@ -128,11 +137,12 @@ def print_unprocessed(filename):
     f.close()
 # end of print_unprocessed 
 
+# get_filename()
+# read_list(file_list) 
+# print file_list
 
-list1, list2 = read_list(file_list) 
-# print list1, list2 
-# compare1(list1)
-# compare2(list2)
+# compare1(compare_list1)
+# compare2(compare_list2)
 
 
 # TODO: update exception 

@@ -2,6 +2,7 @@
 from __future__ import division
 from seism import *
 from scipy.signal import filtfilt, ellip
+import os
 
 def load_smc_v1(filename):
     # if not filename.endswith(".V1"):
@@ -38,6 +39,8 @@ def load_smc_v1(filename):
         ctype = channels[i][0][0:24].lower()
         if ctype != "uncorrected accelerogram":
             return channels, 0
+        else:
+            dtype = 'a'
 
 
         # tmp = channels[i][3].split('.')
@@ -58,16 +61,16 @@ def load_smc_v1(filename):
         station = channels[i][5][0:40].strip()
 
         # get data type 
-        tmp = channels[i][5].split()
-        dtype = tmp[-1]
-        if dtype == "Acceleration": 
-        	dtype = 'a'
-        elif dtype == "Velocity": 
-        	dtype = 'v'
-        elif dtype == "Displacement": 
-        	dtype = 'd'
-        else: 
-        	dtype = "Unknown"
+        # tmp = channels[i][5].split()
+        # dtype = tmp[-1]
+        # if dtype == "Acceleration": 
+        # 	dtype = 'a'
+        # elif dtype == "Velocity": 
+        # 	dtype = 'v'
+        # elif dtype == "Displacement": 
+        # 	dtype = 'd'
+        # else: 
+        # 	dtype = "Unknown"
 
 
         # get orientation, convert to int if it's digit 
@@ -75,6 +78,12 @@ def load_smc_v1(filename):
         orientation = tmp[2]
         if orientation.isdigit():
             orientation = int(orientation)
+        location = channels[i][6][36:].strip()
+        # if 'Depth' in location: 
+        #     depth = float(location.split()[2])
+        # else:
+        #     pass 
+            # TODO: set location 
 
         # get date and time; set to fixed format 
         start_time = channels[i][3][37:80].split()
@@ -159,9 +168,9 @@ def load_smc_v2(filename):
         station_id = filename.split('/')[-1].split('.')[0][2:].upper()
 
         # get orientation, convert to int if it's digit 
-        orientation = tmp[5]
-        if orientation.isdigit():
-            orientation = int(orientation)
+        # orientation = tmp[5]
+        # if orientation.isdigit():
+        #     orientation = int(orientation)
 
 
         # get location's latitude and longitude 
@@ -169,6 +178,19 @@ def load_smc_v2(filename):
         location_lati = tmp[3][:-1]
         location_longi = tmp[4]
         depth = 0.0
+
+        # get orientation, convert to int if it's digit 
+        tmp = channels[i][7].split()
+        orientation = tmp[2]
+        if orientation.isdigit():
+            orientation = int(orientation)
+        location = channels[i][7][36:].strip()
+        print location 
+        # if 'Depth' in location: 
+        #     depth = float(location.split()[2])
+        # else:
+        #     pass 
+            # TODO: set location 
 
 
         # get station name
@@ -264,10 +286,13 @@ def print_smc(filename, record):
     """
     The function generates files for each channel/record 
     """
+    # check existence of target directory 
+    if not os.path.exists('outputs'):
+        os.makedirs('outputs')
     # generate a text file (header + data)
     header = "#" + record.date + " " + record.time + " Samples: " + str(record.samples) + " dt: " + str(record.dt) + "\n"
     try:
-        f = open('SampleOutputs/' + filename, 'w')
+        f = open('outputs/' + filename, 'w')
     except IOError, e:
         print e
         # return 
@@ -275,11 +300,12 @@ def print_smc(filename, record):
     f.write(header)
     # descriptor = '{:>12.7f}' + '\n'
     descriptor = '{:>f}' + '\n'
-    for d in np.nditer(record.data):
-        # f.write(str(d)+"\n")
-        f.write(descriptor.format(float(d)))
+    if record.data.size != 0: 
+        for d in np.nditer(record.data):
+            # f.write(str(d)+"\n")
+            f.write(descriptor.format(float(d)))
     f.close()
-    print "*Generated .txt file at: " + "SampleOutputs/" + filename
+    print "*Generated .txt file at: " + "outputs/" + filename
 
 #end of print_smc
 
@@ -287,13 +313,16 @@ def print_her(filename, record_list):
     """
     The function generates files for each station (with all three channels included)
     """
-        # if there are more than three channels, save for later 
+     # if there are more than three channels, save for later 
     if len(record_list) > 3:
         print "==[The function is processing files with 3 channels only.]=="
         return False 
 
+    # check existence of target directory 
+    if not os.path.exists('outputs'):
+        os.makedirs('outputs')
     try:
-        f = open('SampleOutputs/' + filename, 'w')
+        f = open('outputs/' + filename, 'w')
     except IOError, e:
         print e
         # return 
@@ -352,7 +381,7 @@ def print_her(filename, record_list):
     for c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 in zip(time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up):
         f.write(descriptor.format(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 ))
     f.close()
-    print "*Generated .her file at: " + "SampleOutputs/" + filename
+    print "*Generated .her file at: " + "outputs/" + filename
 #end of print_her 
 
 
@@ -385,10 +414,10 @@ def process_record_list(network, station_id, record_list):
 
 
 
-# record_list, network, station_id = load_smc_v1('NCNHC.V1')
+# record_list, network, station_id = load_smc_v1('CIRSB.D2.RAW')
 # filename = network + "." + station_id + ".V1.her"
 # print_her(filename, process_record_list(network, station_id, record_list))
-# record_list, network, station_id = load_smc_v2('NCNHC.V2')
+# record_list, network, station_id = load_smc_v2('CE14783.V2')
 # filename = network + "." + station_id + ".V2.her"
 # print_her(filename, record_list)
 # record_list, network, station_id = load_smc_v1('CIQ0028.V1')

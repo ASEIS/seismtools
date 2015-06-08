@@ -1,3 +1,4 @@
 #!/usr/bin/env python
 import os 
-print os.stat("SampleFiles/foo").st_size == 0
+if not os.path.exists('directory'):
+    os.makedirs('directory')

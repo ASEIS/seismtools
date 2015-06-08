@@ -11,6 +11,12 @@ file_list = []
 
 def get_filename(): 
 	global file_list
+	# clear the content of unprocessed_files if it exists 
+	try: 
+		open('unprocessed_files.txt', 'w').close()
+	except IOError, e:
+		pass 
+
 	# if filenam is not given with command 
 	if len(sys.argv) == 1:
 		file_list = raw_input('== Enter the file\directory name: ')

@@ -33,10 +33,8 @@ class seism_signal(object):
 
     def set_data(self, data):
         # check if the data passed is a numpy array
-        # if not isinstance(sdata, np.array):
         if not isinstance(data, np.ndarray): 
             print "\nError with signal data: not a numpy array.\n"
-        #     return 3
         self.data = data
     #end set_data
 

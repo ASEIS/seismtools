@@ -11,11 +11,8 @@ file_list = []
 
 def get_filename(): 
 	global file_list
-	# clear the content of unprocessed_files if it exists 
-	try: 
-		open('unprocessed_files.txt', 'w').close()
-	except IOError, e:
-		pass 
+	clear('unprocessed_files.txt')
+	clear('warning.txt')
 
 	# if filenam is not given with command 
 	if len(sys.argv) == 1:
@@ -90,6 +87,16 @@ def print_unprocessed(filename):
     f.write(filename +"\n")
     f.close()
 # end of print_unprocessed 
+
+def clear(filename):
+	# clear the content of a file if it exists 
+	try: 
+		open(filename, 'w').close()
+	except IOError, e:
+		pass
+# end of clear 
+
+
 
 get_filename()
 read_list(file_list) 

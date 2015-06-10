@@ -3,6 +3,7 @@ from __future__ import division
 from seism import *
 from scipy.signal import filtfilt, ellip
 import os
+import math 
 
 def load_smc_v1(filename):
     # if not filename.endswith(".V1"):
@@ -389,17 +390,23 @@ def print_her(filename, record_list):
 def process_record_list(network, station_id, record_list):
     """
     The function is to take a list of V1 records, then use their data to get velocity and displacement,
-    then create precord objects, finally return a list of processed records. 
+    then create precord objects, finally return a list of them. 
+    If encounter file with more than three channels, print message and return False.
+    If encounter special orientations, rotate by matrix, and recursivly calling the function to continue processing. 
     """
-    if len(record_list) > 3:
+    rotate_flag = False 
+    if len(record_list) != 3:
         print "==[The function is processing files with 3 channels only.]=="
         return False 
     processed_list = []
+
     for record in record_list:
         # generate file for record 
         filename = record.process_smc_v1(network, station_id)
         if filename == False: # if contains channel with orientation 60 etc. 
-            return False 
+            rotate_flag = True 
+            break 
+            # return False 
         print_smc(filename, record)
 
         # get velocity and displacement
@@ -407,20 +414,50 @@ def process_record_list(network, station_id, record_list):
         displacement = record.integrate(velocity)
         precord = seism_precord(record.samples, record.dt, record.data, record.type, accel = record.data, displ = displacement, velo = velocity, 
             orientation = record.orientation, date = record.date, time = record.time, depth = record.depth, latitude = record.location_lati, longitude = record.location_longi)
-
         processed_list.append(precord)
+
+    if rotate_flag:
+        tmp = []
+        for record in record_list:
+            if record.orientation != 'Up':
+                tmp.append(record)
+                record_list.remove(record)
+        x = tmp[0].orientation
+        y = tmp[1].orientation
+        if x > y: 
+            list(reversed(tmp))
+
+        # rotate 
+        matrix = np.array([(math.cos(math.radians(x)), -math.sin(math.radians(x))), (math.sin(math.radians(x)), math.cos(math.radians(x)))])
+        data = matrix.dot([tmp[0].data, tmp[1].data])
+
+        # transform the first record with North orientation 
+        tmp[0].data = data[0]
+        tmp[0].orientation = 0
+
+        # transform the second record with East orientation
+        tmp[1].data = data[1]
+        tmp[1].orientation = 90
+
+        record_list += tmp 
+        return process_record_list(network, station_id, record_list) # recursively calling the function to continue processing
+
     return processed_list
 #end process_record_list 
 
 
-
+# =================================== Test Cases ====================================
 # record_list, network, station_id = load_smc_v1('CIRSB.D2.RAW')
 # filename = network + "." + station_id + ".V1.her"
 # print_her(filename, process_record_list(network, station_id, record_list))
+
+
 # record_list, network, station_id = load_smc_v2('CE14783.V2')
 # filename = network + "." + station_id + ".V2.her"
 # print_her(filename, record_list)
-# record_list, network, station_id = load_smc_v1('CIQ0028.V1')
+
+
+# record_list, network, station_id = load_smc_v1('CE12116.RAW')
 # filename = network + "." + station_id + ".V1.her"
 # print_her(filename, process_record_list(network, station_id, record_list))
 

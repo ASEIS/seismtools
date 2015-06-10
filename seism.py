@@ -334,7 +334,7 @@ class seism_record(seism_signal):
             orientation = 'Z'
             self.data = self.data*-1
         else: 
-             # handling degrees such as 60, 120 etc. 
+             # handling other degrees.
              return False 
              pass
 

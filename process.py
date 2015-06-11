@@ -11,17 +11,30 @@ file_list = []
 
 def get_filename(): 
 	global file_list
+	destination = ''
 	clear('unprocessed_files.txt')
 	clear('warning.txt')
 
 	# if filenam is not given with command 
 	if len(sys.argv) == 1:
-		file_list = raw_input('== Enter the file\directory name: ')
+		while not file_list: 
+			file_list = raw_input('== Enter the file\directory name: ')
 		file_list = file_list.split()
 
 	# one or more filenames are given; get a list of them
 	else: 
 		file_list = sys.argv[1:]
+
+	while not destination: 
+		destination = raw_input('== Enter name of the directory to store outputs: ')
+	# check existence of target directory 
+	if not os.path.exists(destination):
+		os.makedirs(destination)
+
+	get_destination(destination)
+
+
+
 
 
 def read_list(file_list):

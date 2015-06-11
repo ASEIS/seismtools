@@ -5,8 +5,13 @@ from scipy.signal import filtfilt, ellip
 import os
 import math 
 
-# stype not in self.record_type:
 discard = {'dam': 'Dam', 'Fire Sta': 'Fire Station', 'Acosta Res': 'Acosta Res', 'Bldg': 'Building', 'Br': 'Interchange Bridge'}
+destination = '' 
+def get_destination(d):
+    """The function is to get the user input from process.py."""
+    global destination
+    destination = d 
+
 
 def load_smc_v1(filename):
     record_list = []
@@ -256,7 +261,7 @@ def load_smc_v2(filename):
             orientation = 'Z'
         else:
             orientation = ' '
-        # filename = network + "." + station_id + ".V2" + orientation + ".txt"
+
         print_smc(network + "." + station_id + ".V2" + orientation + ".txt", record)
         record_list.append(precord)
 
@@ -283,13 +288,11 @@ def print_smc(filename, record):
     """
     The function generates .txt files for each channel/record 
     """
-    # check existence of target directory 
-    if not os.path.exists('outputs'):
-        os.makedirs('outputs')
+    global destination
     # generate a text file (header + data)
     header = "#" + record.date + " " + record.time + " Samples: " + str(record.samples) + " dt: " + str(record.dt) + "\n"
     try:
-        f = open('outputs/' + filename, 'w')
+        f = open(destination + '/' + filename, 'w')
     except IOError, e:
         print e
         # return 
@@ -302,7 +305,7 @@ def print_smc(filename, record):
             # f.write(str(d)+"\n")
             f.write(descriptor.format(float(d)))
     f.close()
-    print "*Generated .txt file at: " + "outputs/" + filename
+    print "*Generated .txt file at: " + destination + "/" + filename
 
 #end of print_smc
 
@@ -310,16 +313,14 @@ def print_her(filename, record_list):
     """
     The function generates .her files for each station (with all three channels included)
     """
+    global destination
      # if there are more than three channels, save for later 
     if len(record_list) > 3:
         print "==[The function is processing files with 3 channels only.]=="
         return False 
 
-    # check existence of target directory 
-    if not os.path.exists('outputs'):
-        os.makedirs('outputs')
     try:
-        f = open('outputs/' + filename, 'w')
+        f = open(destination + '/' + filename, 'w')
     except IOError, e:
         print e
         # return 
@@ -367,7 +368,7 @@ def print_her(filename, record_list):
     for c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 in zip(time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up):
         f.write(descriptor.format(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 ))
     f.close()
-    print "*Generated .her file at: " + "outputs/" + filename
+    print "*Generated .her file at: " + destination + "/" + filename
 #end of print_her 
 
 def rotate(record_list):

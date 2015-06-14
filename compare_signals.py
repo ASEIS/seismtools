@@ -76,12 +76,52 @@ def read_her_file(filename):
 
 
 
-def plot(title, samples1, dt1, data1, samples2, dt2, data2):
-	plt.title(title)
-	t1 = np.arange(0, samples1*dt1, dt1)
-	t2 = np.arange(0, samples2*dt2, dt2)
-	plt.plot(t1,data1,'r',t2,data2,'b')
+# def plot(title, samples1, dt1, data1, samples2, dt2, data2):
+# 	plt.title(title)
+# 	t1 = np.arange(0, samples1*dt1, dt1)
+# 	t2 = np.arange(0, samples2*dt2, dt2)
+# 	plt.plot(t1,data1,'r',t2,data2,'b')
+# 	plt.show()
+
+	
+
+def plot(title, data1, data2, t1, t2):
+	"""
+	This function is to plot Signals with Fourier Amplitude Spectura. 
+	title = a list of titles for each subplot 
+	data1, data2 = lists of signals for each subplots 
+	"""
+	# check instance type and avoid IndexOutOfRange Error
+	for data in data1, data2: 
+		if not isinstance(data, list) or len(data) < len(title):
+			print "[ERROR]: invalid instance for plot."
+
+	plt.close('all')
+
+	# for data from .txt files 
+	if len(title) == 2: 
+		f, axarr = plt.subplots(nrows = 1, ncols = 2, figsize = (12, 5))
+		axarr[0].set_title(title[0])
+		axarr[0].plot(t1,data1[0],'r',t2,data2[0],'b')
+		axarr[1].set_title(title[1])
+		axarr[1].plot(t1,data1[1],'r',t2,data2[1],'b')
+		f.tight_layout()
+
+	# for data from .her files 
+	else: 
+		f, axarr = plt.subplots(nrows = len(title), ncols = 2, figsize = (12, 16))
+		for i in range(0, len(title)):
+			axarr[i][0].set_title(title[i])
+			axarr[i][0].plot(t1,data1[i],'r',t2,data2[i],'b')
+		f.tight_layout()
+
 	plt.show()
+# end of plot 
+
+
+
+
+
 
 
 def compare_txt(file1, file2):
@@ -96,13 +136,42 @@ def compare_txt(file1, file2):
 	if (not isinstance(signal1, seism_signal)) or (not isinstance(signal2, seism_signal)):
 		print "[ERROR]: Invalid instance type: can only compare signal objects."
 		return 
+
+	title = ['Acceleration ONLY: \n' + file1 + ' ' + file2, 'Fourier Amplitude Spectura']
 	samples1 = signal1.samples
-	data1 = signal1.data
+	data1 = [signal1.data]
 	dt1 = signal1.dt
 	samples2 = signal2.samples
-	data2 = signal2.data
+	data2 = [signal2.data]
 	dt2 = signal2.dt
-	plot('Acceleration: \n' + file1 + ' ' + file2, samples1, dt1, data1, samples2, dt2, data2)
+	t1 = np.arange(0, samples1*dt1, dt1)
+	t2 = np.arange(0, samples2*dt2, dt2)
+
+	# function [f,fs] = fourierbounded(s,fmin,fmax,dt,points);
+
+	fas1 = abs(np.fft.fft(signal1.data))*dt1
+	fas2 = abs(np.fft.fft(signal2.data))*dt2
+	data1.append(fas1)
+	data2.append(fas2)
+
+# fft_s(:,1) = fft(s(:,1),points);
+# afs_s = abs(fft_s)*dt; 
+
+
+# freq = (1/dt)*(0:points-1)/points;
+# # freq = freq';
+
+# deltaf = (1/dt)/points;
+
+# ini = fix(fmin/deltaf)+1;
+# fin = fix(fmax/deltaf);
+
+# fs = afs_s(ini:fin,:);
+# f  = freq(ini:fin,:);
+
+	# plot('Acceleration: \n' + file1 + ' ' + file2, samples1, dt1, data1, samples2, dt2, data2)
+	plot(title, data1, data2, t1, t2)
+
 # end of compare_txt
 
 
@@ -121,22 +190,41 @@ def compare_her(file1, file2):
 	samples2 = station2[0].samples
 	dt2 = station2[0].dt
 
+	t1 = np.arange(0, samples1*dt1, dt1)
+	t2 = np.arange(0, samples2*dt2, dt2)
+
 	for i in range(0, 3):
 		if (not isinstance(station1[i], seism_signal)) or (not isinstance(station2[i], seism_signal)):
 			print "[ERROR]: Invalid instance type: can only compare psignal objects."
 			return 
 
-	plot('Displacement in N/S: \n' + file1 + ' ' + file2, samples1, dt1, station1[0].displ, samples2, dt2, station2[0].displ) #displacement 
-	plot('Displacement in E/W: \n' + file1 + ' ' + file2, samples1, dt1, station1[1].displ, samples2, dt2, station2[1].displ) 
-	plot('Displacement in Up/Down: \n' + file1 + ' ' + file2, samples1, dt1, station1[2].displ, samples2, dt2, station2[2].displ) 
 
-	plot('Velocity in N/S: \n' + file1 + ' ' + file2, samples1, dt1, station1[0].velo, samples2, dt2, station2[0].velo) #velocity 
-	plot('Velocity in E/W: \n' + file1 + ' ' + file2, samples1, dt1, station1[1].velo, samples2, dt2, station2[1].velo) 
-	plot('Velocity in Up/Down: \n' + file1 + ' ' + file2, samples1, dt1, station1[2].velo, samples2, dt2, station2[2].velo) 
+	title = ['Displacement in N/S: ', 'Displacement in E/W: ', 'Displacement in Up/Down: ']
+	data1 = [station1[0].displ, station1[1].displ, station1[2].displ]
+	data2 = [station2[0].displ, station2[1].displ, station2[2].displ]
+	plot(title, data1, data2, t1, t2)
 
-	plot('Acceleration in N/S: \n' + file1 + ' ' + file2, samples1, dt1, station1[0].accel, samples2, dt2, station2[0].accel) #acceleration  
-	plot('Acceleration in E/W: \n' + file1 + ' ' + file2, samples1, dt1, station1[1].accel, samples2, dt2, station2[1].accel) 
-	plot('Acceleration in Up/Down: \n' + file1 + ' ' + file2, samples1, dt1, station1[2].accel, samples2, dt2, station2[2].accel) 
+	title = ['Velocity in N/S: ', 'Velocity in E/W: ', 'Velocity in Up/Down: ']
+	data1 = [station1[0].velo, station1[1].velo, station1[2].velo]
+	data2 = [station2[0].velo, station2[1].velo, station2[2].velo]
+	plot(title, data1, data2, t1, t2)
+
+	title = ['Acceleration in N/S: ', 'Acceleration in E/W: ', 'Acceleration in Up/Down: ']
+	data1 = [station1[0].accel, station1[1].accel, station1[2].accel]
+	data2 = [station2[0].accel, station2[1].accel, station2[2].accel]
+	plot(title, data1, data2, t1, t2)
+
+	# plot('Displacement in N/S: \n' + file1 + ' ' + file2, samples1, dt1, station1[0].displ, samples2, dt2, station2[0].displ) #displacement 
+	# plot('Displacement in E/W: \n' + file1 + ' ' + file2, samples1, dt1, station1[1].displ, samples2, dt2, station2[1].displ) 
+	# plot('Displacement in Up/Down: \n' + file1 + ' ' + file2, samples1, dt1, station1[2].displ, samples2, dt2, station2[2].displ) 
+
+	# plot('Velocity in N/S: \n' + file1 + ' ' + file2, samples1, dt1, station1[0].velo, samples2, dt2, station2[0].velo) #velocity 
+	# plot('Velocity in E/W: \n' + file1 + ' ' + file2, samples1, dt1, station1[1].velo, samples2, dt2, station2[1].velo) 
+	# plot('Velocity in Up/Down: \n' + file1 + ' ' + file2, samples1, dt1, station1[2].velo, samples2, dt2, station2[2].velo) 
+
+	# plot('Acceleration in N/S: \n' + file1 + ' ' + file2, samples1, dt1, station1[0].accel, samples2, dt2, station2[0].accel) #acceleration  
+	# plot('Acceleration in E/W: \n' + file1 + ' ' + file2, samples1, dt1, station1[1].accel, samples2, dt2, station2[1].accel) 
+	# plot('Acceleration in Up/Down: \n' + file1 + ' ' + file2, samples1, dt1, station1[2].accel, samples2, dt2, station2[2].accel) 
 # end of compare_her
 
 

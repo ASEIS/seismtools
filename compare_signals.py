@@ -180,6 +180,7 @@ def plot_stations(station1, station2):
 
 
 def test(psignal):
+	"""to test with psignal's data"""
 	print psignal.data[:,0], psignal.data[:,1], psignal.data[:,2]
 	print psignal.accel
 	print psignal.velo
@@ -188,8 +189,6 @@ def test(psignal):
 	print (psignal.data[:,1]==psignal.velo).all()
 	print (psignal.data[:,2]==psignal.accel).all()
 	print psignal.data.shape[1]
-
-
 
 
 def compare_txt(file1, file2):
@@ -211,7 +210,6 @@ def compare_txt(file1, file2):
 
 
 
-
 def compare_her(file1, file2):
 	# revert the order of files to V1, V2
 	if 'V1' not in file1.split('.')[-2]: 
@@ -227,4 +225,14 @@ def compare_her(file1, file2):
 
 	# test(station1[0])
 # end of compare_her
+
+def set_bound(f1, f2): 
+	"""The function is used to get fmin and fmax from compare.py"""
+	global fmin 
+	global fmax 
+	fmin = f1 
+	fmax = f2
+
+	print fmin, fmax 
+# end of set_bound
 

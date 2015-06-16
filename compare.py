@@ -16,12 +16,31 @@ def get_filename():
 	global file_list
 	# if filenam is not given with command 
 	if len(sys.argv) == 1:
-		file_list = raw_input('== Enter the file\directory name: ')
+		while not file_list: 
+			file_list = raw_input('== Enter the file\directory name: ')
 		file_list = file_list.split()
 
 	# one or more filenames are given; get a list of them
 	else: 
 		file_list = sys.argv[1:]
+
+
+def get_bound():
+	fmin = raw_input('== Enter fmin for FAS: ')
+	fmax = raw_input('== Enter fmax for FAS: ')
+	try: 
+		fmin = float(fmin)
+		fmax = float(fmax)
+	except ValueError:
+		print "[ERROR]: invalid input type: floats or integers ONLY."
+		return get_bound()
+
+	while fmin >= fmax:
+		print "[ERROR]: fmax must be greater than fmin."
+		return get_bound()
+
+	set_bound(fmin, fmax)
+
 
 
 def read_list(file_list):
@@ -115,12 +134,10 @@ def compare2(compare_list):
 
 
 get_filename()
+get_bound()
 read_list(file_list) 
 
 compare1(compare_list1)
-# fmin fmax 
-# 0.05 - 5
-# plot from 0- fend 
 compare2(compare_list2)
 
 

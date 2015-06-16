@@ -118,6 +118,9 @@ get_filename()
 read_list(file_list) 
 
 compare1(compare_list1)
+# fmin fmax 
+# 0.05 - 5
+# plot from 0- fend 
 compare2(compare_list2)
 
 

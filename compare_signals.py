@@ -6,7 +6,11 @@
 # ==========================================================================
 import numpy as np
 import matplotlib.pyplot as plt
+import math 
 from seism import *
+
+fmin = 0.05 
+fmax = 5.0 
 
 def read_file(filename): 
 	"""
@@ -46,115 +50,144 @@ def read_her_file(filename):
 	dt = time[1]
 
 	# samples, dt, data, acceleration, velocity, displacement 
-	psignal_ns = seism_psignal(samples, dt, np.c_[acc_ns, vel_ns, dis_ns], 'a', acc_ns, vel_ns, dis_ns)
-	psignal_ew = seism_psignal(samples, dt, np.c_[acc_ew, vel_ew, dis_ew], 'a', acc_ew, vel_ew, dis_ew)
-	psignal_up = seism_psignal(samples, dt, np.c_[acc_up, vel_up, dis_up], 'a', acc_up, vel_up, dis_up)
+	psignal_ns = seism_psignal(samples, dt, np.c_[dis_ns, vel_ns, acc_ns], 'a', acc_ns, vel_ns, dis_ns)
+	psignal_ew = seism_psignal(samples, dt, np.c_[dis_ew, vel_ew, acc_ew], 'a', acc_ew, vel_ew, dis_ew)
+	psignal_up = seism_psignal(samples, dt, np.c_[dis_up, vel_up, acc_up], 'a', acc_up, vel_up, dis_up)
 
 	station = [psignal_ns, psignal_ew, psignal_up]
 	# return samples, dt, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up
 	return station 
 
 
-# def plot(title, signal1, signal2):
-# 	if (not isinstance(signal1, seism_signal)) or (not isinstance(signal2, seism_signal)):
-# 		print "[ERROR]: Invalid instance type: can only plot signal objects."
-# 		return 
-# 	plt.title(title)
-# 	samples1 = signal1.samples
-# 	data1 = signal1.data
-# 	dt1 = signal1.dt
+def FAS(data, dt, points):
+	global fmin 
+	global fmax 
+	afs = abs(np.fft.fft(data, points))*dt 
+	# freq = (1/signal.dt)*range(points)/points 
+	freq = (1/dt)*np.array(range(points))/points 
+
+	deltaf = (1/dt)/points
+
+	inif = int(fmin/deltaf)
+	endf = int(fmax/deltaf) + 1
+
+	afs = afs[inif:endf]
+	freq = freq[inif:endf]
+
+	# freq = t; data = afs 
+	return freq, afs 
+
+def get_points(samples1, samples2):
+	# points is the least base-2 number that is greater than max samples 
+	power = int(math.log(max(samples1, samples2), 2)) + 1 
+	return 2**power 
+# end of get_points
 
 
-# 	samples2 = signal2.samples
-# 	data2 = signal2.data
-# 	dt2 = signal2.dt
 
-# 	t1 = np.arange(0, samples1*dt1, dt1)
-# 	t2 = np.arange(0, samples2*dt2, dt2)
-# 	plt.plot(t1,data1,'r',t2,data2,'b')
-# 	plt.show()
-
-
-
-# def plot(title, samples1, dt1, data1, samples2, dt2, data2):
-# 	plt.title(title)
-# 	t1 = np.arange(0, samples1*dt1, dt1)
-# 	t2 = np.arange(0, samples2*dt2, dt2)
-# 	plt.plot(t1,data1,'r',t2,data2,'b')
-# 	plt.show()
-
-
-	
-
-def plot(title, data1, data2, samples1, samples2, dt1, dt2):
+def plot_signals(title, signal1, signal2):
 	"""
 	This function is to plot Signals with Fourier Amplitude Spectura. 
-	title = a list of titles for each subplot 
-	data1, data2 = lists of signals for each subplots 
 	"""
-	# check instance type and avoid IndexOutOfRange Error
-	for data in data1, data2: 
-		if not isinstance(data, list) or len(data) < len(title):
-			print "[ERROR]: invalid instance for plot."
+	global fmin
+	global fmax 
 
-	t1 = np.arange(0, samples1*dt1, dt1)
-	t2 = np.arange(0, samples2*dt2, dt2)
+	if (not isinstance(signal1, seism_signal)) or (not isinstance(signal2, seism_signal)):
+		print "[ERROR]: Invalid instance type: can only plot signal objects."
+		return 
 
 	plt.close('all')
 
-	# for data from .txt files 
-	if len(title) == 1: 
-		f, axarr = plt.subplots(nrows = 1, ncols = 2, figsize = (12, 5))
-		axarr[0].set_title(title[0])
-		axarr[0].plot(t1,data1[0],'r',t2,data2[0],'b')
-		fas1 = FAS(data1[0], dt1)
-		fas2 = FAS(data2[0], dt2)
-		axarr[1].set_title('Fourier Amplitude Spectra')
-		axarr[1].plot(t1,fas1,'r',fas2,'b')
-		f.tight_layout()
+	samples1 = signal1.samples
+	samples2 = signal2.samples
+	data1 = signal1.data 
+	data2 = signal2.data 
+	dt1 = signal1.dt 
+	dt2 = signal2.dt 
+	t1 = np.arange(0, samples1*dt1, dt1)
+	t2 = np.arange(0, samples2*dt2, dt2)
 
-	# for data from .her files 
-	else: 
-		f, axarr = plt.subplots(nrows = len(title), ncols = 2, figsize = (12, 16))
-		for i in range(0, len(title)):
-			axarr[i][0].set_title(title[i])
-			axarr[i][0].plot(t1,data1[i],'r',t2,data2[i],'b')
+	points = get_points(samples1, samples2)
+	freq1, fas1 = FAS(signal1.data, dt1, points)
+	freq2, fas2 = FAS(signal2.data, dt2, points)
 
-			fas1 = FAS(data1[i], dt1)
-			fas2 = FAS(data2[i], dt2)
-			axarr[i][1].set_title('Fourier Amplitude Spectra')
-			axarr[i][1].plot(t1,fas1,'r',fas2,'b')
-		f.tight_layout()
+	f, axarr = plt.subplots(nrows = 1, ncols = 2, figsize = (12, 5))
+	axarr[0].set_title(title)
+	axarr[0].plot(t1,data1,'r',t2,data2,'b')
 
+	axarr[1].set_title('Fourier Amplitude Spectra')
+	axarr[1].plot(freq1,fas1,'r',freq2,fas2,'b')
+	f.tight_layout()
 	plt.show()
-# end of plot 
-
-def FAS(data, dt):
-	# freq = (1/dt)*()
-	afs = abs(np.fft.fft(data))*dt
-
-# function [f,fs] = fourierbounded(s,fmin,fmax,dt,points);
-
-# fft_s(:,1) = fft(s(:,1),points);
-# afs_s = abs(fft_s)*dt;
-
-# freq = (1/dt)*(0:points-1)/points;
-# freq = freq';
-
-# deltaf = (1/dt)/points;
-
-# ini = fix(fmin/deltaf)+1;
-# fin = fix(fmax/deltaf);
-
-# fs = afs_s(ini:fin,:); 
-# f  = freq(ini:fin,:);
-	return afs 
-
-	pass 
+# end of plot_signals
 
 
 
+def plot_stations(station1, station2):
+	"""
+	This function is to plot two lists of psignals with Fourier Amplitude Spectra. 
+	station = a list of 3 psignals for three orientation. 
+	"""
+	global fmin 
+	global fmax 
+	dtype = ['Displacement', 'Velocity', 'Acceleration']
+	orientation = ['N/S', 'E/W', 'Up/Down']
 
+	if len(station1) != 3 or len(station2) != 3:
+		print "[ERROR]: plot_stations only handles stations with 3 channels."
+		return 
+
+	# from displacement to velocity to acceleration
+	for i in range(0, 3):
+		f, axarr = plt.subplots(nrows = 3, ncols = 2, figsize = (12, 16))
+		# iterative through psignals in each station 
+		for j in range(0, 3):
+			title = dtype[i] + ' in ' + orientation[j]
+			signal1 = station1[j]
+			signal2 = station2[j]
+			if (not isinstance(signal1, seism_psignal)) or (not isinstance(signal2, seism_psignal)):
+				print "[PLOT ERROR]: Invalid instance type: can only plot psignal objects."
+				return 
+			if signal1.data.shape[1] != 3 or signal2.data.shape[1] != 3:
+				print "[PLOT ERROR]: psignal's data must be 3-column numpy array for displ, velo, accel."
+				return 
+
+			samples1 = signal1.samples
+			samples2 = signal2.samples
+
+			# psignal.data = [displ, velo, accel]
+			data1 = signal1.data[:,i]
+			data2 = signal2.data[:,i]
+
+			dt1 = signal1.dt 
+			dt2 = signal2.dt 
+
+			t1 = np.arange(0, samples1*dt1, dt1)
+			t2 = np.arange(0, samples2*dt2, dt2)
+
+			points = get_points(samples1, samples2)
+			freq1, fas1 = FAS(data1, dt1, points)
+			freq2, fas2 = FAS(data2, dt2, points)
+
+			axarr[j][0].set_title(title)
+			axarr[j][0].plot(t1,data1,'r',t2,data2,'b')
+			axarr[j][1].set_title('Fourier Amplitude Spectra')
+			axarr[j][1].plot(freq1,fas1,'r',freq2,fas2,'b')
+			f.tight_layout()
+
+		plt.show()
+# end of plot_stations
+
+
+def test(psignal):
+	print psignal.data[:,0], psignal.data[:,1], psignal.data[:,2]
+	print psignal.accel
+	print psignal.velo
+	print psignal.displ
+	print (psignal.data[:,0]==psignal.displ).all()
+	print (psignal.data[:,1]==psignal.velo).all()
+	print (psignal.data[:,2]==psignal.accel).all()
+	print psignal.data.shape[1]
 
 
 
@@ -173,20 +206,7 @@ def compare_txt(file1, file2):
 		return 
 
 	title = ['Acceleration ONLY: \n' + file1 + ' ' + file2]
-	samples1 = signal1.samples
-	data1 = [signal1.data]
-	dt1 = signal1.dt
-	samples2 = signal2.samples
-	data2 = [signal2.data]
-	dt2 = signal2.dt
-	# t1 = np.arange(0, samples1*dt1, dt1)
-	# t2 = np.arange(0, samples2*dt2, dt2)
-
-	# data1.append(FAS(signal1.data, dt1))
-	# data2.append(FAS(signal2.data, dt2))
-
-	plot(title, data1, data2, samples1, samples2, dt1, dt2)
-
+	plot_signals(title, signal1, signal2)
 # end of compare_txt
 
 
@@ -198,71 +218,13 @@ def compare_her(file1, file2):
 		tmp = file1
 		file1 = file2 
 		file2 = tmp 
+
 	# station = [psignal_ns, psignal_ew, psignal_up]
 	station1 = read_her_file(file1) 
 	station2 = read_her_file(file2)
 
-	samples1 = station1[0].samples
-	dt1 = station1[0].dt
-	samples2 = station2[0].samples
-	dt2 = station2[0].dt
+	plot_stations(station1, station2)
 
-	# t1 = np.arange(0, samples1*dt1, dt1)
-	# t2 = np.arange(0, samples2*dt2, dt2)
-
-	for i in range(0, 3):
-		if (not isinstance(station1[i], seism_signal)) or (not isinstance(station2[i], seism_signal)):
-			print "[ERROR]: Invalid instance type: can only compare psignal objects."
-			return 
-
-
-	title = ['Displacement in N/S: ', 'Displacement in E/W: ', 'Displacement in Up/Down: ']
-	data1 = [station1[0].displ, station1[1].displ, station1[2].displ]
-	data2 = [station2[0].displ, station2[1].displ, station2[2].displ]
-	plot(title, data1, data2, samples1, samples2, dt1, dt2)
-
-	title = ['Velocity in N/S: ', 'Velocity in E/W: ', 'Velocity in Up/Down: ']
-	data1 = [station1[0].velo, station1[1].velo, station1[2].velo]
-	data2 = [station2[0].velo, station2[1].velo, station2[2].velo]
-	plot(title, data1, data2, samples1, samples2, dt1, dt2)
-
-	title = ['Acceleration in N/S: ', 'Acceleration in E/W: ', 'Acceleration in Up/Down: ']
-	data1 = [station1[0].accel, station1[1].accel, station1[2].accel]
-	data2 = [station2[0].accel, station2[1].accel, station2[2].accel]
-	plot(title, data1, data2, samples1, samples2, dt1, dt2)
-
-	# plot('Displacement in N/S: \n' + file1 + ' ' + file2, samples1, dt1, station1[0].displ, samples2, dt2, station2[0].displ) #displacement 
-	# plot('Displacement in E/W: \n' + file1 + ' ' + file2, samples1, dt1, station1[1].displ, samples2, dt2, station2[1].displ) 
-	# plot('Displacement in Up/Down: \n' + file1 + ' ' + file2, samples1, dt1, station1[2].displ, samples2, dt2, station2[2].displ) 
-
-	# plot('Velocity in N/S: \n' + file1 + ' ' + file2, samples1, dt1, station1[0].velo, samples2, dt2, station2[0].velo) #velocity 
-	# plot('Velocity in E/W: \n' + file1 + ' ' + file2, samples1, dt1, station1[1].velo, samples2, dt2, station2[1].velo) 
-	# plot('Velocity in Up/Down: \n' + file1 + ' ' + file2, samples1, dt1, station1[2].velo, samples2, dt2, station2[2].velo) 
-
-	# plot('Acceleration in N/S: \n' + file1 + ' ' + file2, samples1, dt1, station1[0].accel, samples2, dt2, station2[0].accel) #acceleration  
-	# plot('Acceleration in E/W: \n' + file1 + ' ' + file2, samples1, dt1, station1[1].accel, samples2, dt2, station2[1].accel) 
-	# plot('Acceleration in Up/Down: \n' + file1 + ' ' + file2, samples1, dt1, station1[2].accel, samples2, dt2, station2[2].accel) 
+	# test(station1[0])
 # end of compare_her
 
-
-	# samples1, dt1, dis_ns1, dis_ew1, dis_up1, vel_ns1, vel_ew1, vel_up1, acc_ns1, acc_ew1, acc_up1 = read_her_file(file1)
-	# samples2, dt2, dis_ns2, dis_ew2, dis_up2, vel_ns2, vel_ew2, vel_up2, acc_ns2, acc_ew2, acc_up2 = read_her_file(file2)
-	# plot('Displacement in N/S (HER)', samples1, dt1, dis_ns1, samples2, dt2, dis_ns2) #displacement 
-	# plot('Displacement in E/W (HER)', samples1, dt1, dis_ew1, samples2, dt2, dis_ew2) 
-	# plot('Displacement in Up/Down (HER)', samples1, dt1, dis_up1, samples2, dt2, dis_up2) 
-
-	# plot('Velocity in N/S (HER)', samples1, dt1, vel_ns1, samples2, dt2, vel_ns2) #velocity 
-	# plot('Velocity in E/W (HER)', samples1, dt1, vel_ew1, samples2, dt2, vel_ew2) 
-	# plot('Velocity in Up/Down (HER)', samples1, dt1, vel_up1, samples2, dt2, vel_up2) 
-
-	# plot('Acceleration in N/S (HER)', samples1, dt1, acc_ns1, samples2, dt2, acc_ns2) #acceleration  
-	# plot('Acceleration in E/W (HER)', samples1, dt1, acc_ew1, samples2, dt2, acc_ew2) 
-	# plot('Acceleration in Up/Down (HER)', samples1, dt1, acc_up1, samples2, dt2, acc_up2) 
-
-
-# compare_her('NC.NHC.V2.her', 'NC.NHC.V1.her')
-
-
-# compare_txt('NC.NHC.V1N.txt', 'NC.NHC.V2N.txt')
-# compare_txt('NC.NHC.V1E.txt', 'NC.NHC.V2E.txt')
-# compare_txt('NC.NHC.V1Z.txt', 'NC.NHC.V2Z.txt')

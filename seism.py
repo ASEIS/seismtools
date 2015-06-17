@@ -109,12 +109,17 @@ class seism_signal(object):
     #end plot
 
     def integrate(self, data):
-        """
-        The function is to integrate to get the other type of data. 
-        """
+        """The function is to integrate to get the other type of data."""
         data = ellip_filter(np.cumsum(data*self.dt), self.dt)
         # data = ellip_filter(np.cumsum(data*self.dt), self.dt, Wn = 0.075/((1.0/self.dt)/2.0), N = 7)
         return data
+
+    def derivative(self, data):
+        """The funtion is to compute derivative of an numpy."""
+        data = np.diff(data/self.dt)
+        data = np.insert(data, 0, 0)
+        data = ellip_filter(data, self.dt)
+        return data 
 #end signal class
 
 

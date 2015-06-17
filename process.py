@@ -7,13 +7,14 @@ import sys
 import os
 from smc import *
 
+destination = ''
 file_list = []
 
 def get_filename(): 
 	global file_list
-	destination = ''
-	clear('unprocessed_files.txt')
-	clear('warning.txt')
+	global destination
+	# clear('unprocessed_files.txt')
+	# clear('warning.txt')
 
 	# if filenam is not given with command 
 	if len(sys.argv) == 1:
@@ -96,7 +97,7 @@ def print_unprocessed(filename):
     """
     The function generates a file containing a list of files that were not processed by this program. 
     """
-    f = open('unprocessed_files.txt', 'a')
+    f = open(destination + '/unprocessed_files.txt', 'a')
     f.write(filename +"\n")
     f.close()
 # end of print_unprocessed 

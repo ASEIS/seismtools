@@ -289,8 +289,12 @@ def print_smc(filename, record):
     The function generates .txt files for each channel/record 
     """
     global destination
+    network = filename.split('.')[0]
+    station = filename.split('.')[1]
+    info = "XXX"  # info = band + instrument type + orientation 
+    
     # generate a text file (header + data)
-    header = "#" + record.date + " " + record.time + " Samples: " + str(record.samples) + " dt: " + str(record.dt) + "\n"
+    header = "# " + network + " " + station + " " + info + " " + record.date + "," + record.time + " " + str(record.samples) + " " + str(record.dt) + "\n"
     try:
         f = open(destination + '/' + filename, 'w')
     except IOError, e:
@@ -407,7 +411,7 @@ def print_warning(warning):
     """
     The function is to generate warning messages for channles at special locations. 
     """
-    f = open('warning.txt', 'a')
+    f = open(destination + '/warning.txt', 'a')
     f.write(warning +"\n")
     f.close()
 # end of print_warning

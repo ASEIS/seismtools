@@ -29,8 +29,8 @@ def read_file(filename):
 		# get header 
 		if "#" in line: 
 			tmp = line.split()
-			samples = int(tmp[4])
-			dt = float(tmp[6])
+			samples = int(tmp[6])
+			dt = float(tmp[7])
 		# get data 
 		else:
 			# print line.split()[0]
@@ -233,6 +233,6 @@ def set_bound(f1, f2):
 	fmin = f1 
 	fmax = f2
 
-	print fmin, fmax 
+	# print fmin, fmax 
 # end of set_bound
 

@@ -73,10 +73,15 @@ def read_list(file_list):
 					print e
 					pass 
 				lines = fp.read().split('\n')
-				if '#' and 'Samples:' and 'dt:' in lines[0]: 
-					compare_list2.append(f)
-				else: 
-					print "[ERROR]: unable to recognize file type."
+				compare_list2.append(f)
+				# if '#' and 'Samples:' and 'dt:' in lines[0]: 
+				# 	compare_list2.append(f)
+				# else: 
+				# 	print "[ERROR]: unable to recognize file type."
+
+			elif ('warning.txt' in f) or ('unprocessed.txt' in f):
+				# ignore 
+				pass 
 
 			# if the file contians a list of files
 			else: 
@@ -88,7 +93,7 @@ def read_list(file_list):
 				lines = fp.read().split()
 				# print lines 
 				if not '#filelist' in lines[0]:
-					print "[ERROR]: unable to recognize file type."
+					print "[ERROR]: unable to recognize file type: " + f 
 				else: 
 					for l in lines[1:]: 
 						if not l in file_list:

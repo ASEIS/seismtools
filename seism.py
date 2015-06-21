@@ -5,6 +5,7 @@ __author__ = 'rtaborda'
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import filtfilt, ellip
+import math
 
 
 class seism_signal(object):
@@ -312,11 +313,10 @@ class seism_record(seism_signal):
         print "orientation: " + str(self.orientation)
     #end print_attr 
 
-    def process_smc_v1(self, network, station_id):
+    def process_smc_v1(self):
         """
         The function process record by converting orientation and multiplying data 
         """
-    # ======================================= processing orientation ========================================== 
         # If the orientation was not set properly, it would be empty string by default 
         if self.orientation == " ":
             print "[ERROR]: missing orientation"
@@ -340,8 +340,7 @@ class seism_record(seism_signal):
              # handling other degrees.
              return False 
              pass
-
-    # ======================================= processing data ================================================  
+ 
         # filter data 
         self.data = ellip_filter(self.data, self.dt) 
 
@@ -349,8 +348,9 @@ class seism_record(seism_signal):
         # self.data = 981*(self.data - np.average(self.data))
         self.data = 981*(self.data - np.average(self.data[0:int(self.samples*0.1)]))
 
-        filename = network + "." + station_id + ".V1" + orientation + ".txt"
-        return filename
+        # filename = network + "." + station_id + ".V1" + orientation + ".txt"
+        # return filename
+        return 
     #end process_smc_V1 
 
 # end record class
@@ -508,13 +508,139 @@ class seism_precord(seism_record):
         print self.displ
 #end seism_precord class
 
-# =========================================================Class for Station===============================================================
+# =================================================Class for Station===============================================================
 class seism_station(object):
     """
-    The station object contains either a list of psignals: three channels/orientations
+    The station object contains a list of signals/psignals; with network number and station ID 
     """
-    
-#end signal class
+    def __init__(self, *args, **kwargs):
+        # Initialize to default values
+        self.list = []
+        self.network = ''
+        self.id = ''
+        self.type = ''
+
+        if len(args) > 0:
+            args_range = range(len(args))
+            if 0 in args_range:
+                if self.set_list(args[0]) == False:
+                    return 
+            if 1 in args_range:
+                self.set_network(args[1])
+            if 2 in args_range:
+                self.set_id(args[2])
+            if 3 in args_range:
+                self.set_type(args[3])
+                # all arguments were given in unlabled format
+                # return
+
+        if len(kwargs) > 0:
+            if 'list' in kwargs:
+                if self.set_list(kwargs['list']) == False:
+                    return 
+            if 'network' in kwargs:
+                self.set_network(kwargs['network'])
+            if 'staion' in kwargs:
+                self.set_id(kwargs['station'])
+            if 'type' in kwargs:
+                self.set_type(kwargs['type'])
+        return
+    #end __init__
+
+    def set_list(self, record_list):
+        if len(record_list) != 3:
+            print "[ERROR]: The program handles stations with three channels ONLY. "
+            return False 
+
+        if not all(isinstance(record, seism_signal) for record in record_list):
+            print "[ERROR]: list in station does not contain seism signals."
+            return False 
+
+        if all(isinstance(record, seism_record) for record in record_list):
+            if not (record_list[0].orientation != record_list[1].orientation != record_list[2].orientation):
+                print "[ERROR]: conflict orientations."
+                return False 
+
+        self.list = record_list
+    # end of set_list 
+
+    def set_network(self, network):
+        self.network = network
+
+    def set_id(self, station_id):
+        self.id = station_id
+
+    def set_type(self, filetype):
+        filetype = filetype.upper()
+        if filetype in ['V1', 'V2']: 
+            self.type = filetype
+
+    def rotate(self, record_list):
+        """
+        The function is to transfrom data for channels with special orientations. 
+        """
+        tmp = []
+        for record in record_list:
+            if record.orientation != 'Up':
+                tmp.append(record)
+                record_list.remove(record)
+        if len(tmp) != 2: 
+            return False 
+        x = tmp[0].orientation
+        y = tmp[1].orientation
+        if x > y: 
+            list(reversed(tmp))
+
+        # rotate 
+        matrix = np.array([(math.cos(math.radians(x)), -math.sin(math.radians(x))), (math.sin(math.radians(x)), math.cos(math.radians(x)))])
+        data = matrix.dot([tmp[0].data, tmp[1].data])
+
+        # transform the first record with North orientation 
+        tmp[0].data = data[0]
+        tmp[0].orientation = 0
+
+        # transform the second record with East orientation
+        tmp[1].data = data[1]
+        tmp[1].orientation = 90
+
+        record_list += tmp
+        return record_list
+    # end of rotate
+
+    def process_list(self):
+        """The function is take a list of records get from V1 files; 
+        then use their data to all three types of data (acc, vel, dis),
+        then return a list of precords. 
+        """
+        rotate_flag = False 
+        precord_list = []
+
+        for record in self.list:
+            # process data of record 
+            if record.process_smc_v1() == False: # if encounter special orientations. 
+                rotate_flag = True 
+                break 
+
+            if record.type == 'a': 
+                # get velocity and displacement
+                velocity = record.integrate(record.data)
+                displacement = record.integrate(velocity)
+                precord = seism_precord(record.samples, record.dt, record.data, record.type, accel = record.data, displ = displacement, velo = velocity, 
+                    orientation = record.orientation, date = record.date, time = record.time, depth = record.depth, latitude = record.location_lati, longitude = record.location_longi)
+                precord_list.append(precord)
+
+        # rotation 
+        if rotate_flag:
+            record_list = self.rotate(self.list)
+            if not record_list: 
+                return False 
+            else: 
+                self.list = record_list
+            return self.process_list() # recursively calling the function to continue processing
+        self.list = precord_list
+    # end of process_list
+
+#end station class
 # ===================================================Global Functions=======================================================
 def ellip_filter(data, dt, *args, **kwargs):
     """

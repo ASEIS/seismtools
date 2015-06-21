@@ -66,18 +66,6 @@ def load_smc_v1(filename):
         # get station name
         station = channels[i][5][0:40].strip()
 
-        # get data type 
-        # tmp = channels[i][5].split()
-        # dtype = tmp[-1]
-        # if dtype == "Acceleration": 
-        # 	dtype = 'a'
-        # elif dtype == "Velocity": 
-        # 	dtype = 'v'
-        # elif dtype == "Displacement": 
-        # 	dtype = 'd'
-        # else: 
-        # 	dtype = "Unknown"
-
 
         # get orientation, convert to int if it's digit 
         tmp = channels[i][6].split()
@@ -125,8 +113,17 @@ def load_smc_v1(filename):
 
         record_list.append(record)
 
-    # return a list of records, and corresponding network code and station id 
-    return record_list, network, station_id
+    print station_id
+    station = seism_station(record_list, network, station_id, 'V1')
+    # if the station does not contain 3 channles or it has special orientations, return False 
+    if not station.list: 
+        return False 
+    elif station.process_list() == False: 
+        return False 
+    else:
+        return station 
+
+
 
 def load_smc_v2(filename):
     record_list = []
@@ -260,12 +257,19 @@ def load_smc_v2(filename):
         elif orientation in ['Up', 'Down']:
             orientation = 'Z'
         else:
-            orientation = ' '
+            print "[ERROR]: invalid orientation."
+            return False 
+            # break 
+            # orientation = ' '
 
-        print_smc(network + "." + station_id + ".V2" + orientation + ".txt", record)
+        # print_smc(station.network + "." + station_id + ".V2" + orientation + ".txt", record)
         record_list.append(precord)
 
-    return record_list, network, station_id
+    station = seism_station(record_list, network, station_id, 'V2')
+    if not station.list:
+        return False 
+    else: 
+        return station 
 
 
 
@@ -284,44 +288,51 @@ def process_signal(signal):
     return data 
 
 
-def print_smc(filename, record):
+def print_smc(station):
     """
     The function generates .txt files for each channel/record 
     """
     global destination
-    network = filename.split('.')[0]
-    station = filename.split('.')[1]
-    info = "XXX"  # info = band + instrument type + orientation 
-    
-    # generate a text file (header + data)
-    header = "# " + network + " " + station + " " + info + " " + record.date + "," + record.time + " " + str(record.samples) + " " + str(record.dt) + "\n"
-    try:
-        f = open(destination + '/' + filename, 'w')
-    except IOError, e:
-        print e
-        # return 
-    
-    f.write(header)
-    # descriptor = '{:>12.7f}' + '\n'
-    descriptor = '{:>f}' + '\n'
-    if record.data.size != 0: 
-        for d in np.nditer(record.data):
-            # f.write(str(d)+"\n")
-            f.write(descriptor.format(float(d)))
-    f.close()
-    print "*Generated .txt file at: " + destination + "/" + filename
+    orientation = ''
+    # network = filename.split('.')[0]
+    # station = filename.split('.')[1]
 
+    for record in station.list:
+        if record.orientation in [0, 180, 360, -180]:
+            orientation = 'N'
+        elif record.orientation in [90, -90, 270, -270]:
+            orientation = 'E'
+        elif record.orientation in ['Up', 'Down']:
+            orientation = 'Z'
+
+        info = "XXX"  # info = band + instrument type + orientation 
+        filename = station.network + '.' + station.id + '.' + station.type + orientation + '.txt'
+        
+        # generate a text file (header + data)
+        header = "# " + station.network + " " + station.id + " " + info + " " + record.date + "," + record.time + " " + str(record.samples) + " " + str(record.dt) + "\n"
+        try:
+            f = open(destination + '/' + filename, 'w')
+        except IOError, e:
+            print e
+            # return 
+        
+        f.write(header)
+        # descriptor = '{:>12.7f}' + '\n'
+        descriptor = '{:>f}' + '\n'
+        if record.data.size != 0: 
+            for d in np.nditer(record.data):
+                # f.write(str(d)+"\n")
+                f.write(descriptor.format(float(d)))
+        f.close()
+        print "*Generated .txt file at: " + destination + "/" + filename
 #end of print_smc
 
-def print_her(filename, record_list):
+def print_her(station):
     """
     The function generates .her files for each station (with all three channels included)
     """
     global destination
-     # if there are more than three channels, save for later 
-    if len(record_list) > 3:
-        print "==[The function is processing files with 3 channels only.]=="
-        return False 
+    filename = station.network + '.' + station.id + '.' + station.type + '.her'
 
     try:
         f = open(destination + '/' + filename, 'w')
@@ -338,13 +349,18 @@ def print_her(filename, record_list):
     dis_up = []
     vel_up = []
     acc_up = []
+    orientation = ''
 
     # round data to 7 decimals in order to print properly 
-    for precord in record_list:
-        if precord.orientation == " ":
-            print "[ERROR]: missing orientation"
-            orientation = " "
-        elif precord.orientation in [0, 360, 180, -180]:
+    for precord in station.list:
+        # if precord.orientation == " ":
+        #     print "[ERROR]: missing orientation"
+        #     return False 
+        #     # orientation = " "
+        # elif precord.orientation == orientation:
+        #     print "[ERROR]: conflict orientation"
+        #     return False 
+        if precord.orientation in [0, 360, 180, -180]:
             dis_ns = precord.displ.tolist()
             vel_ns = precord.velo.tolist()
             acc_ns = precord.accel.tolist()
@@ -359,6 +375,7 @@ def print_her(filename, record_list):
         else: 
              # handling degrees such as 60, 120 etc. 
              pass
+        # orientation = precord.orientation
 
     # get a list of time incremented by dt 
     time = [0.000]
@@ -375,37 +392,37 @@ def print_her(filename, record_list):
     print "*Generated .her file at: " + destination + "/" + filename
 #end of print_her 
 
-def rotate(record_list):
-    """
-    The function is to transfrom data for channels with special orientations. 
-    """
-    tmp = []
-    for record in record_list:
-        if record.orientation != 'Up':
-            tmp.append(record)
-            record_list.remove(record)
-    if len(tmp) != 2: 
-        return False 
-    x = tmp[0].orientation
-    y = tmp[1].orientation
-    if x > y: 
-        list(reversed(tmp))
+# def rotate(record_list):
+#     """
+#     The function is to transfrom data for channels with special orientations. 
+#     """
+#     tmp = []
+#     for record in record_list:
+#         if record.orientation != 'Up':
+#             tmp.append(record)
+#             record_list.remove(record)
+#     if len(tmp) != 2: 
+#         return False 
+#     x = tmp[0].orientation
+#     y = tmp[1].orientation
+#     if x > y: 
+#         list(reversed(tmp))
 
-    # rotate 
-    matrix = np.array([(math.cos(math.radians(x)), -math.sin(math.radians(x))), (math.sin(math.radians(x)), math.cos(math.radians(x)))])
-    data = matrix.dot([tmp[0].data, tmp[1].data])
+#     # rotate 
+#     matrix = np.array([(math.cos(math.radians(x)), -math.sin(math.radians(x))), (math.sin(math.radians(x)), math.cos(math.radians(x)))])
+#     data = matrix.dot([tmp[0].data, tmp[1].data])
 
-    # transform the first record with North orientation 
-    tmp[0].data = data[0]
-    tmp[0].orientation = 0
+#     # transform the first record with North orientation 
+#     tmp[0].data = data[0]
+#     tmp[0].orientation = 0
 
-    # transform the second record with East orientation
-    tmp[1].data = data[1]
-    tmp[1].orientation = 90
+#     # transform the second record with East orientation
+#     tmp[1].data = data[1]
+#     tmp[1].orientation = 90
 
-    record_list += tmp
-    return record_list
-# end of rotate
+#     record_list += tmp
+#     return record_list
+# # end of rotate
 
 def print_warning(warning):
     """
@@ -416,53 +433,58 @@ def print_warning(warning):
     f.close()
 # end of print_warning
 
-def process_record_list(network, station_id, record_list):
-    """
-    The function is to take a list of V1 [record]s, then use their data to get velocity and displacement,
-    then create [precord] objects, finally return a list of them. 
-    If encounter file with more than three channels, print message and return False.
-    If encounter special orientations, rotate by matrix, and recursivly calling the function to continue processing. 
-    """
-    global discard
-    rotate_flag = False 
-    if len(record_list) != 3:
-        print "==[The function is processing files with 3 channels only.]=="
-        return False 
-    processed_list = []
+# def process_record_list(network, station_id, record_list):
+#     """
+#     The function is to take a list of V1 [record]s, then use their data to get velocity and displacement,
+#     then create [precord] objects, finally return a list of them. 
+#     If encounter file with more than three channels, print message and return False.
+#     If encounter special orientations, rotate by matrix, and recursivly calling the function to continue processing. 
+#     """
+#     global discard
+#     rotate_flag = False 
+#     if len(record_list) != 3:
+#         print "==[The function is processing files with 3 channels only.]=="
+#         return False 
+#     processed_list = []
 
-    for record in record_list:
-        # process data of record 
-        filename = record.process_smc_v1(network, station_id)
-        if filename == False: # if encounter special orientations. 
-            rotate_flag = True 
-            break 
+#     for record in record_list:
+#         # process data of record 
+#         filename = record.process_smc_v1(network, station_id)
+#         if filename == False: # if encounter special orientations. 
+#             if record.orientation.isdigit():
+#                 rotate_flag = True 
+#                 break 
+#             else:
+#                 return False 
 
-        # generate .txt file for record 
-        print_smc(filename, record)
 
-        # get velocity and displacement
-        velocity = record.integrate(record.data)
-        displacement = record.integrate(velocity)
-        precord = seism_precord(record.samples, record.dt, record.data, record.type, accel = record.data, displ = displacement, velo = velocity, 
-            orientation = record.orientation, date = record.date, time = record.time, depth = record.depth, latitude = record.location_lati, longitude = record.location_longi)
-        processed_list.append(precord)
 
-    # rotation 
-    if rotate_flag:
-        record_list = rotate(record_list)
-        if record_list == False: 
-            return False 
-        return process_record_list(network, station_id, record_list) # recursively calling the function to continue processing
+#         # generate .txt file for record 
+#         print_smc(filename, record)
 
-    # if the channel is in the location should be discarded; print warning 
-    for key in discard:
-            if key in record_list[0].station:
-                filename = network + station_id + '.V1'
-                warning = filename + " was processed, but it's from " + discard[key]
-                print_warning(warning)
-                break 
+#         # get velocity and displacement
+#         velocity = record.integrate(record.data)
+#         displacement = record.integrate(velocity)
+#         precord = seism_precord(record.samples, record.dt, record.data, record.type, accel = record.data, displ = displacement, velo = velocity, 
+#             orientation = record.orientation, date = record.date, time = record.time, depth = record.depth, latitude = record.location_lati, longitude = record.location_longi)
+#         processed_list.append(precord)
 
-    return processed_list
+#     # rotation 
+#     if rotate_flag:
+#         record_list = rotate(record_list)
+#         if record_list == False: 
+#             return False 
+#         return process_record_list(network, station_id, record_list) # recursively calling the function to continue processing
+
+#     # if the channel is in the location should be discarded; print warning 
+#     for key in discard:
+#             if key in record_list[0].station:
+#                 filename = network + station_id + '.V1'
+#                 warning = filename + " was processed, but it's from " + discard[key]
+#                 print_warning(warning)
+#                 break 
+
+#     return processed_list
 #end process_record_list 
 
 
@@ -487,3 +509,12 @@ def process_record_list(network, station_id, record_list):
 
 
 
+# if the channel is in the location should be discarded; print warning 
+
+
+    # for key in discard:
+    #         if key in record_list[0].station:
+    #             filename = network + station_id + '.V1'
+    #             warning = filename + " was processed, but it's from " + discard[key]
+    #             print_warning(warning)
+    #             break 

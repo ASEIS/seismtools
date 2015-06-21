@@ -56,21 +56,34 @@ def read_list(file_list):
 		elif os.path.isfile(f) and os.stat(f).st_size != 0:
 			# if the file is V1/raw data file: generate text file for acceleration, and .her file 
 			if f.upper().endswith(".V1") or f.upper().endswith(".RAW"):
-				record_list, network, station_id = load_smc_v1(f)
-				filename = network + "." + station_id + ".V1.her"
-				precord_list = process_record_list(network, station_id, record_list)
-				if precord_list == False:
+				station = load_smc_v1(f)
+				if not station: 
 					print_unprocessed(f)
-					# append the filename to unprocessed files 
 				else: 
-					print_her(filename, precord_list) 
+					print_smc(station)
+					print_her(station)
+
+				# record_list, network, station_id = load_smc_v1(f)
+				# filename = network + "." + station_id + ".V1.her"
+				# precord_list = process_record_list(network, station_id, record_list)
+				# if precord_list == False:
+				# 	print_unprocessed(f)
+				# 	# append the filename to unprocessed files 
+				# else: 
+				# 	print_her(filename, precord_list) 
 
 			# if the file is V2/processed data file; generate text file for acceleration, and .her file 
 			elif f.upper().endswith(".V2"):
-				record_list, network, station_id = load_smc_v2(f)
-				filename = network + "." + station_id + ".V2.her"
-				if print_her(filename, record_list) == False:
+				station = load_smc_v2(f)
+				if not station: 
 					print_unprocessed(f)
+				else:
+					print_smc(station)
+					print_her(station)
+				# record_list, network, station_id = load_smc_v2(f)
+				# filename = network + "." + station_id + ".V2.her"
+				# if print_her(filename, record_list) == False:
+				# 	print_unprocessed(f)
 					# append the filename to unprocessed files 
 
 			else: 

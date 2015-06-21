@@ -13,8 +13,6 @@ file_list = []
 def get_filename(): 
 	global file_list
 	global destination
-	# clear('unprocessed_files.txt')
-	# clear('warning.txt')
 
 	# if filenam is not given with command 
 	if len(sys.argv) == 1:
@@ -31,11 +29,14 @@ def get_filename():
 	# check existence of target directory 
 	if not os.path.exists(destination):
 		os.makedirs(destination)
+	else: 
+		# clear content of unprocessed and warning files if they exist 
+		if os.path.exists(destination + '/unprocessed.txt'):
+			clear(destination + '/unprocessed.txt')
+		if os.path.exists(destination + '/warning.txt'):
+			clear(destination + '/warning.txt')
 
 	get_destination(destination)
-
-
-
 
 
 def read_list(file_list):
@@ -58,10 +59,11 @@ def read_list(file_list):
 			if f.upper().endswith(".V1") or f.upper().endswith(".RAW"):
 				station = load_smc_v1(f)
 				if not station: 
-					print_unprocessed(f)
+					print_message(f, 'unprocessed')
 				else: 
 					print_smc(station)
 					print_her(station)
+					check_station(station)
 
 				# record_list, network, station_id = load_smc_v1(f)
 				# filename = network + "." + station_id + ".V1.her"
@@ -76,10 +78,11 @@ def read_list(file_list):
 			elif f.upper().endswith(".V2"):
 				station = load_smc_v2(f)
 				if not station: 
-					print_unprocessed(f)
+					print_message(f, 'unprocessed')
 				else:
 					print_smc(station)
 					print_her(station)
+					check_station(station)
 				# record_list, network, station_id = load_smc_v2(f)
 				# filename = network + "." + station_id + ".V2.her"
 				# if print_her(filename, record_list) == False:
@@ -105,15 +108,56 @@ def read_list(file_list):
 			print "[ERROR]: no such file or directory: " + f
 		# file_list = list(set(file_list)) #remove duplicated ones from list 
 # end of read_list 
+def print_message(message, ftype):
+	"""
+	The function is to generate a files containing warning/unprocessed messages for input files. 
+	"""
+	f = open(destination + '/' + ftype + '.txt', 'a')
+	f.write(message +"\n")
+	f.close()
+# end of print_message
 
-def print_unprocessed(filename):
+
+
+# def print_unprocessed(filename):
+#     """
+#     The function generates a file containing a list of files that were not processed by this program. 
+#     """
+#     f = open(destination + '/unprocessed.txt', 'a')
+#     f.write(filename +"\n")
+#     f.close()
+# # end of print_unprocessed 
+
+# def print_warning(warning):
+#     """
+#     The function is to generate warning messages for channles at special locations. 
+#     """
+#     f = open(destination + '/warning.txt', 'a')
+#     f.write(warning +"\n")
+#     f.close()
+# # end of print_warning
+
+def check_station(station):
     """
-    The function generates a file containing a list of files that were not processed by this program. 
+    The function is to check the station name of each record,
+    if it's in the location should be discarded, print warning. 
     """
-    f = open(destination + '/unprocessed_files.txt', 'a')
-    f.write(filename +"\n")
-    f.close()
-# end of print_unprocessed 
+    # check instance 
+    if not isinstance(station, seism_station):
+        return 
+    if not station.list:
+        return 
+
+    discard = {'dam': 'Dam', 'Fire Sta': 'Fire Station', 'Acosta Res': 'Acosta Res', 'Bldg': 'Building', 'Br': 'Interchange Bridge'}
+    name = station.list[0].station_name
+    for key in discard:
+        if key in name:
+        	filename = station.network + station.id + '.' + station.type 
+        	msg = filename + " was processed, but it's from " + discard[key]
+        	print_message(msg, 'warning')
+        	break 
+# end of check_station
+
 
 def clear(filename):
 	# clear the content of a file if it exists 

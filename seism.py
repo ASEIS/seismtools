@@ -132,24 +132,24 @@ class seism_record(seism_signal):
     
     def __init__(self, *args, **kwargs):
         """
-        Correct order for unlabeled arguments is: samples, dt, data, signal type, station, 
+        Correct order for unlabeled arguments is: samples, dt, data, signal type, station name, 
         location_lati, location_longi, depth, date, time, orientation
         """
         super(seism_record, self).__init__(*args, **kwargs)
 
         # initialize instances
-        self.station = " "
-        self.location_lati = " "
-        self.location_longi = " "
+        self.station_name = ""
+        self.location_lati = ""
+        self.location_longi = ""
         self.depth = 0.0
-        self.date = " "
-        self.time = " "
+        self.date = ""
+        self.time = ""
         self.hour = 0.0 
         self.minute = 0.0
         self.seconds = 0.0
         self.fraction = 0.0
-        self.tzone = " "
-        self.orientation = " "
+        self.tzone = ""
+        self.orientation = ""
 
         if len(args) > 0:
             args_range = range(len(args))
@@ -169,12 +169,12 @@ class seism_record(seism_signal):
                 self.set_tstamp(self.time)
             if 10 in args_range:
                 self.set_orientation(args[10])
-                return 
+                # return 
                 # all arguments were given in unlabled format
 
         if len(kwargs) > 0:
             if 'station' in kwargs:
-                self.set_samples(kwargs['station'])
+                self.set_station(kwargs['station'])
             if 'latitude' in kwargs:
                 self.set_latitude(kwargs['latitude'])
             if 'longitude' in kwargs:
@@ -192,11 +192,10 @@ class seism_record(seism_signal):
         return 
     #end __init__
     
-    def set_station(self, station):
-        # checking station name 
-        if not isinstance(station, str): 
+    def set_station(self, station_name):
+        if not isinstance(station_name, str): 
             print "\n**Error with station name.**\n"
-        self.station = station 
+        self.station_name = station_name 
     #end set_station
 
     def set_latitude(self, location_lati):
@@ -299,7 +298,7 @@ class seism_record(seism_signal):
         print "dt: " + str(self.dt)
         print "data type: " + self.type 
         print self.data
-        print "station name: " + self.station
+        print "station name: " + self.station_name
         print "station latitude: " + self.location_lati
         print "station longitude: " + self.location_longi
         print "depth: ??" 
@@ -318,8 +317,9 @@ class seism_record(seism_signal):
         The function process record by converting orientation and multiplying data 
         """
         # If the orientation was not set properly, it would be empty string by default 
-        if self.orientation == " ":
-            print "[ERROR]: missing orientation"
+        if not self.orientation:
+            print "[ERROR]: invalid orientation"
+            return False 
             orientation = " "
         elif self.orientation in [0, 360]:
             orientation = 'N'
@@ -491,7 +491,7 @@ class seism_precord(seism_record):
         print "samples: " + str(self.samples)
         print "dt: " + str(self.dt)
         print "data type: " + self.type 
-        print "station name: " + self.station
+        print "station name: " + self.station_name
         print "station latitude: " + self.location_lati
         print "station longitude: " + self.location_longi
         print "depth: ??" 
@@ -617,6 +617,10 @@ class seism_station(object):
 
         for record in self.list:
             # process data of record 
+            if not record.orientation: 
+                print "[ERROR]: invalid orientation."
+                return False 
+
             if record.process_smc_v1() == False: # if encounter special orientations. 
                 rotate_flag = True 
                 break 
@@ -625,7 +629,7 @@ class seism_station(object):
                 # get velocity and displacement
                 velocity = record.integrate(record.data)
                 displacement = record.integrate(velocity)
-                precord = seism_precord(record.samples, record.dt, record.data, record.type, accel = record.data, displ = displacement, velo = velocity, 
+                precord = seism_precord(record.samples, record.dt, record.data, record.type, record.station_name, accel = record.data, displ = displacement, velo = velocity, 
                     orientation = record.orientation, date = record.date, time = record.time, depth = record.depth, latitude = record.location_lati, longitude = record.location_longi)
                 precord_list.append(precord)
 
@@ -639,8 +643,10 @@ class seism_station(object):
             return self.process_list() # recursively calling the function to continue processing
         self.list = precord_list
     # end of process_list
-
 #end station class
+
+
+
 # ===================================================Global Functions=======================================================
 def ellip_filter(data, dt, *args, **kwargs):
     """

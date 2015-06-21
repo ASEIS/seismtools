@@ -130,6 +130,7 @@ def compare2(compare_list):
 			for f2 in compare_list:
 				# EXAMPLE: CI.Q0028.V1N.txt v.s. CI.Q0028.V2N.txt 
 				if f2 != f1 and f2[:-6] == f1[:-6] and f1[-5:] == f2[-5:]: 
+					print f1, f2
 					compare_txt(f1, f2)
 					# compare_list.remove(f1)
 					compare_list.remove(f2)

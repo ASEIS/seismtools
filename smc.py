@@ -64,7 +64,7 @@ def load_smc_v1(filename):
 
 
         # get station name
-        station = channels[i][5][0:40].strip()
+        station_name = channels[i][5][0:40].strip()
 
 
         # get orientation, convert to int if it's digit 
@@ -106,15 +106,16 @@ def load_smc_v1(filename):
         data = process_signal(signal)
 
 
+
         # record = seism_record(samples, dt, data, dtype, station, location_lati, location_longi, depth, date, time, orientation)
-        record = seism_record(samples, dt, data, dtype, station, location_lati, location_longi, depth = depth, 
+        record = seism_record(samples, dt, data, dtype, station_name, location_lati, location_longi, depth = depth, 
             orientation = orientation, date = date, time = time)
         # record.print_attr()
 
         record_list.append(record)
 
-    print station_id
     station = seism_station(record_list, network, station_id, 'V1')
+
     # if the station does not contain 3 channles or it has special orientations, return False 
     if not station.list: 
         return False 
@@ -122,7 +123,6 @@ def load_smc_v1(filename):
         return False 
     else:
         return station 
-
 
 
 def load_smc_v2(filename):
@@ -193,7 +193,7 @@ def load_smc_v2(filename):
 
 
         # get station name
-        station = channels[i][6][0:40].strip()
+        station_name = channels[i][6][0:40].strip()
 
 
         # get date and time; set to fixed format 
@@ -247,18 +247,20 @@ def load_smc_v2(filename):
         d_data = process_signal(d_signal)
         data = np.c_[a_data, v_data, d_data]
 
-        record = seism_record(samples, dt, a_data, dtype, station, location_lati, location_longi, depth, date, time, orientation)
-        precord = seism_precord(samples, dt, data, dtype, accel = a_data, displ = d_data, velo = v_data, orientation = orientation, date = date, time = time, depth = depth,
+        # record = seism_record(samples, dt, a_data, dtype, station_name, location_lati, location_longi, depth, date, time, orientation)
+
+        precord = seism_precord(samples, dt, data, dtype, station_name, accel = a_data, displ = d_data, velo = v_data, orientation = orientation, date = date, time = time, depth = depth,
             latitude = location_lati, longitude = location_longi)
-        if orientation in [0, 360, 180, -180]:
-            orientation = 'N'
-        elif orientation in [90, 270, -90, -270]:
-            orientation = 'E'
-        elif orientation in ['Up', 'Down']:
-            orientation = 'Z'
-        else:
-            print "[ERROR]: invalid orientation."
-            return False 
+
+        # if orientation in [0, 360, 180, -180]:
+        #     orientation = 'N'
+        # elif orientation in [90, 270, -90, -270]:
+        #     orientation = 'E'
+        # elif orientation in ['Up', 'Down']:
+        #     orientation = 'Z'
+        # else:
+        #     print "[ERROR]: invalid orientation."
+        #     return False 
             # break 
             # orientation = ' '
 
@@ -270,6 +272,7 @@ def load_smc_v2(filename):
         return False 
     else: 
         return station 
+
 
 
 
@@ -319,8 +322,8 @@ def print_smc(station):
         f.write(header)
         # descriptor = '{:>12.7f}' + '\n'
         descriptor = '{:>f}' + '\n'
-        if record.data.size != 0: 
-            for d in np.nditer(record.data):
+        if record.accel.size != 0: 
+            for d in np.nditer(record.accel):
                 # f.write(str(d)+"\n")
                 f.write(descriptor.format(float(d)))
         f.close()
@@ -424,14 +427,9 @@ def print_her(station):
 #     return record_list
 # # end of rotate
 
-def print_warning(warning):
-    """
-    The function is to generate warning messages for channles at special locations. 
-    """
-    f = open(destination + '/warning.txt', 'a')
-    f.write(warning +"\n")
-    f.close()
-# end of print_warning
+
+
+
 
 # def process_record_list(network, station_id, record_list):
 #     """

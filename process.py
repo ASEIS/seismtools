@@ -37,6 +37,7 @@ def get_filename():
 			clear(destination + '/warning.txt')
 
 	get_destination(destination)
+# end of get_filename
 
 
 def read_list(file_list):
@@ -65,15 +66,6 @@ def read_list(file_list):
 					print_her(station)
 					check_station(station)
 
-				# record_list, network, station_id = load_smc_v1(f)
-				# filename = network + "." + station_id + ".V1.her"
-				# precord_list = process_record_list(network, station_id, record_list)
-				# if precord_list == False:
-				# 	print_unprocessed(f)
-				# 	# append the filename to unprocessed files 
-				# else: 
-				# 	print_her(filename, precord_list) 
-
 			# if the file is V2/processed data file; generate text file for acceleration, and .her file 
 			elif f.upper().endswith(".V2"):
 				station = load_smc_v2(f)
@@ -83,11 +75,6 @@ def read_list(file_list):
 					print_smc(station)
 					print_her(station)
 					check_station(station)
-				# record_list, network, station_id = load_smc_v2(f)
-				# filename = network + "." + station_id + ".V2.her"
-				# if print_her(filename, record_list) == False:
-				# 	print_unprocessed(f)
-					# append the filename to unprocessed files 
 
 			else: 
 				try:
@@ -108,6 +95,8 @@ def read_list(file_list):
 			print "[ERROR]: no such file or directory: " + f
 		# file_list = list(set(file_list)) #remove duplicated ones from list 
 # end of read_list 
+
+
 def print_message(message, ftype):
 	"""
 	The function is to generate a files containing warning/unprocessed messages for input files. 
@@ -117,25 +106,6 @@ def print_message(message, ftype):
 	f.close()
 # end of print_message
 
-
-
-# def print_unprocessed(filename):
-#     """
-#     The function generates a file containing a list of files that were not processed by this program. 
-#     """
-#     f = open(destination + '/unprocessed.txt', 'a')
-#     f.write(filename +"\n")
-#     f.close()
-# # end of print_unprocessed 
-
-# def print_warning(warning):
-#     """
-#     The function is to generate warning messages for channles at special locations. 
-#     """
-#     f = open(destination + '/warning.txt', 'a')
-#     f.write(warning +"\n")
-#     f.close()
-# # end of print_warning
 
 def check_station(station):
     """
@@ -172,5 +142,3 @@ def clear(filename):
 get_filename()
 read_list(file_list) 
 
-
-# TODO: update exception 

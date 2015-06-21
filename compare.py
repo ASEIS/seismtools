@@ -74,10 +74,6 @@ def read_list(file_list):
 					pass 
 				lines = fp.read().split('\n')
 				compare_list2.append(f)
-				# if '#' and 'Samples:' and 'dt:' in lines[0]: 
-				# 	compare_list2.append(f)
-				# else: 
-				# 	print "[ERROR]: unable to recognize file type."
 
 			elif ('warning.txt' in f) or ('unprocessed.txt' in f):
 				# ignore 
@@ -130,7 +126,6 @@ def compare2(compare_list):
 			for f2 in compare_list:
 				# EXAMPLE: CI.Q0028.V1N.txt v.s. CI.Q0028.V2N.txt 
 				if f2 != f1 and f2[:-6] == f1[:-6] and f1[-5:] == f2[-5:]: 
-					print f1, f2
 					compare_txt(f1, f2)
 					# compare_list.remove(f1)
 					compare_list.remove(f2)
@@ -146,5 +141,3 @@ read_list(file_list)
 compare1(compare_list1)
 compare2(compare_list2)
 
-
-# TODO: update exception 

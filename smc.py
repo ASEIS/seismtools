@@ -179,7 +179,8 @@ def load_smc_v2(filename):
         if orientation.isdigit():
             orientation = int(orientation)
         location = channels[i][7][36:].strip()
-        print location 
+        # print location 
+        
         # if 'Depth' in location: 
         #     depth = float(location.split()[2])
         # else:
@@ -240,9 +241,9 @@ def load_smc_v2(filename):
         a_data = process_signal(a_signal)
         v_data = process_signal(v_signal)
         d_data = process_signal(d_signal)
-        data = np.c_[a_data, v_data, d_data]
+        data = np.c_[d_data, v_data, a_data]
 
-        precord = seism_precord(samples, dt, data, dtype, station_name, accel = a_data, displ = d_data, velo = v_data, orientation = orientation, date = date, time = time, depth = depth,
+        precord = seism_precord(samples, dt, data, 'c', station_name, accel = a_data, displ = d_data, velo = v_data, orientation = orientation, date = date, time = time, depth = depth,
             latitude = location_lati, longitude = location_longi)
         record_list.append(precord)
 
@@ -275,6 +276,8 @@ def print_smc(station):
     """
     global destination
     orientation = ''
+    band = {'H': '80-250Hz', 'B': '10-80Hz', 'E': '80-250Hz'}
+    data_type = {'H': 'v', 'L': 'v', 'N': 'a'}
     # network = filename.split('.')[0]
     # station = filename.split('.')[1]
 
@@ -285,6 +288,13 @@ def print_smc(station):
             orientation = 'E'
         elif record.orientation in ['Up', 'Down']:
             orientation = 'Z'
+
+        if record.dt in band.values():
+            pass 
+            # sample_rate = ?
+
+        if record.type in data_type.values():
+            pass 
 
         info = "XXX"  # info = band + instrument type + orientation 
         filename = station.network + '.' + station.id + '.' + station.type + orientation + '.txt'

@@ -18,7 +18,8 @@ class seism_signal(object):
     of samples
     """
 
-    record_type = {'a': 'Acceleration', 'v': 'Velocity', 'd': 'Displacement'}
+    # Complete Data Group = 3-column numpy array for displ, velo, accel
+    record_type = {'a': 'Acceleration', 'v': 'Velocity', 'd': 'Displacement', 'c': 'Complete Data Group'}
 
     def set_samples(self, samples):
         if not isinstance(samples, int):
@@ -117,8 +118,8 @@ class seism_signal(object):
 
     def derivative(self, data):
         """The funtion is to compute derivative of an numpy."""
+        data = np.insert(data, 0, data[0])
         data = np.diff(data/self.dt)
-        data = np.insert(data, 0, 0)
         data = ellip_filter(data, self.dt)
         return data 
 #end signal class
@@ -519,6 +520,10 @@ class seism_station(object):
         self.network = ''
         self.id = ''
         self.type = ''
+        self.name = ''
+        self.latitude = ''
+        self.longitude = ''
+
 
         if len(args) > 0:
             args_range = range(len(args))
@@ -544,6 +549,10 @@ class seism_station(object):
                 self.set_id(kwargs['station'])
             if 'type' in kwargs:
                 self.set_type(kwargs['type'])
+
+        self.set_name()
+        self.set_location()
+
         return
     #end __init__
 
@@ -574,6 +583,31 @@ class seism_station(object):
         filetype = filetype.upper()
         if filetype in ['V1', 'V2']: 
             self.type = filetype
+
+    def set_name(self):
+        if self.list:
+            if self.list[0].station_name == self.list[1].station_name == self.list[2].station_name:
+                self.name = self.list[0].station_name
+            else:
+                print "[ERROR]: channels have different station names."
+                return 
+        return 
+    # end of set_name
+
+    def set_location(self):
+        if self.list:
+            if self.list[0].location_lati == self.list[1].location_lati == self.list[2].location_lati:
+                self.latitude = self.list[0].location_lati
+
+            if self.list[0].location_longi == self.list[1].location_longi == self.list[2].location_longi:
+                self.longitude = self.list[0].location_longi
+
+            else:
+                print "[ERROR]: channels have different location (latitude/longitude)."
+                return 
+        return 
+    # end of set_location
+
 
     def rotate(self, record_list):
         """
@@ -629,7 +663,10 @@ class seism_station(object):
                 # get velocity and displacement
                 velocity = record.integrate(record.data)
                 displacement = record.integrate(velocity)
-                precord = seism_precord(record.samples, record.dt, record.data, record.type, record.station_name, accel = record.data, displ = displacement, velo = velocity, 
+
+                data = np.c_[displacement, velocity, record.data]
+
+                precord = seism_precord(record.samples, record.dt, data, 'c', record.station_name, accel = record.data, displ = displacement, velo = velocity, 
                     orientation = record.orientation, date = record.date, time = record.time, depth = record.depth, latitude = record.location_lati, longitude = record.location_longi)
                 precord_list.append(precord)
 

@@ -83,9 +83,8 @@ def read_list(file_list):
 					print e
 					pass 
 				lines = fp.read().split()
-				# print lines 
 				if not '#filelist' in lines[0]:
-					print "[ERROR]: unable to recognize file type."
+					print "[ERROR]: unable to recognize file type: " + f
 				else: 
 					for l in lines[1:]: 
 						if not l in file_list:
@@ -119,7 +118,7 @@ def check_station(station):
         return 
 
     discard = {'dam': 'Dam', 'Fire Sta': 'Fire Station', 'Acosta Res': 'Acosta Res', 'Bldg': 'Building', 'Br': 'Interchange Bridge'}
-    name = station.list[0].station_name
+    name = station.name 
     for key in discard:
         if key in name:
         	filename = station.network + station.id + '.' + station.type 
@@ -141,4 +140,5 @@ def clear(filename):
 
 get_filename()
 read_list(file_list) 
+
 

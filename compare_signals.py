@@ -50,9 +50,9 @@ def read_her_file(filename):
 	dt = time[1]
 
 	# samples, dt, data, acceleration, velocity, displacement 
-	psignal_ns = seism_psignal(samples, dt, np.c_[dis_ns, vel_ns, acc_ns], 'a', acc_ns, vel_ns, dis_ns)
-	psignal_ew = seism_psignal(samples, dt, np.c_[dis_ew, vel_ew, acc_ew], 'a', acc_ew, vel_ew, dis_ew)
-	psignal_up = seism_psignal(samples, dt, np.c_[dis_up, vel_up, acc_up], 'a', acc_up, vel_up, dis_up)
+	psignal_ns = seism_psignal(samples, dt, np.c_[dis_ns, vel_ns, acc_ns], 'c', acc_ns, vel_ns, dis_ns)
+	psignal_ew = seism_psignal(samples, dt, np.c_[dis_ew, vel_ew, acc_ew], 'c', acc_ew, vel_ew, dis_ew)
+	psignal_up = seism_psignal(samples, dt, np.c_[dis_up, vel_up, acc_up], 'c', acc_up, vel_up, dis_up)
 
 	station = [psignal_ns, psignal_ew, psignal_up]
 	# return samples, dt, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up
@@ -117,6 +117,8 @@ def plot_signals(title, signal1, signal2):
 
 	axarr[1].set_title('Fourier Amplitude Spectra')
 	axarr[1].plot(freq1,fas1,'r',freq2,fas2,'b')
+	plt.xlim(0, fmax)
+
 	f.tight_layout()
 	plt.show()
 # end of plot_signals
@@ -173,6 +175,7 @@ def plot_stations(station1, station2):
 			axarr[j][0].plot(t1,data1,'r',t2,data2,'b')
 			axarr[j][1].set_title('Fourier Amplitude Spectra')
 			axarr[j][1].plot(freq1,fas1,'r',freq2,fas2,'b')
+			plt.xlim(0, fmax)
 			f.tight_layout()
 
 		plt.show()
@@ -204,7 +207,7 @@ def compare_txt(file1, file2):
 		print "[ERROR]: Invalid instance type: can only compare signal objects."
 		return 
 
-	title = ['Acceleration ONLY: \n' + file1 + ' ' + file2]
+	title = 'Acceleration ONLY: \n' + file1 + ' ' + file2
 	plot_signals(title, signal1, signal2)
 # end of compare_txt
 

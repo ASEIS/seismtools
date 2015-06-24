@@ -7,6 +7,7 @@ import numpy as np
 from seism import *
 
 destination = 'outputs'
+
 def load_event(eventfile):
 	"""The function is to read the event file and get information about the event."""
 	if not eventfile.lower().endswith('evnt'):
@@ -201,9 +202,12 @@ def print_her(filename, dict):
 
 # process(load_file('data-sdc/14383980.CI.WNS.BLN.ascii'))
 # load_event('data-sdc/14383980.evnt')
+# file_list = ['data-sdc/14383980.CI.CHN.HHN.ascii', 'data-sdc/14383980.CI.CHN.HHE.ascii', 'data-sdc/14383980.CI.CHN.HHZ.ascii']
+
 dict = {}
-dict['N'] = process(load_file('data-sdc/14383980.CI.WNS.BLN.ascii'))
-dict['E'] = process(load_file('data-sdc/14383980.CI.WNS.BLE.ascii'))
-dict['Z'] = process(load_file('data-sdc/14383980.CI.WNS.BLZ.ascii'))
-print_her('14383980.CI.WNS.B.her', dict)
+
+dict['N'] = process(load_file('data-sdc/14383980.CI.CHN.HHN.ascii'))
+dict['E'] = process(load_file('data-sdc/14383980.CI.CHN.HHE.ascii'))
+dict['Z'] = process(load_file('data-sdc/14383980.CI.CHN.HHZ.ascii'))
+print_her('14383980.CI.WNS.BL.her', dict)
 

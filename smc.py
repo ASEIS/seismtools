@@ -296,11 +296,10 @@ def print_smc(station):
         if record.type in data_type.values():
             pass 
 
-        info = "XXX"  # info = band + instrument type + orientation 
         filename = station.network + '.' + station.id + '.' + station.type + orientation + '.txt'
         
         # generate a text file (header + data)
-        header = "# " + station.network + " " + station.id + " " + info + " " + record.date + "," + record.time + " " + str(record.samples) + " " + str(record.dt) + "\n"
+        header = "# " + station.network + " " + station.id + " " + station.type + orientation + " " + record.date + "," + record.time + " " + str(record.samples) + " " + str(record.dt) + "\n"
         try:
             f = open(destination + '/' + filename, 'w')
         except IOError, e:
@@ -366,8 +365,14 @@ def print_her(station):
     while samples > 1:
         time.append(time[len(time)-1] + precord.dt)
         samples -= 1 
-        descriptor = '{:>12}' + '  {:>12}'*9 + '\n'
-    f.write(descriptor.format("time", "dis_ns", "dis_ew", "dis_up", "vel_ns", "vel_ew", "vel_up", "acc_ns", "acc_ew", "acc_up")) # header 
+    
+    
+    header = "# " + station.network + " " + station.id + " " + station.type + " " + precord.date + "," + precord.time + " " + str(precord.samples) + " " + str(precord.dt) + "\n"
+    f.write(header)
+
+    descriptor = '{:>12}' + '  {:>12}'*9 + '\n'
+    f.write(descriptor.format("# time", "dis_ns", "dis_ew", "dis_up", "vel_ns", "vel_ew", "vel_up", "acc_ns", "acc_ew", "acc_up")) # header 
+
     descriptor = '{:>12.3f}' + '  {:>12.7f}'*9 + '\n'
     for c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 in zip(time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up):
         f.write(descriptor.format(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 ))

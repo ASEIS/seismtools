@@ -44,8 +44,14 @@ def read_her_file(filename):
 	"""
 	The function is to read 10-column .her files. Return a list of psignals for each orientation/channel. 
 	"""
-	# TODO: add exception 
-	time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up = np.loadtxt(filename, skiprows = 1, unpack = True)
+	time = dis_ns = dis_ew = dis_up = vel_ns = vel_ew = vel_up = acc_ns = acc_ew = acc_up = np.array([],float)
+
+	try:
+		time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up = np.loadtxt(filename, skiprows = 2, unpack = True)
+	except IOError:
+		print "[ERROR]: error loading her file. "
+		return False  
+
 	samples = dis_ns.size 
 	dt = time[1]
 

@@ -6,7 +6,13 @@
 import numpy as np
 from seism import *
 
-destination = 'outputs'
+destination = '' 
+def get_destination(d):
+    """The function is to get the user input from process.py."""
+    global destination
+    destination = d 
+# end of get_destination
+
 
 def load_event(eventfile):
 	"""The function is to read the event file and get information about the event."""
@@ -54,16 +60,16 @@ def load_file(filename):
 	date = ''
 	dtype = ''
 
-	# f = filename.split('/')[-1]
-	# tmp = f.split('.')
-	# event = tmp[0]
-	# network = tmp[1].upper()
-	# station_id = tmp[2].upper()
-	# info = tmp[3]
+	f = filename.split('/')[-1]
+	tmp = f.split('.')
+	event = tmp[0]
+	network = tmp[1].upper()
+	station_id = tmp[2].upper()
+	info = tmp[3]
 
-	# sample_rate = info[0].upper()
-	# instr_type = info[1].upper()
-	# orientation = info[2]
+	sample_rate = info[0].upper()
+	instr_type = info[1].upper()
+	orientation = info[2]
 
 	try:
 		f = open(filename, 'r')
@@ -102,11 +108,13 @@ def load_file(filename):
 		dtype = data_type[instr_type]
 
 	signal = seism_signal(samples, dt, data, dtype)
+	filename = event + '.' + network + '.' + station_id + '.' + sample_rate + instr_type
 	# record = seism_record(samples, dt, data, dtype, station, '', '', )
 	# samples, dt, data, signal type, station, 
  #        location_lati, location_longi, depth, date, time, orientation
-	return signal 
+	return signal
 # end of load_file
+
 
 def process(signal):
 	"""
@@ -141,6 +149,7 @@ def process(signal):
 	psignal = seism_psignal(signal.samples, signal.dt, np.c_[dis, vel, acc], 'a', acc, vel, dis)
 	return psignal
 # end of process
+
 
 def print_her(filename, dict):
     """
@@ -182,6 +191,7 @@ def print_her(filename, dict):
             vel_up = dict[key].velo.tolist()
             acc_up = dict[key].accel.tolist()
 
+    signal = dict[key]
     # get a list of time incremented by dt 
     time = [0.000]
     samples = dict['N'].samples 
@@ -190,8 +200,13 @@ def print_her(filename, dict):
     while samples > 1:
         time.append(time[len(time)-1] + dt)
         samples -= 1 
-        descriptor = '{:>12}' + '  {:>12}'*9 + '\n'
+    
+    # header = "# " + station.network + " " + station.id + " " + station.type + " " + precord.date + "," + precord.time + " " + str(precord.samples) + " " + str(precord.dt) + "\n"
+    # f.write(header)
+
+    descriptor = '{:>12}' + '  {:>12}'*9 + '\n'
     f.write(descriptor.format("time", "dis_ns", "dis_ew", "dis_up", "vel_ns", "vel_ew", "vel_up", "acc_ns", "acc_ew", "acc_up")) # header 
+
     descriptor = '{:>12.3f}' + '  {:>12.7f}'*9 + '\n'
     for c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 in zip(time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up):
         f.write(descriptor.format(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 ))
@@ -204,10 +219,21 @@ def print_her(filename, dict):
 # load_event('data-sdc/14383980.evnt')
 # file_list = ['data-sdc/14383980.CI.CHN.HHN.ascii', 'data-sdc/14383980.CI.CHN.HHE.ascii', 'data-sdc/14383980.CI.CHN.HHZ.ascii']
 
-dict = {}
 
-dict['N'] = process(load_file('data-sdc/14383980.CI.CHN.HHN.ascii'))
-dict['E'] = process(load_file('data-sdc/14383980.CI.CHN.HHE.ascii'))
-dict['Z'] = process(load_file('data-sdc/14383980.CI.CHN.HHZ.ascii'))
-print_her('14383980.CI.WNS.BL.her', dict)
 
+def main(file_list):
+	"""
+	The function reads a list of files containing data from three orientations. 
+	And call load_file and process on each of them. Then print .her file. 
+	"""
+	dict = {}
+	if len(file_list) < 3: 
+		print "[ERROR]: Missing file. The program processes three files in a group. "
+		return 
+		
+	dict['N'] = process(load_file(file_list[0]))
+	dict['E'] = process(load_file(file_list[1]))
+	dict['Z'] = process(load_file(file_list[2]))
+	print_her('14383980.CI.WNS.BL.her', dict)
+
+# end of main

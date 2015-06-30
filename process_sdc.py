@@ -9,36 +9,80 @@ import os
 
 destination = ''
 file_list = []
+path = ''
 event = ''
 net = ''
 station = ''
+info = ''
 
-def get_option():
+def split(filename):
 	"""
-	The function is to get evernt ID; station; and information code (representing sample rate and data type)
+	Split the filename to get path/event.net.station.info.ASCII
+	"""
+	global path 
+	global event 
+	global net 
+	global station 
+	global info 
+	
+	tmp = filename.split('/')[-1]
+	path = filename.replace(tmp, '')
+	tmp = tmp.split('.')
+
+	# tmp = [event, net, stat, info]
+	if len(tmp) >= 1:
+		event = tmp[0]
+	if len(tmp) >= 2: 
+		net = tmp[1]
+	if len(tmp) >= 3:
+		station = tmp[2]
+	if len(tmp) >= 4:
+		info = tmp[3][:-1]
+
+# end of split  
+
+def get_station():
+	"""To get the event ID; network code; and station ID from user as a searching option"""
+	global event 
+	global net 
+	global station 
+
+	event = raw_input('== Enter event ID (optional): ')
+	net = raw_input('== Enter network code (optional): ').upper()
+	station = raw_input('== Enter station ID (optional): ').upper()
+
+	# return event, net, station 
+
+
+def get_info():
+	"""
+	To get the information code (representing sample rate and data type)
 	from user as searching options.
 	"""
-	event = raw_input('== Enter event ID (optional): ')
-	network = raw_input('== Enter network code (optional): ').upper()
-	station = raw_input('== Enter station ID (optional): ').upper()
+	global info 
 	info = raw_input('== Enter sample rate and data type representation (optional): ').upper()
+	if len(info) == 3:
+		info = info[:-1]
+		print info 
 
-	return event, network+'.'+station, info 
+	# return info 
 
-
-	pass 
-# end of get_option
-
-def get_path(): 
+def search(): 
 	"""
 	The function is to get a list of files to search for their pairs. 
 	"""
-	global search_list
 	global destination
+	global path 
+	global event 
+	global net 
+	global station 
+	global info 
+	path_list = []
+
 
 	# if filenam is not given with command 
 	if len(sys.argv) == 1:
-		while not search_list: 
+		while not path_list: 
 			path_list = raw_input('== Enter the file\directory path: ')
 		path_list = path_list.split()
 
@@ -46,190 +90,67 @@ def get_path():
 	else: 
 		path_list = sys.argv[1:]
 
-	# iterate through paths; search for files with options 
-	for path in path_list:
-		if os.path.isdir(path):
-			event, station, info = get_option()
-			filename = path + event + '.' + station + info 
-			search(filename)
+
+	print path_list
+	# iterate through paths; search for files with matched options 
+	for p in path_list:
+		if not os.path.isdir(p):
+			split(p)
 
 		else:
-			search(path)
+			path = p 
 
-	while not destination: 
-		destination = raw_input('== Enter name of the directory to store outputs: ')
-	# check existence of target directory 
-	if not os.path.exists(destination):
-		os.makedirs(destination)
-	get_destination(destination)
+		if not path:
+			print "[ERROR]: missing directory path."
+			return 
 
-# end of get_path
+		if (not event) or (not net) or not station:
+			get_station()
 
-def search_dir(path):
-	"""Return all files in directory."""
-	file_list = []
-	for fp in os.listdir(path):
-		file_list.append(fp)
-	return sorted(file_list)
+		if not info:
+			get_info()
 
+		for fp in os.listdir(path):
+			if (event in fp) and (net in fp) and (station in fp) and (info in fp) and (fp.endswith('.ascii')):
+				file_list.append(fp)
 
-def search_station(file_list):
-	"""Return a list of data files from given station."""
-	global event 
-	global net 
-	global station 
-	target = event + '.' + net + '.' + station
-	l = []
-
-	for f in file_list:
-		if target in f: 
-			l.append(f)
-			file_list.remove(f)
-	return sorted(l)
-
-
-def search_info(file_list):
-	global info 
-	if len(info) == 3:
-		info = info.replace(info[2], '')
-
-	for i in range(0, 3):
-		info += orientation[i]
-		# f = event + '.' + net + '.' + station + '.' + info  
-		for f in file_list:
-			if info in f:
-				l.append(f)
-				file_list.remove(f)
-		info = info.replace(info[2], '')
-	return sorted(l)
+		return file_list
 
 
 
-
-
-
-	# 	for i in range(0, 3):
-	# 		info += orientation[i]
-	# 		f = event + '.' + net + '.' + station + '.' + info 
-	# 		print f 
-	# 		for fp in os.listdir(path):
-	# 			if f in fp: 
-	# 				print fp 
-	# 				file_list.append(fp)
-	# 		info = info.replace(info[2], '')
-	# 	return file_list
-
-	# pass 
-
-
-
-
-def search(filename):
+def search_pairs(file_list):
 	"""
-	The function is to search for the pairs of given files. 
+	The function is to search for the pairs in a given list of files. 
 	"""
-
-	file_dict = {}
-	file_list = []
-	orientation = ['N', 'E', 'Z']
-
-	tmp = filename.split('/')[-1]
-	path = filename.replace(tmp, '')
-	tmp = tmp.split('.')
-
-	# tmp = [event, net, stat, info]
-	if len(tmp) < 4:
-		print "[ERROR]: invalid filename/path."
+	if not file_list:
 		return 
 
-	event = tmp[0]
-	net = tmp[1]
-	station = tmp[2]
-
-	# if containing information code for searching 
-	if tmp[3]:
+	orientation = ['N', 'E', 'Z']
+	for f in file_list:
+		file_dict = {}
+		tmp = f.split('/')[-1]
+		path = f.replace(tmp, '')
+		tmp = tmp.split('.')
+		if len(tmp) < 5:
+			return 
 		info = tmp[3]
-		if len(info) == 3:
-			info = info.replace(info[2], '')
-
-
+		info = info[0:2]
 		for i in range(0, 3):
-			info += orientation[i]
-			f = event + '.' + net + '.' + station + '.' + info 
-			print f 
-			for fp in os.listdir(path):
-				if f in fp: 
-					print fp 
-					file_list.append(fp)
-			info = info.replace(info[2], '')
-		return file_list
+			target = path + tmp[0] + '.' + tmp[1] + '.' + tmp[2] + '.' + info + orientation[i] + '.ascii'
+			print target
+			if target in file_list:
+				# print target 
+				file_dict[orientation[i]] = target
+				file_list.remove(target)
 
-	
-	# if containing network and station id for searching 
-	elif tmp[1] and tmp[2]:
-		f = event + '.' + net + '.' + station 
-		for fp in os.listdir(path):
-			if f in fp: 
-				file_list.append(fp)
-		file_list = sorted(file_list)
-		print file_list 
-		return file_list
+		print file_dict
+		print file_list
 
-	# i = len(tmp) - 2
-	# for i in range(0, len(tmp)):
-	# 	filename = tmp[0] + 
-	# tmp 
-	
-	# tmp = tmp.split('.')
-	# if 'ascii' in tmp: tmp.remove('ascii')
-	# if len(tmp) >= 4: 
-	# 	info = tmp[3]
-	# 	if len(info) == 3: 
-	# 		file_list.append()
-
-	# event = tmp[0]
-	# network = tmp[1].upper()
-	# station_id = tmp[2].upper()
-	# info = tmp[3]
-
-	# for s in search_list:
-	# 	# if is a directory
-	# 	if os.path.isdir(s):
-	# 		for fp in os.listdir(s):
-	# 			filename = s + '/' + fp
-	# 			if not filename in file_list: 
-	# 				file_list.append(filename)
-
-	# 	# if is an existing file 
-	# 	elif os.path.isfile(s) and os.stat(f).st_size != 0:
+		# process the directory
+		pass 
 
 
 
-	# 	tmp = s.split('/')[-1]
-	# 	path = s.replace(tmp, "")
-	# 	print path 
-	# 	tmp = tmp.split('.')
-	# 	event = tmp[0]
-	# 	network = tmp[1].upper()
-	# 	station_id = tmp[2].upper()
-	# 	info = tmp[3]
-	
-
-
-	# 	print tmp 
-
-
-
-
-	pass 
-# end of search 
-
-
-
-
-
-# get_search_list()
-search('data-sdc/14383980.CI.CHN.')
-# read_list(file_list) 
-
-
+file_list = search()
+print file_list
+search_pairs(file_list)

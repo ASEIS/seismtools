@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # ===================================================================================
 # The program is to read two .her files; process their signals; 
-# calculate their scores; and generate 3D matrix for scores. 
+# calculate their scores with different sample rates; 
+# and generate 3D matrix for scores. 
 # ===================================================================================
 
 import sys

@@ -221,19 +221,20 @@ def print_her(filename, dict):
 
 
 
-def main(file_list):
+def main(file_dict):
 	"""
-	The function reads a list of files containing data from three orientations. 
-	And call load_file and process on each of them. Then print .her file. 
+	The function reads the dictionary getting from process_sdc; 
+	INPUT: dictionary holding paths to files 
+	OUTUTS: dictionary holding psignals. 
 	"""
 	dict = {}
 	if len(file_list) < 3: 
 		print "[ERROR]: Missing file. The program processes three files in a group. "
 		return 
 		
-	dict['N'] = process(load_file(file_list[0]))
-	dict['E'] = process(load_file(file_list[1]))
-	dict['Z'] = process(load_file(file_list[2]))
+	file_dict['N'] = process(load_file(file_dict['N']))
+	file_dict['E'] = process(load_file(file_dict['E']))
+	file_dict['Z'] = process(load_file(file_dict['Z']))
 	print_her('14383980.CI.WNS.BL.her', dict)
 
 # end of main

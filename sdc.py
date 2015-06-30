@@ -5,6 +5,7 @@
 # ==========================================================================
 import numpy as np
 from seism import *
+from stools import *
 
 destination = '' 
 def get_destination(d):
@@ -128,21 +129,22 @@ def process(signal):
 	acc = np.array([],float)
 	vel = np.array([],float)
 	dis = np.array([],float)
+	dt = signal.dt 
 
 	if signal.type == 'a':
 		acc = signal.data 
-		vel = signal.integrate(acc)
-		dis = signal.integrate(vel)
+		vel = integrate(acc, dt)
+		dis = integrate(vel, dt)
 
 	elif signal.type == 'v':
 		vel = signal.data 
-		acc = signal.derivative(vel)
-		dis = signal.integrate(vel)
+		acc = derivative(vel, dt)
+		dis = integrate(vel, dt)
 
 	elif signal.type == 'd':
 		dis = signal.data 
-		vel = signal.derivative(dis)
-		acc = signal.derivative(vel)
+		vel = derivative(dis, dt)
+		acc = derivative(vel, dt)
 	else:
 		pass 
 

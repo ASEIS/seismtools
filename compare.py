@@ -5,8 +5,9 @@
 # ==========================================================================
 import sys
 import os
-from smc import *
+# from smc import *
 from compare_signals import *
+from stools import *
 
 file_list = []
 compare_list1 = []

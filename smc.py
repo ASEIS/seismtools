@@ -241,7 +241,7 @@ def load_smc_v2(filename):
         a_data = process_signal(a_signal)
         v_data = process_signal(v_signal)
         d_data = process_signal(d_signal)
-        data = np.c_[d_data, v_data, a_data]
+        data = np.c_[d_data, v_data, a_data] 
 
         precord = seism_precord(samples, dt, data, 'c', station_name, accel = a_data, displ = d_data, velo = v_data, orientation = orientation, date = date, time = time, depth = depth,
             latitude = location_lati, longitude = location_longi)

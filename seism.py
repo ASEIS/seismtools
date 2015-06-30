@@ -4,8 +4,8 @@ __author__ = 'rtaborda'
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import filtfilt, ellip
 import math
+from stools import *
 
 
 class seism_signal(object):
@@ -109,19 +109,6 @@ class seism_signal(object):
             pass
         return
     #end plot
-
-    def integrate(self, data):
-        """The function is to integrate to get the other type of data."""
-        data = ellip_filter(np.cumsum(data*self.dt), self.dt)
-        # data = ellip_filter(np.cumsum(data*self.dt), self.dt, Wn = 0.075/((1.0/self.dt)/2.0), N = 7)
-        return data
-
-    def derivative(self, data):
-        """The funtion is to compute derivative of an numpy."""
-        data = np.insert(data, 0, data[0])
-        data = np.diff(data/self.dt)
-        data = ellip_filter(data, self.dt)
-        return data 
 #end signal class
 
 
@@ -661,8 +648,8 @@ class seism_station(object):
 
             if record.type == 'a': 
                 # get velocity and displacement
-                velocity = record.integrate(record.data)
-                displacement = record.integrate(velocity)
+                velocity = integrate(record.data, record.dt)
+                displacement = integrate(velocity, record.dt)
 
                 data = np.c_[displacement, velocity, record.data]
 
@@ -683,44 +670,3 @@ class seism_station(object):
 #end station class
 
 
-
-# ===================================================Global Functions=======================================================
-def ellip_filter(data, dt, *args, **kwargs):
-    """
-    Correct order for unlabeled arguments is: data, dt, order N, rp, rs, Wn 
-    """
-    if not isinstance(data, np.ndarray): 
-        print "\n[ERROR]: data is not an numpy array.\n"
-        return 
-    data = data 
-    dt = dt
-    N = 5
-    rp = 0.1
-    rs = 100 
-    Wn = 0.05/((1.0/dt)/2.0)
-
-    if len(args) > 0:
-        args_range = range(len(args))
-        if 0 in args_range:
-            N = args[0]
-        if 1 in args_range:
-            rp = args[1]
-        if 2 in args_range:
-            rs = args[2]
-        if 3 in args_range:
-            Wn = args[3]
-
-    if len(kwargs) > 0:
-        if 'N' in kwargs:
-            N = kwargs['N']
-        if 'rp' in kwargs:
-            rp = kwargs['rp']
-        if 'rs' in kwargs:
-            rs = kwargs['rs']
-        if 'Wn' in kwargs:
-            Wn = kwargs['Wn']
-
-    # create highpass elliptic filter 
-    b, a = ellip(N = N, rp = rp, rs = rs, Wn = Wn, btype = 'highpass', analog=False)
-    data = filtfilt(b, a, data)
-    return data 

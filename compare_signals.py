@@ -6,11 +6,9 @@
 # ==========================================================================
 import numpy as np
 import matplotlib.pyplot as plt
-import math 
+# import math 
 from seism import *
-
-fmin = 0.05 
-fmax = 5.0 
+from stools import *
 
 def read_file(filename): 
 	"""
@@ -53,7 +51,7 @@ def read_her_file(filename):
 		return False  
 
 	samples = dis_ns.size 
-	dt = time[1]
+	dt = time[2] - time[1]
 
 	# samples, dt, data, acceleration, velocity, displacement 
 	psignal_ns = seism_psignal(samples, dt, np.c_[dis_ns, vel_ns, acc_ns], 'c', acc_ns, vel_ns, dis_ns)
@@ -63,31 +61,6 @@ def read_her_file(filename):
 	station = [psignal_ns, psignal_ew, psignal_up]
 	# return samples, dt, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up
 	return station 
-
-
-def FAS(data, dt, points):
-	global fmin 
-	global fmax 
-	afs = abs(np.fft.fft(data, points))*dt 
-	# freq = (1/signal.dt)*range(points)/points 
-	freq = (1/dt)*np.array(range(points))/points 
-
-	deltaf = (1/dt)/points
-
-	inif = int(fmin/deltaf)
-	endf = int(fmax/deltaf) + 1
-
-	afs = afs[inif:endf]
-	freq = freq[inif:endf]
-
-	# freq = t; data = afs 
-	return freq, afs 
-
-def get_points(samples1, samples2):
-	# points is the least base-2 number that is greater than max samples 
-	power = int(math.log(max(samples1, samples2), 2)) + 1 
-	return 2**power 
-# end of get_points
 
 
 
@@ -147,7 +120,7 @@ def plot_stations(station1, station2):
 
 	# from displacement to velocity to acceleration
 	for i in range(0, 3):
-		f, axarr = plt.subplots(nrows = 3, ncols = 2, figsize = (12, 16))
+		f, axarr = plt.subplots(nrows = 3, ncols = 2, figsize = (12, 12))
 		# iterative through psignals in each station 
 		for j in range(0, 3):
 			title = dtype[i] + ' in ' + orientation[j]
@@ -207,6 +180,8 @@ def compare_txt(file1, file2):
 		file1 = file2 
 		file2 = tmp 
 
+	print file1, file2
+
 	signal1 = read_file(file1)
 	signal2 = read_file(file2)
 	if (not isinstance(signal1, seism_signal)) or (not isinstance(signal2, seism_signal)):
@@ -226,6 +201,8 @@ def compare_her(file1, file2):
 		file1 = file2 
 		file2 = tmp 
 
+	print file1, file2
+
 	# station = [psignal_ns, psignal_ew, psignal_up]
 	station1 = read_her_file(file1) 
 	station2 = read_her_file(file2)
@@ -234,14 +211,4 @@ def compare_her(file1, file2):
 
 	# test(station1[0])
 # end of compare_her
-
-def set_bound(f1, f2): 
-	"""The function is used to get fmin and fmax from compare.py"""
-	global fmin 
-	global fmax 
-	fmin = f1 
-	fmax = f2
-
-	# print fmin, fmax 
-# end of set_bound
 

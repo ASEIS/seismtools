@@ -76,20 +76,20 @@ def read_list(file_list):
 					print_her(station)
 					check_station(station)
 
-			else: 
+			else:
 				try:
 					fp = open(f)
 				except IOError, e:
 					print e
-					pass 
+					pass
 				lines = fp.read().split()
 				if not '#filelist' in lines[0]:
 					print "[ERROR]: unable to recognize file type: " + f
-				else: 
-					for l in lines[1:]: 
+				else:
+					for l in lines[1:]:
 						if not l in file_list:
 							file_list.append(l)
-					# file_list += lines[1:]
+						# file_list += lines[1:]
 		else:
 			print "[ERROR]: no such file or directory: " + f
 		# file_list = list(set(file_list)) #remove duplicated ones from list 

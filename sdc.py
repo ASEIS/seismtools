@@ -132,7 +132,7 @@ def process(signal):
 	if signal.type == 'a':
 		acc = signal.data 
 		vel = signal.integrate(acc)
-		dis = signal.integrate(velocity)
+		dis = signal.integrate(vel)
 
 	elif signal.type == 'v':
 		vel = signal.data 
@@ -151,21 +151,28 @@ def process(signal):
 # end of process
 
 
-def print_her(filename, dict):
+def print_her(file_dict):
     """
     The function generates .her files for each station (with all three channels included)
     """
     global destination
      # if there are more than three channels, save for later 
-    if len(dict) > 3:
+    if len(file_dict) > 3:
         print "==[The function is processing files with 3 channels only.]=="
         return False 
+
+    filename = file_dict['N'].split('/')[-1].replace('N.ascii', '.her')
 
     try:
         f = open(destination + '/' + filename, 'w')
     except IOError, e:
         print e
         # return 
+
+    # load files in dictionary; generate siganls and processes them
+    file_dict['N'] = process(load_file(file_dict['N']))
+    file_dict['E'] = process(load_file(file_dict['E']))
+    file_dict['Z'] = process(load_file(file_dict['Z']))
 
     dis_ns = []
     vel_ns = []
@@ -177,35 +184,41 @@ def print_her(filename, dict):
     vel_up = []
     acc_up = []
 
-    for key in dict:
+    for key in file_dict:
         if key == 'N':
-            dis_ns = dict[key].displ.tolist()
-            vel_ns = dict[key].velo.tolist()
-            acc_ns = dict[key].accel.tolist()
+            dis_ns = file_dict[key].displ.tolist()
+            vel_ns = file_dict[key].velo.tolist()
+            acc_ns = file_dict[key].accel.tolist()
         elif key == 'E':
-            dis_ew = dict[key].displ.tolist()
-            vel_ew = dict[key].velo.tolist()
-            acc_ew = dict[key].accel.tolist()
+            dis_ew = file_dict[key].displ.tolist()
+            vel_ew = file_dict[key].velo.tolist()
+            acc_ew = file_dict[key].accel.tolist()
         elif key == 'Z':
-            dis_up = dict[key].displ.tolist()
-            vel_up = dict[key].velo.tolist()
-            acc_up = dict[key].accel.tolist()
+            dis_up = file_dict[key].displ.tolist()
+            vel_up = file_dict[key].velo.tolist()
+            acc_up = file_dict[key].accel.tolist()
 
-    signal = dict[key]
+    signal = file_dict[key]
     # get a list of time incremented by dt 
     time = [0.000]
-    samples = dict['N'].samples 
-    dt = dict['N'].dt
+    samples = file_dict['N'].samples 
+    dt = file_dict['N'].dt
     
     while samples > 1:
         time.append(time[len(time)-1] + dt)
         samples -= 1 
     
-    # header = "# " + station.network + " " + station.id + " " + station.type + " " + precord.date + "," + precord.time + " " + str(precord.samples) + " " + str(precord.dt) + "\n"
-    # f.write(header)
+    network = filename.split('.')[1]
+    station = filename.split('.')[2]
+    info = filename.split('.')[3]
+
+
+    # TODO: get time and date from read_event()
+    header = "# " + network + " " + station + " " + "ASCII" + " " + "date" + "," + "time" + " " + str(signal.samples) + " " + str(signal.dt) + "\n"
+    f.write(header)
 
     descriptor = '{:>12}' + '  {:>12}'*9 + '\n'
-    f.write(descriptor.format("time", "dis_ns", "dis_ew", "dis_up", "vel_ns", "vel_ew", "vel_up", "acc_ns", "acc_ew", "acc_up")) # header 
+    f.write(descriptor.format("# time", "dis_ns", "dis_ew", "dis_up", "vel_ns", "vel_ew", "vel_up", "acc_ns", "acc_ew", "acc_up")) # header 
 
     descriptor = '{:>12.3f}' + '  {:>12.7f}'*9 + '\n'
     for c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 in zip(time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up):
@@ -221,20 +234,20 @@ def print_her(filename, dict):
 
 
 
-def main(file_dict):
-	"""
-	The function reads the dictionary getting from process_sdc; 
-	INPUT: dictionary holding paths to files 
-	OUTUTS: dictionary holding psignals. 
-	"""
-	dict = {}
-	if len(file_list) < 3: 
-		print "[ERROR]: Missing file. The program processes three files in a group. "
-		return 
+# def main(file_dict):
+# 	"""
+# 	The function reads the dictionary getting from process_sdc; 
+# 	INPUT: dictionary holding paths to files 
+# 	OUTUTS: dictionary holding psignals. 
+# 	"""
+# 	# dict = {}
+# 	# if len(file_list) < 3: 
+# 	# 	print "[ERROR]: Missing file. The program processes three files in a group. "
+# 	# 	return 
 		
-	file_dict['N'] = process(load_file(file_dict['N']))
-	file_dict['E'] = process(load_file(file_dict['E']))
-	file_dict['Z'] = process(load_file(file_dict['Z']))
-	print_her('14383980.CI.WNS.BL.her', dict)
+# 	file_dict['N'] = process(load_file(file_dict['N']))
+# 	file_dict['E'] = process(load_file(file_dict['E']))
+# 	file_dict['Z'] = process(load_file(file_dict['Z']))
+# 	print_her(file_dict)
 
 # end of main

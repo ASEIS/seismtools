@@ -5,7 +5,7 @@
 # ===================================================================================
 import sys
 import os
-# from sdc import *
+from sdc import *
 
 destination = ''
 file_list = []
@@ -26,7 +26,7 @@ def split(filename):
 	global info 
 	
 	tmp = filename.split('/')[-1]
-	path = filename.replace(tmp, '')
+	path = filename.replace('/'+tmp, '')
 	tmp = tmp.split('.')
 
 	# tmp = [event, net, stat, info]
@@ -63,7 +63,6 @@ def get_info():
 	info = raw_input('== Enter sample rate and data type representation (optional): ').upper()
 	if len(info) == 3:
 		info = info[:-1]
-		print info 
 
 	# return info 
 
@@ -91,7 +90,7 @@ def search():
 		path_list = sys.argv[1:]
 
 
-	print path_list
+	# print path_list
 	# iterate through paths; search for files with matched options 
 	for p in path_list:
 		if not os.path.isdir(p):
@@ -114,7 +113,19 @@ def search():
 			if (event in fp) and (net in fp) and (station in fp) and (info in fp) and (fp.endswith('.ascii')):
 				file_list.append(fp)
 
-		return file_list
+	
+
+	while not destination: 
+		destination = raw_input('== Enter name of the directory to store outputs: ')
+	# check existence of target directory 
+	if not os.path.exists(destination):
+		os.makedirs(destination)
+
+	get_destination(destination)
+
+	return file_list
+
+# end of search 
 
 
 
@@ -129,28 +140,24 @@ def search_pairs(file_list):
 	for f in file_list:
 		file_dict = {}
 		tmp = f.split('/')[-1]
-		path = f.replace(tmp, '')
 		tmp = tmp.split('.')
 		if len(tmp) < 5:
 			return 
 		info = tmp[3]
 		info = info[0:2]
 		for i in range(0, 3):
-			target = path + tmp[0] + '.' + tmp[1] + '.' + tmp[2] + '.' + info + orientation[i] + '.ascii'
-			print target
+			target = tmp[0] + '.' + tmp[1] + '.' + tmp[2] + '.' + info + orientation[i] + '.ascii'
 			if target in file_list:
-				# print target 
-				file_dict[orientation[i]] = target
+				file_dict[orientation[i]] = path + '/' + target
 				file_list.remove(target)
 
-		print file_dict
-		print file_list
 
-		# process the directory
+		# process the directory with sdc.py
+		print_her(file_dict)
 		pass 
 
 
 
 file_list = search()
-print file_list
+# print file_list
 search_pairs(file_list)

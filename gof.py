@@ -9,17 +9,18 @@ import sys
 import os
 import numpy as np
 from seism import *
+from stools import *
 
 
 destination = 'outputs'
-bb = 0.05
-b1 = 0.1
-b2 = 0.25 
-b3 = 0.5
-b4 = 1
-b5 = 2
-b6 = 4 
-rate = [bb, b1, b2, b3, b4, b5, b6]
+f0 = 0.05
+f1 = 0.1
+f2 = 0.25 
+f3 = 0.5
+f4 = 1
+f5 = 2
+f6 = 4 
+bands = [f0, f1, f2, f3, f4, f5, f6]
 
 
 def get_files(): 
@@ -41,7 +42,7 @@ def get_files():
 	while not file2:
 		file2 = raw_input('== Enter the path of file2: ')
 
-	get_rate()
+	get_bands()
 
 
 	# get the destination saving outputs 
@@ -59,45 +60,37 @@ def get_files():
 	return file1, file2
 # end of get_files
 
-def get_rate():
+def get_bands():
 	"""
 	The function is to allow user specify sample rates. 
 	Without user input, sample rates are setting to default values. 
 	"""
-	global rate
-	input_rate = []
+	global bands
+	freq = []
 	flag = True 
 
 	while flag: 
 		flag = False 
-		input_rate = raw_input('== Enter the sequence of 6 sample rates: ').split()
-		if not input_rate:
+		freq = raw_input('== Enter the sequence of sample rates: ').replace(',', ' ').split()
+		if not freq:
 			#setting to default values 
 			return
 
-		if len(input_rate) != 7: 
-			print "[ERROR]: missing sample rates."
-			flag = True 
-		else: 
-
+		bands = []
+		for f in freq:
 			try: 
-				bb = float(input_rate[0])
-				b1 = float(input_rate[1])
-				b2 = float(input_rate[2])
-				b3 = float(input_rate[3])
-				b4 = float(input_rate[4])
-				b5 = float(input_rate[5])
-				b6 = float(input_rate[6])
-			except ValueError: 
+				bands.append(float(f))
+			except ValueError:
 				print "[ERROR]: invalid sample rates"
-				flag = True 
+				flag = True
 
-			if not (bb  < b1 < b2 < b3 < b4 < b5 < b6):
+		for i in range(0, len(bands)-1):
+			if bands[i] >= bands[i+1]:
 				print "[ERROR]: invalid sequence of sample rates"
 				flag = True 
+				break 
 
-	rate = [bb, b1, b2, b3, b4, b5, b6]
-# enf of get_rate
+# enf of get_bands
 
 def read_file(filename):
 	"""
@@ -107,7 +100,7 @@ def read_file(filename):
 	time = dis_ns = dis_ew = dis_up = vel_ns = vel_ew = vel_up = acc_ns = acc_ew = acc_up = np.array([],float)
 
 	try:
-		time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up = np.loadtxt(filename, skiprows = 2, unpack = True)
+		time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up = np.loadtxt(filename, skiprows = 1, unpack = True)
 	except IOError:
 		print "[ERROR]: error loading her file. "
 		return False  
@@ -124,7 +117,7 @@ def read_file(filename):
 	return station 
 # end of read_file
 
-
+# ===========================================================================================
 def filt(psignal):
 	"""The function is to call ellip_filter on each psignal from seism.py"""
 	if not isinstance(psignal, seism_psignal):
@@ -159,29 +152,117 @@ def cal_peak(data1, data2):
 	score = S(p1, p2)
 	return score 
 
+def I(data, dt):
+	# I(t) = max|integral(data^2)dt|
+	return np.amax(np.cumsum(data*data*dt))
 
+
+def cal_SI(signal1, signal2):
+	"""
+	score = S(IA1, IA2) for Arias intensity 
+	score = S(IE1, IE2) for Energy integral 
+	"""
+	I1 = I(signal1.accel, signal1.dt)
+	I2 = I(signal2.accel, signal2.dt)
+	SIa = S(I1, I2)
+
+	I1 = I(signal1.velo, signal1.dt)
+	I2 = I(signal2.velo, signal2.dt)
+	SIv = S(I1, I2)
+	return SIa, SIv 
+
+def N(data, dt):
+	"""N = Ie(t)/IE = Ia(t)/IA"""
+	return np.cumsum(data*data*dt)/I(data, dt)
+
+def F(N1, N2):
+	return np.absolute(N1-N2)
+
+
+def cal_SD(signal1, signal2):
+	"""SD = 10*(1-max(F))"""
+	N1 = N(signal1.accel, signal1.dt)
+	N2 = N(signal2.accel, signal2.dt)
+	SDa = 10*(1-np.amax(F(N1, N2)))
+
+	N1 = N(signal1.velo, signal1.dt)
+	N2 = N(signal2.velo, signal2.dt)
+	SDe = 10*(1-np.amax(F(N1, N2)))
+
+	return SDa, SDe
+
+def cal_Sfs(signal1, signal2):
+	"""
+	calculate the score for Fourier Spectra
+	Sfs = mean(S(FS1, FS2))
+	"""
+	points = get_points(signal1.samples, signal2.samples)
+	fs1 = FAS(signal1.accel, signal1.dt, points)[-1]
+	fs2 = FAS(signal2.accel, signal2.dt, points)[-1]
+	s = np.array([],float)
+
+	for i in range(0, fs1.size):
+		s = np.append(s, S(fs1[i], fs2[i]))
+
+	# print s.size 
+	Sfs = np.mean(s)
+	return Sfs
+
+def cal_C(a1, a2, dt):
+	"""
+	calculate the score for Cross Correlation 
+	C* = 10*max(C(a1, a2), 0)
+	C = integral(a1, a2)dt/((integral(a1^2)dt^1/2)*(integral(a2^2)dt^1/2))
+	"""
+	x = np.cumsum(a1*a2*dt)
+	y = np.cumsum(a1*a1*dt)
+	z = np.cumsum(a2*a2*dt)
+	c = x/(np.power(y, 0.5)*np.power(z, 0.5))
+	cc = 10*np.amax(c, 0)
+	return cc 
+
+
+
+# ============================================================================================
 
 def scores_matrix(station1, station2):
 	"""
 	Generate the 3D matrix of scores 
 	"""
-	global rate 
+	global bands 
+	bands.insert(0, bands[len(bands)-1])
+	# print bands 
 	c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c9 = c10 = c11 = avg = 0.0
 
-	matrix = np.empty((3, 8, 12))
+	matrix = np.empty((3, len(bands)+1, 12))
 
 	for i in range(0, len(station1)):
-		for j in range(0, len(rate)-1): 
-			fmin = rate[j]
-			fmax = rate[j+1]
+		for j in range(0, len(bands)-1): 
+			if j == 0:
+				# BB-Bn
+				fmin = bands[j+1]
+				fmax = bands[j]
+			else: 
+				# Bn-Bn+1
+				fmin = bands[j]
+				fmax = bands[j+1]
 			# print fmin, fmax 
+
+			# set the fmin and fmax being used in stools.py 
+			set_bound(fmin, fmax)
 
 			signal1 = filt(station1[i])
 			signal2 = filt(station2[i])
 
+			c1, c2 = cal_SD(signal1, signal2)
+			c3, c4 = cal_SI(signal1, signal2)
 			c5 = cal_peak(signal1.accel, signal2.accel)
 			c6 = cal_peak(signal1.velo, signal2.velo)
 			c7 = cal_peak(signal1.displ, signal2.displ)
+
+			c9 = cal_Sfs(signal1, signal2)
+			c10 = cal_C(signal1.accel, signal2.accel, signal1.dt)
+
 
 			scores = np.array([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11], float)
 			scores = np.append(scores, np.average(scores))
@@ -219,42 +300,6 @@ def scores_matrix(station1, station2):
 	
 	return matrix
 
-def my_scores_matrix(station1, station2):
-	pass 
-
-
-def print_matrix(matrix):
-	"""
-	The function generates a text files printing the scores matrix. 
-	"""
-	global destination
-	filename = "scores.txt"
-	ll = []
-	try:
-		f = open(destination + '/' + filename, 'w')
-	except IOError, e:
-		print e
-
-	for i in range(0, 3): 
-		for j in range(0, 8):
-			for k in range(0, 12): 
-				f.write(str(matrix[i][j][k]) + '\t')
-			f.write('\n')
-
-	# 		ll.append(matrix[i][j].tolist())
-
-	# descriptor = '{:>12.2f}'*len(ll) + '\n'
-
-	# 	for i in range(0, len(l)):
-	# 		f.write(descriptor.format(l[i]))
-
-		# f.write(descriptor.format(l))
-	f.close()
-	pass 
-
-
-
-
 
 
 file1, file2 = get_files()
@@ -268,8 +313,29 @@ station2 = read_file(file2)
 # filt(station2[2])
 matrix = scores_matrix(station1, station2)
 
-# print_matrix(matrix)
+
+def print_scores(matrix):
+	global destination
+	filename = "scores.txt"
+	s = ''
+	try:
+		f = open(destination + '/' + filename, 'a')
+	except IOError, e:
+		print e
+
+	for i in range(0, 3):
+		for j in range(0, len(bands)):
+			for k in range(0, len(matrix[i][j])):
+				s += str(matrix[i][j][k]) + ' '
+
+	f.write(s + '\n')
+	f.close()
+# end of print_scores
+
+# print_scores(matrix)
+
 
 for i in range(0, 3):
-	for j in range(0, 8):
+	for j in range(0, len(bands)):
 		print matrix[i][j]
+	print "----------------------------------------------------------------------"

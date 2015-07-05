@@ -65,24 +65,34 @@ def ellip_filter(data, dt, *args, **kwargs):
     data = filtfilt(b, a, data)
     return data 
 
+def smooth(data, factor): 
+    # factor = 3; c = 0.5, 0.25, 0.25
+    # TODO: fix coefficients for factors other than 3 
+    c = 0.5/(factor-1)
+    for i in range(1, data.size-1):
+        data[i] = 0.5*data[i] + c*data[i-1] + c*data[i+1]
+    return data 
 
-def FAS(data, dt, points):
-	global fmin 
-	global fmax 
-	afs = abs(np.fft.fft(data, points))*dt 
-	# freq = (1/signal.dt)*range(points)/points 
-	freq = (1/dt)*np.array(range(points))/points 
 
-	deltaf = (1/dt)/points
+def FAS(data, dt, points, fmin, fmax, s_factor):
+    afs = abs(np.fft.fft(data, points))*dt
+	# freq = (1/signal.dt)*range(points)/points
+    freq = (1/dt)*np.array(range(points))/points
 
-	inif = int(fmin/deltaf)
-	endf = int(fmax/deltaf) + 1
+    deltaf = (1/dt)/points
 
-	afs = afs[inif:endf]
-	freq = freq[inif:endf]
+    inif = int(fmin/deltaf)
+    endf = int(fmax/deltaf) + 1
+    
+    afs = afs[inif:endf]
+    afs = smooth(afs, s_factor)
+    freq = freq[inif:endf]
+    return freq, afs
 
-	# freq = t; data = afs 
-	return freq, afs 
+    # afs = afs[inif:endf]
+    # afs = smooth(afs, s_factor) # smooth the curve 
+    # freq = freq[inif:endf]
+    # return freq, afs 
 
 def get_points(samples1, samples2):
 	# points is the least base-2 number that is greater than max samples 
@@ -97,6 +107,6 @@ def set_bound(f1, f2):
 	fmin = f1 
 	fmax = f2
 
-	# print fmin, fmax 
+	print fmin, fmax 
 # end of set_bound
 

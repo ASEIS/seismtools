@@ -40,7 +40,8 @@ def get_bound():
 		print "[ERROR]: fmax must be greater than fmin."
 		return get_bound()
 
-	set_bound(fmin, fmax)
+	# set_bound(fmin, fmax)
+	return fmin, fmax 
 
 
 
@@ -136,9 +137,13 @@ def compare2(compare_list):
 
 
 get_filename()
-get_bound()
+
+# fmin, fmax = get_bound()
+
 read_list(file_list) 
 
 compare1(compare_list1)
 compare2(compare_list2)
+
+# compare_her("3/14383980.CI.CHN.HH.her", "3/14383980.CI.CHN.BH.her")
 

@@ -8,6 +8,7 @@ from seism import *
 from stools import *
 
 destination = '' 
+header = ''
 def get_destination(d):
     """The function is to get the user input from process.py."""
     global destination
@@ -50,6 +51,7 @@ def load_file(filename):
 		print "[ERROR]: process Waveform files in ascii format only. "
 		return 
 
+	global header 
 	band = {'H': '80-250Hz', 'B': '10-80Hz', 'E': '80-250Hz'}
 	data_type = {'H': 'v', 'L': 'v', 'N': 'a'}
 	# v for velocity; a for acceleration, d for displacement 
@@ -57,20 +59,20 @@ def load_file(filename):
 	network = ''
 	station = ''
 	dt = 0.0
-	orientation = ''
+	# orientation = ''
 	date = ''
 	dtype = ''
 
 	f = filename.split('/')[-1]
 	tmp = f.split('.')
 	event = tmp[0]
-	network = tmp[1].upper()
-	station_id = tmp[2].upper()
-	info = tmp[3]
+	# network = tmp[1].upper()
+	# station_id = tmp[2].upper()
+	# info = tmp[3]
 
-	sample_rate = info[0].upper()
-	instr_type = info[1].upper()
-	orientation = info[2]
+	# sample_rate = info[0].upper()
+	# instr_type = info[1].upper()
+	# orientation = info[2]
 
 	try:
 		f = open(filename, 'r')
@@ -78,7 +80,7 @@ def load_file(filename):
 		print e
 		return 
 
-	data = np.loadtxt(filename, skiprows = 1, unpack = True)
+	data = np.loadtxt(filename, comments = '#', unpack = True)
 	samples = data.size -1 
 
 	for line in f:
@@ -109,7 +111,10 @@ def load_file(filename):
 		dtype = data_type[instr_type]
 
 	signal = seism_signal(samples, dt, data, dtype)
-	filename = event + '.' + network + '.' + station_id + '.' + sample_rate + instr_type
+	# print date 
+	header = "# " + network + " " + station + " " + "ASCII" + " " + date + " " + str(samples) + " " + str(dt) + "\n"
+	# print header 
+	# filename = event + '.' + network + '.' + station + '.' + sample_rate + instr_type
 	# record = seism_record(samples, dt, data, dtype, station, '', '', )
 	# samples, dt, data, signal type, station, 
  #        location_lati, location_longi, depth, date, time, orientation
@@ -216,7 +221,7 @@ def print_her(file_dict):
 
 
     # TODO: get time and date from read_event()
-    header = "# " + network + " " + station + " " + "ASCII" + " " + "date" + "," + "time" + " " + str(signal.samples) + " " + str(signal.dt) + "\n"
+    # header = "# " + network + " " + station + " " + "ASCII" + " " + "date" + "," + "time" + " " + str(signal.samples) + " " + str(signal.dt) + "\n"
     f.write(header)
 
     descriptor = '{:>12}' + '  {:>12}'*9 + '\n'

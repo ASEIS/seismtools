@@ -45,13 +45,14 @@ def read_her_file(filename):
 	time = dis_ns = dis_ew = dis_up = vel_ns = vel_ew = vel_up = acc_ns = acc_ew = acc_up = np.array([],float)
 
 	try:
-		time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up = np.loadtxt(filename, skiprows = 2, unpack = True)
+		time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up = np.loadtxt(filename, comments='#', unpack = True)
+		print time
 	except IOError:
 		print "[ERROR]: error loading her file. "
 		return False  
 
 	samples = dis_ns.size 
-	dt = time[2] - time[1]
+	dt = time[1]
 
 	# samples, dt, data, acceleration, velocity, displacement 
 	psignal_ns = seism_psignal(samples, dt, np.c_[dis_ns, vel_ns, acc_ns], 'c', acc_ns, vel_ns, dis_ns)
@@ -68,8 +69,10 @@ def plot_signals(title, signal1, signal2):
 	"""
 	This function is to plot Signals with Fourier Amplitude Spectura. 
 	"""
-	global fmin
-	global fmax 
+	# global fmin
+	# global fmax 
+	fmin = 0.05
+	fmax = 4
 
 	if (not isinstance(signal1, seism_signal)) or (not isinstance(signal2, seism_signal)):
 		print "[ERROR]: Invalid instance type: can only plot signal objects."
@@ -87,8 +90,8 @@ def plot_signals(title, signal1, signal2):
 	t2 = np.arange(0, samples2*dt2, dt2)
 
 	points = get_points(samples1, samples2)
-	freq1, fas1 = FAS(signal1.data, dt1, points)
-	freq2, fas2 = FAS(signal2.data, dt2, points)
+	freq1, fas1 = FAS(signal1.data, dt1, points, fmin, fmax, 3)
+	freq2, fas2 = FAS(signal2.data, dt2, points, fmin, fmax, 3)
 
 	f, axarr = plt.subplots(nrows = 1, ncols = 2, figsize = (12, 5))
 	axarr[0].set_title(title)
@@ -109,8 +112,11 @@ def plot_stations(station1, station2):
 	This function is to plot two lists of psignals with Fourier Amplitude Spectra. 
 	station = a list of 3 psignals for three orientation. 
 	"""
-	global fmin 
-	global fmax 
+	# global fmin 
+	# global fmax 
+	fmin = 0.05
+	fmax = 4
+
 	dtype = ['Displacement', 'Velocity', 'Acceleration']
 	orientation = ['N/S', 'E/W', 'Up/Down']
 
@@ -147,8 +153,8 @@ def plot_stations(station1, station2):
 			t2 = np.arange(0, samples2*dt2, dt2)
 
 			points = get_points(samples1, samples2)
-			freq1, fas1 = FAS(data1, dt1, points)
-			freq2, fas2 = FAS(data2, dt2, points)
+			freq1, fas1 = FAS(data1, dt1, points, fmin, fmax, 3)
+			freq2, fas2 = FAS(data2, dt2, points, fmin, fmax, 3)
 
 			axarr[j][0].set_title(title)
 			axarr[j][0].plot(t1,data1,'r',t2,data2,'b')

@@ -8,6 +8,7 @@
 import sys
 import os
 import numpy as np
+import math 
 from seism import *
 from stools import *
 
@@ -138,6 +139,8 @@ def filt(psignal):
 
 def S(p1, p2):
 	# S(p1, p2) = 10*exp{-[(p1-p2)/min(p1, p2)]^2}
+	if p1 == p2:
+		return 10 
 	s = 10*np.exp(-((p1-p2)/min(p1, p2))**2)
 	return s 
 
@@ -154,7 +157,7 @@ def cal_peak(data1, data2):
 
 def I(data, dt):
 	# I(t) = max|integral(data^2)dt|
-	return np.amax(np.cumsum(data*data*dt))
+	return np.amax(np.cumsum(data*data)*dt)
 
 
 def cal_SI(signal1, signal2):
@@ -173,7 +176,7 @@ def cal_SI(signal1, signal2):
 
 def N(data, dt):
 	"""N = Ie(t)/IE = Ia(t)/IA"""
-	return np.cumsum(data*data*dt)/I(data, dt)
+	return np.cumsum(data*data)*dt/I(data, dt)
 
 def F(N1, N2):
 	return np.absolute(N1-N2)
@@ -191,14 +194,14 @@ def cal_SD(signal1, signal2):
 
 	return SDa, SDe
 
-def cal_Sfs(signal1, signal2):
+def cal_Sfs(signal1, signal2, fmin, fmax):
 	"""
 	calculate the score for Fourier Spectra
 	Sfs = mean(S(FS1, FS2))
 	"""
 	points = get_points(signal1.samples, signal2.samples)
-	fs1 = FAS(signal1.accel, signal1.dt, points)[-1]
-	fs2 = FAS(signal2.accel, signal2.dt, points)[-1]
+	fs1 = FAS(signal1.velo, signal1.dt, points, fmin, fmax, 3)[-1]
+	fs2 = FAS(signal2.velo, signal2.dt, points, fmin, fmax, 3)[-1]
 	s = np.array([],float)
 
 	for i in range(0, fs1.size):
@@ -214,12 +217,83 @@ def cal_C(a1, a2, dt):
 	C* = 10*max(C(a1, a2), 0)
 	C = integral(a1, a2)dt/((integral(a1^2)dt^1/2)*(integral(a2^2)dt^1/2))
 	"""
-	x = np.cumsum(a1*a2*dt)
-	y = np.cumsum(a1*a1*dt)
-	z = np.cumsum(a2*a2*dt)
+	x = np.cumsum(a1*a2)*dt
+	y = np.cumsum(a1*a1)*dt
+	z = np.cumsum(a2*a2)*dt
 	c = x/(np.power(y, 0.5)*np.power(z, 0.5))
 	cc = 10*np.amax(c, 0)
 	return cc 
+
+def get_period(fmin, fmax):
+	"""Return an array of period T"""
+	tmin = 1/fmax 
+	tmax = 1/fmin 
+	period = np.logspace(tmin, tmax, num=20)
+	return period 
+
+
+def max_osc_response(acc, dt, csi, period, ini_disp, ini_vel):
+	signal_size = acc.size 
+
+	# initialize numpy arrays
+	d = np.empty((signal_size))
+	v = np.empty((signal_size))
+	aa = np.empty((signal_size)) 
+
+	d[0] = ini_disp
+	v[0] = ini_vel
+
+	w = 2*math.pi/period
+	ww = w**2 
+	csicsi = csi**2 
+	dcsiw=2*csi*w
+
+	rcsi=math.sqrt(1-csicsi)
+	csircs=csi/rcsi
+	wd=w*rcsi
+	ueskdt=-1/(ww*dt)
+	dcsiew=2*csi/w
+	um2csi=(1-2*csicsi)/wd
+	e=math.exp(-w*dt*csi)
+	s=math.sin(wd*dt)
+	c0=math.cos(wd*dt);
+	aa[0]=-ww*d[0]-dcsiw*v[0]
+
+	ca=e*(csircs*s+c0)
+	cb=e*s/wd
+	cc=(e*((um2csi-csircs*dt)*s-(dcsiew+dt)*c0)+dcsiew)*ueskdt
+	cd=(e*(-um2csi*s+dcsiew*c0)+dt-dcsiew)*ueskdt
+	cap=-cb*ww
+	cbp=e*(c0-csircs*s)
+	ccp=(e*((w*dt/rcsi+csircs)*s+c0)-1)*ueskdt
+	cdp=(1-ca)*ueskdt
+
+	for i in range(1, signal_size):
+		d[i] = ca*d[i-1]+cb*v[i-1]+cc*acc[i-1]+cd*acc[i]
+		v[i] = cap*d[i-1]+cbp*v[i-1]+ccp*acc[i-1]+cdp*acc[i]
+		aa[i] = -ww*d[i]-dcsiw*v[i]
+
+	maxdisp = np.amax(np.absolute(d))
+	maxvel = np.amax(np.absolute(v))
+	maxacc = np.amax(np.absolute(aa))
+
+	return maxacc
+
+def cal_Ssa(SA1, SA2):
+	"""Calculate the score for Reponse Spectra"""
+	# SA = [maxdisp, maxvel, maxacc]
+	# print SA1
+	# print SA2
+
+	if len(SA1) != len(SA2): 
+		return 0 
+
+	ss = []
+	for i in range(0, len(SA1)):
+		ss.append(S(SA1[i], SA2[i]))
+
+	return np.mean(ss)
+
 
 
 
@@ -234,7 +308,7 @@ def scores_matrix(station1, station2):
 	# print bands 
 	c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c9 = c10 = c11 = avg = 0.0
 
-	matrix = np.empty((3, len(bands)+1, 12))
+	matrix = np.empty((4, len(bands)+1, 12))
 
 	for i in range(0, len(station1)):
 		for j in range(0, len(bands)-1): 
@@ -249,10 +323,11 @@ def scores_matrix(station1, station2):
 			# print fmin, fmax 
 
 			# set the fmin and fmax being used in stools.py 
-			set_bound(fmin, fmax)
+			# set_bound(fmin, fmax)
 
 			signal1 = filt(station1[i])
 			signal2 = filt(station2[i])
+			period = get_period(fmin, fmax)
 
 			c1, c2 = cal_SD(signal1, signal2)
 			c3, c4 = cal_SI(signal1, signal2)
@@ -260,7 +335,15 @@ def scores_matrix(station1, station2):
 			c6 = cal_peak(signal1.velo, signal2.velo)
 			c7 = cal_peak(signal1.displ, signal2.displ)
 
-			c9 = cal_Sfs(signal1, signal2)
+			SA1 = []
+			SA2 = []
+			for p in period:
+				SA1.append(max_osc_response(signal1.accel, signal1.dt, 0.05, p, 0, 0))
+				SA2.append(max_osc_response(signal2.accel, signal2.dt, 0.05, p, 0, 0))
+
+			c8 = cal_Ssa(SA1, SA2)
+
+			c9 = cal_Sfs(signal1, signal2, fmin, fmax)
 			c10 = cal_C(signal1.accel, signal2.accel, signal1.dt)
 
 
@@ -277,25 +360,29 @@ def scores_matrix(station1, station2):
 		# FS2 = avg(b1-b6)
 		# FS1 = avg(bb-b6)
 		for j in range(0, 12):
-			avg2 = np.average(matrix[i][:,j][1:6])
+			avg2 = np.average(matrix[i][:,j][1:len(bands)])
 			fs2 = np.append(fs2, avg2)
 			fs2 = np.around(fs2, decimals=2)
 
-			avg1 = np.average(matrix[i][:,j][:6])
+			avg1 = np.average(matrix[i][:,j][:len(bands)])
 			fs1 = np.append(fs1, avg1)
 			fs1 = np.around(fs1, decimals=2)
 
 
+		# print fs1 
+		# print fs2
 		matrix[i][-1] = fs1
 		matrix[i][-2] = fs2
 
 
+	# adding the slide contain all average values 
+	for i in range(0, len(bands)+1):
+		for j in range(0, 12):
+			average = (matrix[0][i][j] + matrix[1][i][j] + matrix[2][i][j])/3
+			matrix[3][i][j] = round(average, 2)
 
-		# fs2 = np.append([], avg2)
-		# avg1 = np.average(matrix[i][:,0])
-		# fs1 = np.append([], avg1)
+		pass 
 
-		# matrix = np.append(matrix, [fs2, fs1])
 
 	
 	return matrix
@@ -335,7 +422,7 @@ def print_scores(matrix):
 # print_scores(matrix)
 
 
-for i in range(0, 3):
-	for j in range(0, len(bands)):
+for i in range(0, 4):
+	for j in range(0, len(bands)+1):
 		print matrix[i][j]
-	print "----------------------------------------------------------------------"
+	print "---------------------------------------------------------------------------------------"

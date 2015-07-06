@@ -46,7 +46,6 @@ def read_her_file(filename):
 
 	try:
 		time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up = np.loadtxt(filename, comments='#', unpack = True)
-		print time
 	except IOError:
 		print "[ERROR]: error loading her file. "
 		return False  
@@ -101,7 +100,7 @@ def plot_signals(title, signal1, signal2):
 	axarr[1].plot(freq1,fas1,'r',freq2,fas2,'b')
 	plt.xlim(0, fmax)
 
-	f.tight_layout()
+	# f.tight_layout()
 	plt.show()
 # end of plot_signals
 
@@ -161,7 +160,7 @@ def plot_stations(station1, station2):
 			axarr[j][1].set_title('Fourier Amplitude Spectra')
 			axarr[j][1].plot(freq1,fas1,'r',freq2,fas2,'b')
 			plt.xlim(0, fmax)
-			f.tight_layout()
+			# f.tight_layout()
 
 		plt.show()
 # end of plot_stations

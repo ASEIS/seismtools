@@ -16,10 +16,21 @@ import math
 
 
 
-period = np.logspace(1/0.05, 1/4, num=20)
-for p in period:
-	print p 
+# period = np.logspace(1/0.05, 1/4, num=20)
+# for p in period:
+# 	print p 
 # print period
 
 # w = 2*math.pi*period
 # print w 
+
+# l = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+# for f in l:
+# 	print l
+# 	print f 
+# 	for f2 in l:
+# 		# print l 
+# 		if f2 == f*2:
+# 			l.remove(f)
+# 			l.remove(f2)
+# 	print l 

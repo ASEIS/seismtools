@@ -37,7 +37,9 @@ def split(filename):
 	if len(tmp) >= 3:
 		station = tmp[2]
 	if len(tmp) >= 4:
-		info = tmp[3][:-1]
+		info = tmp[3]
+		if len(info) == 3:
+			info = info[:-1]
 
 # end of split  
 
@@ -110,7 +112,7 @@ def search():
 			get_info()
 
 		for fp in os.listdir(path):
-			if (event in fp) and (net in fp) and (station in fp) and (info in fp) and (fp.endswith('.ascii')):
+			if (event in fp) and (net in fp) and (station in fp) and ('.'+info in fp) and (fp.endswith('.ascii')):
 				file_list.append(fp)
 
 	
@@ -131,11 +133,12 @@ def search():
 
 def search_pairs(file_list):
 	"""
-	The function is to search for the pairs in a given list of files. 
+	search for the pairs in a given list of files. 
 	"""
 	if not file_list:
 		return 
 
+	file_list = sorted(file_list)
 	orientation = ['N', 'E', 'Z']
 	for f in file_list:
 		file_dict = {}
@@ -146,18 +149,35 @@ def search_pairs(file_list):
 		info = tmp[3]
 		info = info[0:2]
 		for i in range(0, 3):
-			target = tmp[0] + '.' + tmp[1] + '.' + tmp[2] + '.' + info + orientation[i] + '.ascii'
-			if target in file_list:
-				file_dict[orientation[i]] = path + '/' + target
-				file_list.remove(target)
+			# target = tmp[0] + '.' + tmp[1] + '.' + tmp[2] + '.' + info + orientation[i] + '.ascii'
+			target = '.' + tmp[1] + '.' + tmp[2] + '.' + info + orientation[i]
+			for ff in file_list:
+				if target in ff:
+					file_dict[orientation[i]] = path + '/' + ff
+					if not ff == f: 
+						file_list.remove(ff) 
 
+			# if target in file_list:
+			# 	file_dict[orientation[i]] = path + '/' + target
+			# 	file_list.remove(target)
+
+
+		# print file_dict
 
 		# process the directory with sdc.py
-		print_her(file_dict)
-		pass 
-
-
+		if len(file_dict) == 3: 
+			print_her(file_dict)
+		else:
+			print "[ERROR]: No pair found."
+		
+	# print file_list 
+# end of search_pairs
+# ------------------------------------------------------------------------------------------------------------------------------
 
 file_list = search()
-# print file_list
 search_pairs(file_list)
+
+
+
+
+

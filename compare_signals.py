@@ -10,6 +10,22 @@ import matplotlib.pyplot as plt
 from seism import *
 from stools import *
 
+def get_bound():
+	fmin = raw_input('== Enter fmin for FAS: ')
+	fmax = raw_input('== Enter fmax for FAS: ')
+	try: 
+		fmin = float(fmin)
+		fmax = float(fmax)
+	except ValueError:
+		print "[ERROR]: invalid input type: floats or integers ONLY."
+		return get_bound()
+
+	while fmin >= fmax:
+		print "[ERROR]: fmax must be greater than fmin."
+		return get_bound()
+
+	return fmin, fmax 
+
 def read_file(filename): 
 	"""
 	The function is to read general 1-column text files. Return a signal object. 
@@ -68,10 +84,7 @@ def plot_signals(title, signal1, signal2):
 	"""
 	This function is to plot Signals with Fourier Amplitude Spectura. 
 	"""
-	# global fmin
-	# global fmax 
-	fmin = 0.05
-	fmax = 4
+	fmin, fmax = get_bound()
 
 	if (not isinstance(signal1, seism_signal)) or (not isinstance(signal2, seism_signal)):
 		print "[ERROR]: Invalid instance type: can only plot signal objects."
@@ -111,10 +124,7 @@ def plot_stations(station1, station2):
 	This function is to plot two lists of psignals with Fourier Amplitude Spectra. 
 	station = a list of 3 psignals for three orientation. 
 	"""
-	# global fmin 
-	# global fmax 
-	fmin = 0.05
-	fmax = 4
+	fmin, fmax = get_bound()
 
 	dtype = ['Displacement', 'Velocity', 'Acceleration']
 	orientation = ['N/S', 'E/W', 'Up/Down']
@@ -125,7 +135,7 @@ def plot_stations(station1, station2):
 
 	# from displacement to velocity to acceleration
 	for i in range(0, 3):
-		f, axarr = plt.subplots(nrows = 3, ncols = 2, figsize = (12, 12))
+		f, axarr = plt.subplots(nrows = 3, ncols = 2, figsize = (12, 9))
 		# iterative through psignals in each station 
 		for j in range(0, 3):
 			title = dtype[i] + ' in ' + orientation[j]

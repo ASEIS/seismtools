@@ -53,21 +53,5 @@ def get_filename():
 
 # end of get_filename
 
-def get_bound():
-	fmin = raw_input('== Enter fmin for FAS: ')
-	fmax = raw_input('== Enter fmax for FAS: ')
-	try: 
-		fmin = float(fmin)
-		fmax = float(fmax)
-	except ValueError:
-		print "[ERROR]: invalid input type: floats or integers ONLY."
-		return get_bound()
-
-	while fmin >= fmax:
-		print "[ERROR]: fmax must be greater than fmin."
-		return get_bound()
-
-	# set_bound(fmin, fmax)
-	return fmin, fmax 
-
 get_filename()
+

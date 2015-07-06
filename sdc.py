@@ -168,7 +168,10 @@ def print_her(file_dict):
         print "==[The function is processing files with 3 channels only.]=="
         return False 
 
-    filename = file_dict['N'].split('/')[-1].replace('N.ascii', '.her')
+    # compose filename
+    filename = file_dict['N'].split('/')[-1]
+    filename = filename.replace('N.', '.')
+    filename = filename.replace('.ascii', '.her')
 
     try:
         f = open(destination + '/' + filename, 'w')

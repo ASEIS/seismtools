@@ -119,22 +119,36 @@ def read_file(filename):
 # end of read_file
 
 # ===========================================================================================
-def filter(psignal):
-	"""The function is to call ellip_filter on each psignal from seism.py"""
+# def filter(psignal):
+# 	"""The function is to call ellip_filter on each psignal """
+# 	if not isinstance(psignal, seism_psignal):
+# 		print "[ERROR]: encounter error filting psignal."
+# 		return False 
+
+# 	# order of unlabeled arguments is: (data, dt, order N, rp, rs, Wn) 
+# 	psignal.accel = highpass_filter(psignal.accel, psignal.dt) 
+# 	psignal.velo = highpass_filter(psignal.velo, psignal.dt) 
+# 	psignal.displ = highpass_filter(psignal.displ, psignal.dt) 
+
+# 	psignal.data = np.c_[psignal.displ, psignal.velo, psignal.accel]
+
+# 	# psignal.print_attr()
+
+# 	return psignal 
+
+def filter_data(psignal, fmin, fmax):
 	if not isinstance(psignal, seism_psignal):
 		print "[ERROR]: encounter error filting psignal."
 		return False 
-
-	# order of unlabeled arguments is: (data, dt, order N, rp, rs, Wn) 
-	psignal.accel = ellip_filter(psignal.accel, psignal.dt) 
-	psignal.velo = ellip_filter(psignal.velo, psignal.dt) 
-	psignal.displ = ellip_filter(psignal.displ, psignal.dt) 
+	dt = psignal.dt 
+	psignal.accel = bandpass_filter(psignal.accel, dt, fmin, fmax)
+	psignal.velo = bandpass_filter(psignal.velo, dt, fmin, fmax)
+	psignal.displ = bandpass_filter(psignal.displ, dt, fmin, fmax)
 
 	psignal.data = np.c_[psignal.displ, psignal.velo, psignal.accel]
 
-	# psignal.print_attr()
+	return psignal
 
-	return psignal 
 
 
 def S(p1, p2):
@@ -249,6 +263,8 @@ def duration(signal):
 	E = I(data, dt)
 	E5 = 0.05*E
 	E95 = 0.95*E
+	T5 = 0 
+	T95 = 0 
 
 	energy = np.cumsum(data*data)*dt
 	for i in range(1, energy.size):
@@ -295,11 +311,17 @@ def scores_matrix(station1, station2):
 				fmax = bands[j+1]
 			# print fmin, fmax 
 
-			# set the fmin and fmax being used in stools.py 
-			# set_bound(fmin, fmax)
 
-			signal1 = filt(station1[i])
-			signal2 = filt(station2[i])
+			signal1 = station1[i]
+			signal2 = station2[i]
+
+			# filtering data
+			signal1 = filter_data(signal1, fmin, fmax)
+			signal2 = filter_data(signal2, fmin, fmax)
+
+			# signal1.print_attr()
+			# signal2.print_attr()
+
 
 			c1, c2 = cal_SD(signal1, signal2)
 			c3, c4 = cal_SI(signal1, signal2)

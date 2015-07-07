@@ -32,7 +32,8 @@ def bandpass_filter(data, dt, fmin, fmax):
     if not isinstance(data, np.ndarray): 
         print "\n[ERROR]: data is not an numpy array.\n"
         return 
-    N = 5
+    # N = 5 
+    N = 3
     rp = 0.1
     rs = 100 
 

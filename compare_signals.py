@@ -120,7 +120,7 @@ def plot_signals(title, signal1, signal2):
 	# filtering data
 	if flag:
 		data1 = bandpass_filter(data1, dt1, fmin, fmax)
-		data2 = bandpass_filter(data1, dt1, fmin, fmax)
+		data2 = bandpass_filter(data2, dt2, fmin, fmax)
 
 	points = get_points(samples1, samples2)
 	freq1, fas1 = FAS(signal1.data, dt1, points, fmin, fmax, 3)
@@ -129,6 +129,7 @@ def plot_signals(title, signal1, signal2):
 	f, axarr = plt.subplots(nrows = 1, ncols = 2, figsize = (12, 5))
 	axarr[0].set_title(title)
 	axarr[0].plot(t1,data1,'r',t2,data2,'b')
+
 
 	axarr[1].set_title('Fourier Amplitude Spectra')
 	axarr[1].plot(freq1,fas1,'r',freq2,fas2,'b')
@@ -184,7 +185,7 @@ def plot_stations(station1, station2):
 			# filtering data
 			if flag:
 				data1 = bandpass_filter(data1, dt1, fmin, fmax)
-				data2 = bandpass_filter(data1, dt1, fmin, fmax)
+				data2 = bandpass_filter(data2, dt2, fmin, fmax)
 
 
 			t1 = np.arange(0, samples1*dt1, dt1)

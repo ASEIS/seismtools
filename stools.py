@@ -3,6 +3,7 @@
 # The program contains general functions what may be used by other programs. 
 # Including: filter; integral; derivative; FAS; 
 # ===================================================================================
+from __future__ import division
 import numpy as np
 import math 
 from scipy.signal import filtfilt, ellip
@@ -101,7 +102,7 @@ def get_points(samples1, samples2):
 # end of get_points
 
 def set_bound(f1, f2): 
-	"""to get fmin and fmax from other programs"""
+	""" get fmin and fmax from other programs """
 	global fmin 
 	global fmax 
 	fmin = f1 
@@ -109,4 +110,64 @@ def set_bound(f1, f2):
 
 	print fmin, fmax 
 # end of set_bound
+
+def get_period(fmin, fmax):
+    """ Return an array of period T """
+    tmin = 1/fmax 
+    tmax = 1/fmin 
+    a = np.log10(tmin)
+    b = np.log10(tmax) 
+
+    period = np.linspace(a, b, 20)
+    period = np.power(10, period)
+    return period 
+
+
+def max_osc_response(acc, dt, csi, period, ini_disp, ini_vel):
+    signal_size = acc.size 
+
+    # initialize numpy arrays
+    d = np.empty((signal_size))
+    v = np.empty((signal_size))
+    aa = np.empty((signal_size)) 
+
+    d[0] = ini_disp
+    v[0] = ini_vel
+
+    w = 2*math.pi/period
+    ww = w**2 
+    csicsi = csi**2 
+    dcsiw=2*csi*w
+
+    rcsi=math.sqrt(1-csicsi)
+    csircs=csi/rcsi
+    wd=w*rcsi
+    ueskdt=-1/(ww*dt)
+    dcsiew=2*csi/w
+    um2csi=(1-2*csicsi)/wd
+    e=math.exp(-w*dt*csi)
+    s=math.sin(wd*dt)
+    c0=math.cos(wd*dt);
+    aa[0]=-ww*d[0]-dcsiw*v[0]
+
+    ca=e*(csircs*s+c0)
+    cb=e*s/wd
+    cc=(e*((um2csi-csircs*dt)*s-(dcsiew+dt)*c0)+dcsiew)*ueskdt
+    cd=(e*(-um2csi*s+dcsiew*c0)+dt-dcsiew)*ueskdt
+    cap=-cb*ww
+    cbp=e*(c0-csircs*s)
+    ccp=(e*((w*dt/rcsi+csircs)*s+c0)-1)*ueskdt
+    cdp=(1-ca)*ueskdt
+
+    for i in range(1, signal_size):
+        d[i] = ca*d[i-1]+cb*v[i-1]+cc*acc[i-1]+cd*acc[i]
+        v[i] = cap*d[i-1]+cbp*v[i-1]+ccp*acc[i-1]+cdp*acc[i]
+        aa[i] = -ww*d[i]-dcsiw*v[i]
+
+    maxdisp = np.amax(np.absolute(d))
+    maxvel = np.amax(np.absolute(v))
+    maxacc = np.amax(np.absolute(aa))
+
+    return maxdisp, maxvel, maxacc
+
 

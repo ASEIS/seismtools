@@ -224,79 +224,48 @@ def cal_C(a1, a2, dt):
 	cc = 10*np.amax(c, 0)
 	return cc 
 
-def get_period(fmin, fmax):
-	"""Return an array of period T"""
-	tmin = 1/fmax 
-	tmax = 1/fmin 
-	a = np.log10(tmin)
-	b = np.log10(tmax) 
 
-	period = np.linspace(a, b, 20)
-	period = np.power(10, period)
-	return period 
-
-
-def max_osc_response(acc, dt, csi, period, ini_disp, ini_vel):
-	signal_size = acc.size 
-
-	# initialize numpy arrays
-	d = np.empty((signal_size))
-	v = np.empty((signal_size))
-	aa = np.empty((signal_size)) 
-
-	d[0] = ini_disp
-	v[0] = ini_vel
-
-	w = 2*math.pi/period
-	ww = w**2 
-	csicsi = csi**2 
-	dcsiw=2*csi*w
-
-	rcsi=math.sqrt(1-csicsi)
-	csircs=csi/rcsi
-	wd=w*rcsi
-	ueskdt=-1/(ww*dt)
-	dcsiew=2*csi/w
-	um2csi=(1-2*csicsi)/wd
-	e=math.exp(-w*dt*csi)
-	s=math.sin(wd*dt)
-	c0=math.cos(wd*dt);
-	aa[0]=-ww*d[0]-dcsiw*v[0]
-
-	ca=e*(csircs*s+c0)
-	cb=e*s/wd
-	cc=(e*((um2csi-csircs*dt)*s-(dcsiew+dt)*c0)+dcsiew)*ueskdt
-	cd=(e*(-um2csi*s+dcsiew*c0)+dt-dcsiew)*ueskdt
-	cap=-cb*ww
-	cbp=e*(c0-csircs*s)
-	ccp=(e*((w*dt/rcsi+csircs)*s+c0)-1)*ueskdt
-	cdp=(1-ca)*ueskdt
-
-	for i in range(1, signal_size):
-		d[i] = ca*d[i-1]+cb*v[i-1]+cc*acc[i-1]+cd*acc[i]
-		v[i] = cap*d[i-1]+cbp*v[i-1]+ccp*acc[i-1]+cdp*acc[i]
-		aa[i] = -ww*d[i]-dcsiw*v[i]
-
-	maxdisp = np.amax(np.absolute(d))
-	maxvel = np.amax(np.absolute(v))
-	maxacc = np.amax(np.absolute(aa))
-
-	return maxacc
-
-def cal_Ssa(SA1, SA2):
+def cal_Ssa(signal1, signal2, fmin, fmax):
 	"""Calculate the score for Reponse Spectra"""
-	# SA = [maxdisp, maxvel, maxacc]
-	# print SA1
-	# print SA2
-
-	if len(SA1) != len(SA2): 
-		return 0 
+	period = get_period(fmin, fmax)
+	SA1 = []
+	SA2 = []
+	for p in period:
+		SA1.append(max_osc_response(signal1.accel, signal1.dt, 0.05, p, 0, 0)[-1])
+		SA2.append(max_osc_response(signal2.accel, signal2.dt, 0.05, p, 0, 0)[-1])
 
 	ss = []
 	for i in range(0, len(SA1)):
 		ss.append(S(SA1[i], SA2[i]))
 
 	return np.mean(ss)
+
+def duration(signal):
+	""" get the total duration of signal """
+	data = signal.velo
+	dt = signal.dt
+
+	# E = max|integral(v^2)dt|
+	E = I(data, dt)
+	E5 = 0.05*E
+	E95 = 0.95*E
+
+	energy = np.cumsum(data*data)*dt
+	for i in range(1, energy.size):
+		if energy[i-1] <= E5 <= energy[i]:
+			T5 = i 
+		if energy[i-1] <= E95 <= energy[i]:
+			T95 = i 
+			break 
+
+	D = (T95-T5)*dt
+	return D
+
+def cal_D(signal1, signal2):
+	""" calculate the score for duration """
+	D1 = duration(signal1)
+	D2 = duration(signal2)
+	return S(D1, D2)
 
 
 
@@ -331,7 +300,6 @@ def scores_matrix(station1, station2):
 
 			signal1 = filt(station1[i])
 			signal2 = filt(station2[i])
-			period = get_period(fmin, fmax)
 
 			c1, c2 = cal_SD(signal1, signal2)
 			c3, c4 = cal_SI(signal1, signal2)
@@ -339,20 +307,11 @@ def scores_matrix(station1, station2):
 			c6 = cal_peak(signal1.velo, signal2.velo)
 			c7 = cal_peak(signal1.displ, signal2.displ)
 
-			SA1 = []
-			SA2 = []
-			for p in period:
-				SA1.append(max_osc_response(signal1.accel, signal1.dt, 0.05, p, 0, 0))
-				SA2.append(max_osc_response(signal2.accel, signal2.dt, 0.05, p, 0, 0))
-			
-			# print period
-			# print SA1, SA2
-
-			c8 = cal_Ssa(SA1, SA2)
-
+			c8 = cal_Ssa(signal1, signal2, fmin, fmax)
 			c9 = cal_Sfs(signal1, signal2, fmin, fmax)
 			c10 = cal_C(signal1.accel, signal2.accel, signal1.dt)
 
+			c11 = cal_D(signal1, signal2)
 
 			scores = np.array([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11], float)
 			scores = np.append(scores, np.average(scores))
@@ -389,8 +348,6 @@ def scores_matrix(station1, station2):
 			matrix[3][i][j] = round(average, 2)
 
 		pass 
-
-
 	
 	return matrix
 

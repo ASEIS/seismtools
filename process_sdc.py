@@ -169,9 +169,19 @@ def search_pairs(file_list):
 			print_her(file_dict)
 		else:
 			print "[ERROR]: No pair found."
+			print_message(f, 'unprocessed')
 		
 	# print file_list 
 # end of search_pairs
+
+def print_message(message, ftype):
+	"""
+	The function is to generate a files containing warning/unprocessed messages for input files. 
+	"""
+	f = open(destination + '/' + ftype + '.txt', 'a')
+	f.write(message +"\n")
+	f.close()
+# end of print_message
 # ------------------------------------------------------------------------------------------------------------------------------
 
 file_list = search()

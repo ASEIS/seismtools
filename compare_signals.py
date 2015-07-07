@@ -26,7 +26,8 @@ def get_bound():
 
 	return fmin, fmax 
 
-def read_file(filename): 
+
+def read_txt(filename, flag): 
 	"""
 	The function is to read general 1-column text files. Return a signal object. 
 	"""
@@ -50,11 +51,17 @@ def read_file(filename):
 			# print line.split()[0]
 			data.append(float(line))
 	data = np.array(data)
+
+	# applying filter to data 
+	if flag: 
+		print "filtering=="
+		data = ellip_filter(data, dt)
+
 	f.close()
 	return seism_signal(samples, dt, data, 'a')
 	# return samples, dt, data 
 
-def read_her_file(filename):
+def read_her(filename, flag):
 	"""
 	The function is to read 10-column .her files. Return a list of psignals for each orientation/channel. 
 	"""
@@ -68,6 +75,20 @@ def read_her_file(filename):
 
 	samples = dis_ns.size 
 	dt = time[1]
+
+	# applying filter to data 
+	if flag: 
+		print "filtering"
+		dis_ns = ellip_filter(dis_ns, dt)
+		dis_ew = ellip_filter(dis_ew, dt)
+		dis_up = ellip_filter(dis_up, dt)
+		vel_ns = ellip_filter(vel_ns, dt)
+		vel_ew = ellip_filter(vel_ew, dt)
+		vel_up = ellip_filter(vel_up, dt)
+		acc_ns = ellip_filter(acc_ns, dt)
+		acc_ew = ellip_filter(acc_ew, dt)
+		acc_up = ellip_filter(acc_up, dt)
+
 
 	# samples, dt, data, acceleration, velocity, displacement 
 	psignal_ns = seism_psignal(samples, dt, np.c_[dis_ns, vel_ns, acc_ns], 'c', acc_ns, vel_ns, dis_ns)
@@ -188,7 +209,7 @@ def test(psignal):
 	print psignal.data.shape[1]
 
 
-def compare_txt(file1, file2):
+def compare_txt(file1, file2, flag):
 	# revert the order of files to V1, V2
 	if 'V1' not in file1.split('.')[-2]: 
 		tmp = file1
@@ -197,8 +218,8 @@ def compare_txt(file1, file2):
 
 	print file1, file2
 
-	signal1 = read_file(file1)
-	signal2 = read_file(file2)
+	signal1 = read_txt(file1, flag)
+	signal2 = read_txt(file2, flag)
 	if (not isinstance(signal1, seism_signal)) or (not isinstance(signal2, seism_signal)):
 		print "[ERROR]: Invalid instance type: can only compare signal objects."
 		return 
@@ -209,7 +230,7 @@ def compare_txt(file1, file2):
 
 
 
-def compare_her(file1, file2):
+def compare_her(file1, file2, flag):
 	# revert the order of files to V1, V2
 	if 'V1' not in file1.split('.')[-2]: 
 		tmp = file1
@@ -219,8 +240,8 @@ def compare_her(file1, file2):
 	print file1, file2
 
 	# station = [psignal_ns, psignal_ew, psignal_up]
-	station1 = read_her_file(file1) 
-	station2 = read_her_file(file2)
+	station1 = read_her(file1, flag) 
+	station2 = read_her(file2, flag)
 
 	plot_stations(station1, station2)
 

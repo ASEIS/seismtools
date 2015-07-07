@@ -4,7 +4,7 @@
 # calculate their scores with different sample rates; 
 # and generate 3D matrix for scores. 
 # ===================================================================================
-
+from __future__ import division
 import sys
 import os
 import numpy as np
@@ -139,8 +139,8 @@ def filt(psignal):
 
 def S(p1, p2):
 	# S(p1, p2) = 10*exp{-[(p1-p2)/min(p1, p2)]^2}
-	if p1 == p2:
-		return 10 
+	# if p1 == p2:
+	# 	return 10 
 	s = 10*np.exp(-((p1-p2)/min(p1, p2))**2)
 	return s 
 
@@ -228,7 +228,11 @@ def get_period(fmin, fmax):
 	"""Return an array of period T"""
 	tmin = 1/fmax 
 	tmax = 1/fmin 
-	period = np.logspace(tmin, tmax, num=20)
+	a = np.log10(tmin)
+	b = np.log10(tmax) 
+
+	period = np.linspace(a, b, 20)
+	period = np.power(10, period)
 	return period 
 
 
@@ -340,6 +344,9 @@ def scores_matrix(station1, station2):
 			for p in period:
 				SA1.append(max_osc_response(signal1.accel, signal1.dt, 0.05, p, 0, 0))
 				SA2.append(max_osc_response(signal2.accel, signal2.dt, 0.05, p, 0, 0))
+			
+			# print period
+			# print SA1, SA2
 
 			c8 = cal_Ssa(SA1, SA2)
 
@@ -351,7 +358,7 @@ def scores_matrix(station1, station2):
 			scores = np.append(scores, np.average(scores))
 			scores = np.around(scores, decimals=2)
 
-			matrix[i][j] = scores 
+			matrix[i][j+2] = scores 
 
 		fs2 = np.array([],float)
 		fs1 = np.array([],float)
@@ -371,8 +378,8 @@ def scores_matrix(station1, station2):
 
 		# print fs1 
 		# print fs2
-		matrix[i][-1] = fs1
-		matrix[i][-2] = fs2
+		matrix[i][0] = fs1
+		matrix[i][1] = fs2
 
 
 	# adding the slide contain all average values 
@@ -426,3 +433,6 @@ for i in range(0, 4):
 	for j in range(0, len(bands)+1):
 		print matrix[i][j]
 	print "---------------------------------------------------------------------------------------"
+
+
+

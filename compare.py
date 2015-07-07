@@ -30,6 +30,7 @@ def check_type(filename):
 def get_filename():
 	file1 = ''
 	file2 = ''
+	f_flag = ''
 
 	# get paths of two files 
 	if len(sys.argv) >= 2:
@@ -44,12 +45,22 @@ def get_filename():
 	while not file2:
 		file2 = raw_input('== Enter the path of file2: ')
 
+	while f_flag not in ['Y', 'N']: 
+		f_flag = raw_input('== Do you want to filter the data (y/n): ')[0].upper()
+	
+	if f_flag == 'Y':
+		f_flag = True 
+	else:
+		f_flag = False 
+
 	if check_type(file1) == check_type(file2) == 'TXT':
-		compare_txt(file1, file2)
+		compare_txt(file1, file2, f_flag)
 	elif check_type(file1) == check_type(file2) == 'HER':
-		compare_her(file1, file2)
+		compare_her(file1, file2, f_flag)
 	else:
 		return 
+
+	
 
 # end of get_filename
 

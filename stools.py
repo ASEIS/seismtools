@@ -13,8 +13,8 @@ fmax = 5.0
 
 def integrate(data, dt):
 	data = np.cumsum(data*dt) #integrate
-	data = ellip_filter(data, dt) #filt  
-	# data = ellip_filter(np.cumsum(data*self.dt), self.dt, Wn = 0.075/((1.0/self.dt)/2.0), N = 7)
+	data = highpass_filter(data, dt) #filt  
+	# data = highpass_filter(np.cumsum(data*self.dt), self.dt, Wn = 0.075/((1.0/self.dt)/2.0), N = 7)
 	return data
 
 
@@ -22,19 +22,36 @@ def derivative(data, dt):
 	"""compute derivative of an numpy."""
 	data = np.insert(data, 0, data[0])
 	data = np.diff(data/dt)
-	data = ellip_filter(data, dt) #filt
+	data = highpass_filter(data, dt) #filt
 	return data 
 
 
-def ellip_filter(data, dt, *args, **kwargs):
+
+def bandpass_filter(data, dt, fmin, fmax):
+    # TODO: allow specifying N, rp, and rs 
+    if not isinstance(data, np.ndarray): 
+        print "\n[ERROR]: data is not an numpy array.\n"
+        return 
+    N = 5
+    rp = 0.1
+    rs = 100 
+
+    w_min = fmin/((1.0/dt)/2.0)
+    w_max = fmax/((1.0/dt)/2.0)
+
+    b, a = ellip(N = N, rp = rp, rs = rs, Wn = [w_min, w_max], btype = 'bandpass', analog=False)
+    data = filtfilt(b, a, data)
+    return data
+
+
+
+def highpass_filter(data, dt, *args, **kwargs):
     """
     Correct order for unlabeled arguments is: data, dt, order N, rp, rs, Wn 
     """
     if not isinstance(data, np.ndarray): 
         print "\n[ERROR]: data is not an numpy array.\n"
         return 
-    data = data 
-    dt = dt
     N = 5
     rp = 0.1
     rs = 100 
@@ -90,10 +107,6 @@ def FAS(data, dt, points, fmin, fmax, s_factor):
     freq = freq[inif:endf]
     return freq, afs
 
-    # afs = afs[inif:endf]
-    # afs = smooth(afs, s_factor) # smooth the curve 
-    # freq = freq[inif:endf]
-    # return freq, afs 
 
 def get_points(samples1, samples2):
 	# points is the least base-2 number that is greater than max samples 
@@ -101,14 +114,14 @@ def get_points(samples1, samples2):
 	return 2**power 
 # end of get_points
 
-def set_bound(f1, f2): 
-	""" get fmin and fmax from other programs """
-	global fmin 
-	global fmax 
-	fmin = f1 
-	fmax = f2
+# def set_bound(f1, f2): 
+# 	""" get fmin and fmax from other programs """
+# 	global fmin 
+# 	global fmax 
+# 	fmin = f1 
+# 	fmax = f2
 
-	print fmin, fmax 
+# 	print fmin, fmax 
 # end of set_bound
 
 def get_period(fmin, fmax):
@@ -169,5 +182,6 @@ def max_osc_response(acc, dt, csi, period, ini_disp, ini_vel):
     maxacc = np.amax(np.absolute(aa))
 
     return maxdisp, maxvel, maxacc
+
 
 

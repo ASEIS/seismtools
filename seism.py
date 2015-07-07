@@ -330,7 +330,7 @@ class seism_record(seism_signal):
              pass
  
         # filter data 
-        self.data = ellip_filter(self.data, self.dt) 
+        self.data = highpass_filter(self.data, self.dt) 
 
         # make average on first 10% of samples; minus average and multiply by 981 
         # self.data = 981*(self.data - np.average(self.data))

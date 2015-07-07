@@ -119,7 +119,7 @@ def read_file(filename):
 # end of read_file
 
 # ===========================================================================================
-def filt(psignal):
+def filter(psignal):
 	"""The function is to call ellip_filter on each psignal from seism.py"""
 	if not isinstance(psignal, seism_psignal):
 		print "[ERROR]: encounter error filting psignal."

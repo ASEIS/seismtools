@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from seism import *
 from stools import *
 
-def get_bound():
+def set_bound():
 	fmin = raw_input('== Enter fmin for FAS: ')
 	fmax = raw_input('== Enter fmax for FAS: ')
 	try: 
@@ -26,8 +26,21 @@ def get_bound():
 
 	return fmin, fmax 
 
+def set_filter():
+	f_flag = ''
+	while f_flag not in ['Y', 'N']: 
+		f_flag = raw_input('== Do you want to filter the data (y/n): ')[0].upper()
+	
+	if f_flag == 'Y':
+		f_flag = True 
+	else:
+		f_flag = False 
+	return f_flag
 
-def read_txt(filename, flag): 
+# ---------------------------------------------------------------------------------------------
+
+
+def read_txt(filename): 
 	"""
 	The function is to read general 1-column text files. Return a signal object. 
 	"""
@@ -52,16 +65,11 @@ def read_txt(filename, flag):
 			data.append(float(line))
 	data = np.array(data)
 
-	# applying filter to data 
-	if flag: 
-		print "filtering=="
-		data = ellip_filter(data, dt)
-
 	f.close()
 	return seism_signal(samples, dt, data, 'a')
 	# return samples, dt, data 
 
-def read_her(filename, flag):
+def read_her(filename):
 	"""
 	The function is to read 10-column .her files. Return a list of psignals for each orientation/channel. 
 	"""
@@ -75,20 +83,6 @@ def read_her(filename, flag):
 
 	samples = dis_ns.size 
 	dt = time[1]
-
-	# applying filter to data 
-	if flag: 
-		print "filtering"
-		dis_ns = ellip_filter(dis_ns, dt)
-		dis_ew = ellip_filter(dis_ew, dt)
-		dis_up = ellip_filter(dis_up, dt)
-		vel_ns = ellip_filter(vel_ns, dt)
-		vel_ew = ellip_filter(vel_ew, dt)
-		vel_up = ellip_filter(vel_up, dt)
-		acc_ns = ellip_filter(acc_ns, dt)
-		acc_ew = ellip_filter(acc_ew, dt)
-		acc_up = ellip_filter(acc_up, dt)
-
 
 	# samples, dt, data, acceleration, velocity, displacement 
 	psignal_ns = seism_psignal(samples, dt, np.c_[dis_ns, vel_ns, acc_ns], 'c', acc_ns, vel_ns, dis_ns)
@@ -105,7 +99,8 @@ def plot_signals(title, signal1, signal2):
 	"""
 	This function is to plot Signals with Fourier Amplitude Spectura. 
 	"""
-	fmin, fmax = get_bound()
+	fmin, fmax = set_bound()
+	flag = set_filter()
 
 	if (not isinstance(signal1, seism_signal)) or (not isinstance(signal2, seism_signal)):
 		print "[ERROR]: Invalid instance type: can only plot signal objects."
@@ -121,6 +116,11 @@ def plot_signals(title, signal1, signal2):
 	dt2 = signal2.dt 
 	t1 = np.arange(0, samples1*dt1, dt1)
 	t2 = np.arange(0, samples2*dt2, dt2)
+
+	# filtering data
+	if flag:
+		data1 = bandpass_filter(data1, dt1, fmin, fmax)
+		data2 = bandpass_filter(data1, dt1, fmin, fmax)
 
 	points = get_points(samples1, samples2)
 	freq1, fas1 = FAS(signal1.data, dt1, points, fmin, fmax, 3)
@@ -145,7 +145,8 @@ def plot_stations(station1, station2):
 	This function is to plot two lists of psignals with Fourier Amplitude Spectra. 
 	station = a list of 3 psignals for three orientation. 
 	"""
-	fmin, fmax = get_bound()
+	fmin, fmax = set_bound()
+	flag = set_filter()
 
 	dtype = ['Displacement', 'Velocity', 'Acceleration']
 	orientation = ['N/S', 'E/W', 'Up/Down']
@@ -153,6 +154,7 @@ def plot_stations(station1, station2):
 	if len(station1) != 3 or len(station2) != 3:
 		print "[ERROR]: plot_stations only handles stations with 3 channels."
 		return 
+
 
 	# from displacement to velocity to acceleration
 	for i in range(0, 3):
@@ -178,6 +180,12 @@ def plot_stations(station1, station2):
 
 			dt1 = signal1.dt 
 			dt2 = signal2.dt 
+
+			# filtering data
+			if flag:
+				data1 = bandpass_filter(data1, dt1, fmin, fmax)
+				data2 = bandpass_filter(data1, dt1, fmin, fmax)
+
 
 			t1 = np.arange(0, samples1*dt1, dt1)
 			t2 = np.arange(0, samples2*dt2, dt2)
@@ -209,17 +217,17 @@ def test(psignal):
 	print psignal.data.shape[1]
 
 
-def compare_txt(file1, file2, flag):
+def compare_txt(file1, file2):
 	# revert the order of files to V1, V2
 	if 'V1' not in file1.split('.')[-2]: 
 		tmp = file1
 		file1 = file2 
 		file2 = tmp 
 
-	print file1, file2
+	# print file1, file2
 
-	signal1 = read_txt(file1, flag)
-	signal2 = read_txt(file2, flag)
+	signal1 = read_txt(file1)
+	signal2 = read_txt(file2)
 	if (not isinstance(signal1, seism_signal)) or (not isinstance(signal2, seism_signal)):
 		print "[ERROR]: Invalid instance type: can only compare signal objects."
 		return 
@@ -230,18 +238,18 @@ def compare_txt(file1, file2, flag):
 
 
 
-def compare_her(file1, file2, flag):
+def compare_her(file1, file2):
 	# revert the order of files to V1, V2
 	if 'V1' not in file1.split('.')[-2]: 
 		tmp = file1
 		file1 = file2 
 		file2 = tmp 
 
-	print file1, file2
+	# print file1, file2
 
 	# station = [psignal_ns, psignal_ew, psignal_up]
-	station1 = read_her(file1, flag) 
-	station2 = read_her(file2, flag)
+	station1 = read_her(file1) 
+	station2 = read_her(file2)
 
 	plot_stations(station1, station2)
 

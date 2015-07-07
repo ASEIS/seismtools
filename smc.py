@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 from seism import *
-from scipy.signal import filtfilt, ellip
+# from scipy.signal import filtfilt, ellip
 import os
 import math 
 

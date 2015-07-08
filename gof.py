@@ -13,7 +13,7 @@ from seism import *
 from stools import *
 
 
-destination = 'outputs'
+destination = ''
 f0 = 0.05
 f1 = 0.1
 f2 = 0.25 
@@ -27,11 +27,11 @@ bands = [f0, f1, f2, f3, f4, f5, f6]
 def get_files(): 
 	file1 = ''
 	file2 = ''
+	filelist = ''
 	global destination
 
-	# get paths of two files 
 	if len(sys.argv) == 2:
-		file1 =  sys.argv[1]
+		filelist =  sys.argv[1]
 
 	elif len(sys.argv) == 3: 
 		file1 = sys.argv[1]
@@ -43,20 +43,16 @@ def get_files():
 	while not file2:
 		file2 = raw_input('== Enter the path of file2: ')
 
-	get_bands()
-
 
 	# get the destination saving outputs 
-	# while not destination: 
-	# 	destination = raw_input('== Enter name of the directory to store outputs: ')
+	while not destination: 
+		destination = raw_input('== Enter name of the directory to store outputs: ')
 
-	# # check existence of target directory 
-	# if not os.path.exists(destination):
-	# 	os.makedirs(destination)
+	# check existence of target directory 
+	if not os.path.exists(destination):
+		os.makedirs(destination)
 
-	# get_destination(destination)
-
-
+	get_bands()
 
 	return file1, file2
 # end of get_files
@@ -77,19 +73,23 @@ def get_bands():
 			#setting to default values 
 			return
 
-		bands = []
-		for f in freq:
-			try: 
-				bands.append(float(f))
-			except ValueError:
-				print "[ERROR]: invalid sample rates"
-				flag = True
+		if len(freq) == 1:
+			flag = True 
+		else: 
+			bands = []
+			for f in freq:
+				try: 
+					bands.append(float(f))
+				except ValueError:
+					print "[ERROR]: invalid sample rates"
+					flag = True
+					break 
 
-		for i in range(0, len(bands)-1):
-			if bands[i] >= bands[i+1]:
-				print "[ERROR]: invalid sequence of sample rates"
-				flag = True 
-				break 
+			for i in range(0, len(bands)-1):
+				if bands[i] >= bands[i+1]:
+					print "[ERROR]: invalid sequence of sample rates"
+					flag = True 
+					break 
 
 # enf of get_bands
 
@@ -297,9 +297,9 @@ def scores_matrix(station1, station2):
 	# print bands 
 	c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c9 = c10 = c11 = avg = 0.0
 
-	matrix = np.empty((4, len(bands)+1, 12))
+	matrix = np.empty((4, len(bands)+1, 13))
 
-	for i in range(0, len(station1)):
+	for i in range(1, len(station1)+1):
 		for j in range(0, len(bands)-1): 
 			if j == 0:
 				# BB-Bn
@@ -312,8 +312,8 @@ def scores_matrix(station1, station2):
 			# print fmin, fmax 
 
 
-			signal1 = station1[i]
-			signal2 = station2[i]
+			signal1 = station1[i-1]
+			signal2 = station2[i-1]
 
 			# filtering data
 			signal1 = filter_data(signal1, fmin, fmax)
@@ -336,43 +336,64 @@ def scores_matrix(station1, station2):
 			c11 = cal_D(signal1, signal2)
 
 			scores = np.array([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11], float)
-			scores = np.append(scores, np.average(scores))
+			# scores = np.append(scores, np.average(scores))
+			T = ((c1+c2)/2 + (c3+c4)/2 + c5 + c6 + c7 + c8 + c9 + c10 + c11)/9 
+			A = (c1+c2+c3+c4+c5+c6+c7+c8+c9+c10)/10 
+			scores = np.insert(scores, 0, T)
+			scores = np.insert(scores, 1, A)
 			scores = np.around(scores, decimals=2)
 
-			matrix[i][j+2] = scores 
+			matrix[i][j] = scores 
 
-		fs2 = np.array([],float)
-		fs1 = np.array([],float)
+		SA = np.array([],float)
+		CA = np.array([],float)
 
 		# calculate the average score of all bands 
 		# FS2 = avg(b1-b6)
 		# FS1 = avg(bb-b6)
-		for j in range(0, 12):
+		for j in range(0, 13):
+			# SA = avg(B1...Bn)
 			avg2 = np.average(matrix[i][:,j][1:len(bands)])
-			fs2 = np.append(fs2, avg2)
-			fs2 = np.around(fs2, decimals=2)
+			SA = np.append(SA, avg2)
+			SA = np.around(SA, decimals=2)
 
+			# CA = avg(BB...Bn)
 			avg1 = np.average(matrix[i][:,j][:len(bands)])
-			fs1 = np.append(fs1, avg1)
-			fs1 = np.around(fs1, decimals=2)
+			CA = np.append(CA, avg1)
+			CA = np.around(CA, decimals=2)
 
 
 		# print fs1 
 		# print fs2
-		matrix[i][0] = fs1
-		matrix[i][1] = fs2
+		matrix[i][-1] = CA
+		matrix[i][-2] = SA
 
 
-	# adding the slide contain all average values 
+	# insert the slide contain all AVERAGE values in front 
 	for i in range(0, len(bands)+1):
 		for j in range(0, 12):
-			average = (matrix[0][i][j] + matrix[1][i][j] + matrix[2][i][j])/3
-			matrix[3][i][j] = round(average, 2)
-
-		pass 
+			average = (matrix[1][i][j] + matrix[2][i][j] + matrix[3][i][j])/3
+			matrix[0][i][j] = round(average, 2)
 	
 	return matrix
 
+def summary(matrix):
+	""" generate a summary matrix contain average scores 
+		calculated with different methods. 
+		including SA_A; CA_A; SA_T; CA_T """
+	s = np.empty((4, 4))
+	SA_A = CA_A = SA_T = CA_T = 0.0
+	for i in range(0, 4):
+		SA_A = matrix[i][-2][1]
+		CA_A = matrix[i][-1][1]
+		SA_T = matrix[i][-2][0]
+		CA_T = matrix[i][-1][0]
+
+		avg = np.array([SA_A, CA_A, SA_T, CA_T], float)
+		s[i] = avg 
+	return s 
+# end of summary
+# --------------------------------------------------------------------------------------------------
 
 
 file1, file2 = get_files()
@@ -388,7 +409,6 @@ matrix = scores_matrix(station1, station2)
 
 
 def print_scores(matrix):
-	global destination
 	filename = "scores.txt"
 	s = ''
 	try:
@@ -405,6 +425,61 @@ def print_scores(matrix):
 	f.close()
 # end of print_scores
 
+def print_matrix(path, matrix):
+	""" generate the file containing the score matrix of two files. """
+	# header = "# GOF " + file1 + ' ' + file2 
+	s = summary(matrix)
+	label = ['AVG', 'N', 'E', 'UP']
+	# reading data of summary matrix by column 
+	SA_A = s[:,0]
+	CA_A = s[:,1]
+	SA_T = s[:,2]
+	CA_T = s[:,3]
+	try:
+		f = open(path, 'w')
+	except IOError, e:
+		print e
+		# return 
+	
+	# printing summary matrix 
+	descriptor = '{:>12}' + '  {:>12}'*4 + '\n'
+	f.write(descriptor.format("# Total Average", "SA_A", "CA_A", "SA_T", "CA_T")) 
+
+	descriptor = '{:>12}' + '  {:>12.2f}'*4 + '\n'
+	for l, s1, c1, s2, c2 in zip(label, SA_A, CA_A, SA_T, CA_T):
+		f.write(descriptor.format(l, s1, c1, s2, c2))
+
+	f.write('# ----------------------------------------------------------------------------------------------\n')
+
+	# generte row and column labels 
+	num_b = len(matrix[0])-2 
+	c_label = "BB" 
+	for i in range(1, num_b):
+		c_label += ',B'+str(i)
+	c_label += ",SA,CA"
+	c_label = c_label.split(',')
+	c_label.insert(0, '')
+
+	label1 = ['Average', 'North', 'East', 'Up']
+	r_label = ['T', 'A', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'C11']
+
+	d1 = '{:>12}' + '  {:>12}'*(num_b+2) + '\n'
+	d2 = '{:>12}' + '  {:>12.2f}'*(num_b+2)+'\n'
+
+	# printing matrix 
+	for i in range(0, len(matrix)):
+		c_label[0] = '# '+label1[i]
+		f.write(d1.format(*c_label)) 
+
+		for s in zip(r_label, *matrix[i]):
+			f.write(d2.format(*s))
+		f.write('# ----------------------------------------------------------------------------------------------\n')
+	f.close()
+
+	pass 
+# end of print_matrix
+
+
 # print_scores(matrix)
 
 
@@ -412,6 +487,8 @@ for i in range(0, 4):
 	for j in range(0, len(bands)+1):
 		print matrix[i][j]
 	print "---------------------------------------------------------------------------------------"
+
+print_matrix("test.txt", matrix)
 
 
 

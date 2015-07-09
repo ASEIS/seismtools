@@ -18,11 +18,11 @@ def set_bound():
 		fmax = float(fmax)
 	except ValueError:
 		print "[ERROR]: invalid input type: floats or integers ONLY."
-		return get_bound()
+		return set_bound()
 
 	while fmin >= fmax:
 		print "[ERROR]: fmax must be greater than fmin."
-		return get_bound()
+		return set_bound()
 
 	return fmin, fmax 
 

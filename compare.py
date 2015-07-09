@@ -13,7 +13,7 @@ def check_type(filename):
 	try: 
 		with open(filename) as f:
 			content = f.readlines()
-			num_col = len(content[1].split())
+			num_col = len(content[2].split())
 			if num_col == 1:
 				return 'TXT'
 			elif num_col == 10:

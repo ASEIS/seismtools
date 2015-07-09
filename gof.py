@@ -12,6 +12,8 @@ import math
 from seism import *
 from stools import *
 
+np.seterr(divide='ignore', invalid='ignore')
+
 f0 = 0.05
 f1 = 0.1
 f2 = 0.25 
@@ -352,11 +354,8 @@ def scores_matrix(station1, station2):
 			signal2 = station2[i-1]
 
 			# filtering data
-			signal1 = filter_data(signal1, fmin, fmax)
-			signal2 = filter_data(signal2, fmin, fmax)
-
-			# signal1.print_attr()
-			# signal2.print_attr()
+			# signal1 = filter_data(signal1, fmin, fmax)
+			# signal2 = filter_data(signal2, fmin, fmax)
 
 
 			c1, c2 = cal_SD(signal1, signal2)

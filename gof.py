@@ -12,8 +12,6 @@ import math
 from seism import *
 from stools import *
 
-
-destination = ''
 f0 = 0.05
 f1 = 0.1
 f2 = 0.25 
@@ -23,12 +21,50 @@ f5 = 2
 f6 = 4 
 bands = [f0, f1, f2, f3, f4, f5, f6]
 
+def get_in():
+	""" get the path of input directories """
+	indir1 = ''
+	indir2 = ''
+
+	while not indir1:
+		indir1 = raw_input('== Enter name of 1st input directory: ')
+
+	while not indir2:
+		indir2 = raw_input('== Enter name of 2nd input directory: ')
+
+	# check the existence of two directories
+	if (not os.path.exists(indir1)) or (not os.path.exists(indir2)):
+		print "[ERROR]: input directory does not exist."
+		return get_in()
+
+	return indir1, indir2
+
+
+def get_out():
+	""" get the path of output directory and output file from user"""
+	outdir = ''
+	outname = ''
+
+	# get the destination saving outputs 
+	while not outdir: 
+		outdir = raw_input('== Enter name of the directory to store outputs: ')
+
+	# check existence of target directory 
+	if not os.path.exists(outdir):
+		os.makedirs(outdir)
+
+	while not outname:
+		outname = raw_input('== Enter name of score file: ')
+
+	path = outdir + '/' + outname
+	return  path 
+
 
 def get_files(): 
 	file1 = ''
 	file2 = ''
 	filelist = ''
-	global destination
+	list1 = list2 = np.array([],str)
 
 	if len(sys.argv) == 2:
 		filelist =  sys.argv[1]
@@ -37,24 +73,23 @@ def get_files():
 		file1 = sys.argv[1]
 		file2 = sys.argv[2]
 
-	while not file1:
-		file1 = raw_input('== Enter the path of file1: ')
+	# if receive two files from user 
+	if file1 and file2:
+		return file1, file2
 
-	while not file2:
-		file2 = raw_input('== Enter the path of file2: ')
+	# if receive a file containing a list of files 
+	if filelist:
+		try:
+			# list1, list2 = np.loadtxt(filelist, comments = '#', unpack = True)
+			list1, list2 = np.genfromtxt(filelist, comments = '#', dtype = 'str', unpack = True)
+			return list1.tolist(), list2.tolist()
+		except IOError:
+			print "[ERROR]: error loading filelist."
+			return False, False
 
-
-	# get the destination saving outputs 
-	while not destination: 
-		destination = raw_input('== Enter name of the directory to store outputs: ')
-
-	# check existence of target directory 
-	if not os.path.exists(destination):
-		os.makedirs(destination)
-
-	get_bands()
-
-	return file1, file2
+	# if encounter other inputs
+	print "[ERROR]: Invalid inputs."
+	return False, False
 # end of get_files
 
 def get_bands():
@@ -93,6 +128,7 @@ def get_bands():
 
 # enf of get_bands
 
+# ================================================================== READING ================================================================
 def read_file(filename):
 	"""
 	The function is to read 10-column .her files. 
@@ -101,7 +137,7 @@ def read_file(filename):
 	time = dis_ns = dis_ew = dis_up = vel_ns = vel_ew = vel_up = acc_ns = acc_ew = acc_up = np.array([],float)
 
 	try:
-		time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up = np.loadtxt(filename, skiprows = 1, unpack = True)
+		time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up = np.loadtxt(filename, comments='#', unpack = True)
 	except IOError:
 		print "[ERROR]: error loading her file. "
 		return False  
@@ -118,7 +154,7 @@ def read_file(filename):
 	return station 
 # end of read_file
 
-# ===========================================================================================
+# ============================================================== CALCULATING =================================================================
 # def filter(psignal):
 # 	"""The function is to call ellip_filter on each psignal """
 # 	if not isinstance(psignal, seism_psignal):
@@ -153,8 +189,8 @@ def filter_data(psignal, fmin, fmax):
 
 def S(p1, p2):
 	# S(p1, p2) = 10*exp{-[(p1-p2)/min(p1, p2)]^2}
-	# if p1 == p2:
-	# 	return 10 
+	if min(p1, p2) == 0:
+		return 10 
 	s = 10*np.exp(-((p1-p2)/min(p1, p2))**2)
 	return s 
 
@@ -286,7 +322,7 @@ def cal_D(signal1, signal2):
 
 
 
-# ============================================================================================
+#  ======================================================================== GENERATING ===========================================================
 
 def scores_matrix(station1, station2):
 	"""
@@ -393,38 +429,7 @@ def summary(matrix):
 		s[i] = avg 
 	return s 
 # end of summary
-# --------------------------------------------------------------------------------------------------
-
-
-file1, file2 = get_files()
-station1 = read_file(file1)
-station2 = read_file(file2)
-# sig1 = filt(station1[0])
-# filt(station1[1])
-# filt(station1[2])
-# sig2 = filt(station2[0])
-# filt(station2[1])
-# filt(station2[2])
-matrix = scores_matrix(station1, station2)
-
-
-def print_scores(matrix):
-	filename = "scores.txt"
-	s = ''
-	try:
-		f = open(destination + '/' + filename, 'a')
-	except IOError, e:
-		print e
-
-	for i in range(0, 3):
-		for j in range(0, len(bands)):
-			for k in range(0, len(matrix[i][j])):
-				s += str(matrix[i][j][k]) + ' '
-
-	f.write(s + '\n')
-	f.close()
-# end of print_scores
-
+# =================================================================== PRINTING ===================================================================
 def print_matrix(path, matrix):
 	""" generate the file containing the score matrix of two files. """
 	# header = "# GOF " + file1 + ' ' + file2 
@@ -479,16 +484,103 @@ def print_matrix(path, matrix):
 	pass 
 # end of print_matrix
 
+def print_scores(path, matrix):
+	""" generate the file containing all the scores of a list of files. """
 
-# print_scores(matrix)
+	try:
+		f = open(path, 'a')
+	except IOError, e:
+		print e
+
+	file1 = 'testtest1'
+	file2 = 'testtest2'
+	scores = [file1, file2]
+	for i in range(0, len(matrix)):
+		for j in range(0, 13):
+			# reading matrix slide by column 
+			col = matrix[i][:,j]
+			scores.append(col[-1]) #CA
+			scores.append(col[-2]) #SA
+			for k in range(0, len(matrix[i])-2):
+				# append BB...Bn
+				scores.append(col[k])
+	d = '{:>12}'*2 + '{:>12.2f}'*(len(scores)-2) + '\n'
+	f.write(d.format(*scores))
+	f.close()
+# end of print_scores
+
+def set_labels():
+	# generate labels for scores file 
+	global bands 
+	o = ['A', 'N', 'E', 'U']
+	b = ['CA', 'SA'] 
+	s = ['T', 'A', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'C11']
+	b_label = "BB" 
+	for i in range(1, len(bands)-1):
+		b_label += ',B'+str(i)
+	b_label = b_label.split(',')
+	b += b_label
+
+	labels = ['# SIGNAL1', 'SIGNAL2']
+	for i in range(0, len(o)):
+		for j in range(0, len(b)):
+			for k in range(0, len(s)):
+				labels.append(o[i]+'_'+b[j]+'_'+s[k])
+	return labels
 
 
-for i in range(0, 4):
-	for j in range(0, len(bands)+1):
-		print matrix[i][j]
-	print "---------------------------------------------------------------------------------------"
+# =========================================================== MAIN =================================================================
 
-print_matrix("test.txt", matrix)
+if __name__ == "__main__":
+	# getting files or lists of files from user; return tuple 
+	files = get_files()
 
+	if isinstance(files[0], str):
+		file1, file2 = files
+		station1 = read_file(file1)
+		station2 = read_file(file2)
+
+		path = get_out()
+		get_bands()
+
+		matrix = scores_matrix(station1, station2)
+		print_matrix(path, matrix)
+
+	elif isinstance(files[0], list):
+		list1, list2 = files
+		indir1, indir2 = get_in()
+		path = get_out()
+		get_bands()
+
+		try:
+			f = open(path, 'w')
+		except IOError, e:
+			print e
+
+		labels = set_labels()
+		d = '{:>12}'*len(labels) + '\n'
+		f.write(d.format(*labels))
+		f.close()
+
+		for i in range(0, len(list1)):
+			file1 = indir1 + '/' + list1[i]
+			file2 = indir1 + '/' + list2[i]
+			station1 = read_file(file1)
+			station2 = read_file(file2)
+			matrix = scores_matrix(station1, station2)
+			print_scores(path, matrix)
+
+
+	# print_matrix(path, matrix)
+
+
+	# else:
+	# 	return 
+
+
+# for i in range(0, 4):
+# 	for j in range(0, len(bands)+1):
+# 		print matrix[i][j]
+# 	print "---------------------------------------------------------------------------------------"
 
 

@@ -26,7 +26,6 @@ def derivative(data, dt):
 	return data 
 
 
-
 def bandpass_filter(data, dt, fmin, fmax):
     # TODO: allow specifying N, rp, and rs 
     if not isinstance(data, np.ndarray): 
@@ -43,7 +42,23 @@ def bandpass_filter(data, dt, fmin, fmax):
     b, a = ellip(N = N, rp = rp, rs = rs, Wn = [w_min, w_max], btype = 'bandpass', analog=False)
     data = filtfilt(b, a, data)
     return data
+# end of bandpass_filter
 
+def lowpass_filter(data, dt, fmax):
+    # TODO: allow specifying N, rp, and rs 
+    if not isinstance(data, np.ndarray): 
+        print "\n[ERROR]: data is not an numpy array.\n"
+        return 
+    # N = 5 
+    N = 3
+    rp = 0.1
+    rs = 100 
+    w_max = fmax/((1.0/dt)/2.0)
+
+    b, a = ellip(N = N, rp = rp, rs = rs, Wn = w_max, btype = 'lowpass', analog=False)
+    data = filtfilt(b, a, data)
+    return data
+# end of lowpass_filter
 
 
 def highpass_filter(data, dt, *args, **kwargs):
@@ -83,6 +98,7 @@ def highpass_filter(data, dt, *args, **kwargs):
     b, a = ellip(N = N, rp = rp, rs = rs, Wn = Wn, btype = 'highpass', analog=False)
     data = filtfilt(b, a, data)
     return data 
+# end of highpass_filter
 
 def smooth(data, factor): 
     # factor = 3; c = 0.5, 0.25, 0.25

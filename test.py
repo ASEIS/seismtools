@@ -71,31 +71,49 @@ import os
 
 # test2(1)
 # test2(2)
-f0 = 0.05
-f1 = 0.1
-f2 = 0.25 
-f3 = 0.5
-f4 = 1
-f5 = 2
-f6 = 4 
-bands = [f0, f1, f2, f3, f4, f5, f6]
-def set_labels():
-	global bands 
-	o = ['A', 'N', 'E', 'U']
-	b = ['CA', 'SA'] 
-	s = ['T', 'A', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'C11']
-	b_label = "BB" 
-	for i in range(1, len(bands)-1):
-		b_label += ',B'+str(i)
-	b_label = b_label.split(',')
-	b += b_label
 
-	labels = ['# SIGNAL1'. 'SIGNAL2']
-	for i in range(0, len(o)):
-		for j in range(0, len(b)):
-			for k in range(0, len(s)):
-				labels.append(o[i]+'_'+b[j]+'_'+s[k])
-	return labels
 
-print set_labels()
+# f0 = 0.05
+# f1 = 0.1
+# f2 = 0.25 
+# f3 = 0.5
+# f4 = 1
+# f5 = 2
+# f6 = 4 
+# bands = [f0, f1, f2, f3, f4, f5, f6]
+# def set_labels():
+# 	global bands 
+# 	o = ['A', 'N', 'E', 'U']
+# 	b = ['CA', 'SA'] 
+# 	s = ['T', 'A', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'C11']
+# 	b_label = "BB" 
+# 	for i in range(1, len(bands)-1):
+# 		b_label += ',B'+str(i)
+# 	b_label = b_label.split(',')
+# 	b += b_label
+
+# 	labels = ['# SIGNAL1'. 'SIGNAL2']
+# 	for i in range(0, len(o)):
+# 		for j in range(0, len(b)):
+# 			for k in range(0, len(s)):
+# 				labels.append(o[i]+'_'+b[j]+'_'+s[k])
+# 	return labels
+
+# print set_labels()
+
+# widgets = ['Something: ', Percentage(), ' ', Bar(marker=RotatingMarker()),
+#            ' ', ETA(), ' ', FileTransferSpeed()]
+
+
+from scipy import interpolate
+import matplotlib.pyplot as plt
+
+x = np.arange(0, 10)
+y = np.exp(-x/3.0)
+f = interpolate.interp1d(x, y)
+
+xnew = np.arange(0,9, 0.1)
+ynew = f(xnew)   # use interpolation function returned by `interp1d`
+plt.plot(x, y, 'o', xnew, ynew, '-')
+plt.show()
 

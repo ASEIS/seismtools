@@ -259,20 +259,12 @@ class seism_record(seism_signal):
 
         try:
             hour = float(hour)
-        except ValueError:
-            print "\n**Error with record start time.**\n"
-        try:
             minute = float(minute)
-        except ValueError:
-            print "\n**Error with record start time.**\n"
-        try:
             seconds = float(seconds)
-        except ValueError:
-            print "\n**Error with record start time.**\n"
-        try:
             fraction = float(fraction)
         except ValueError:
             print "\n**Error with record start time.**\n"
+            
         self.hour = hour 
         self.minute = minute 
         self.seconds = seconds 

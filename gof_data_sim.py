@@ -100,6 +100,8 @@ def interp(data, t, samples, dt):
 	# using plot to test 
 	# plt.plot(t,data,'r',new_t,new_data,'b')
 	# plt.show()
+	print data 
+	print new_data
 	return new_data
 # end of interpolate
 
@@ -115,6 +117,8 @@ def process(signal, dt, fmax):
 	signal.accel = interp(signal.accel, t, signal.samples, dt)
 	signal.velo = interp(signal.velo, t, signal.samples, dt)
 	signal.displ = interp(signal.displ, t, signal.samples, dt)
+
+	signal.dt = dt 
 
 	return signal
 # end of process
@@ -133,9 +137,121 @@ def process_dt(station1, station2):
 # end of process_dt
 
 # =============================================================================================================== 
+def get_earthq():
+	"""get the earthquake start time"""
+	time =  raw_input("== Enter the earthquake start time (#:#:#.#): ").replace('.', ':')
+	time = time.split(':')
+	if len(time) < 4:
+		print "[ERROR]: invalid time format."
+		return get_earthq()
+	else: 
+		for i in range(0, len(time)):
+			try:
+				time[i] = float(time[i])
+		# for t in time:
+		# 	try: 
+		# 		float(t)
+			except ValueError:
+				print "[ERROR]: invalid time format."
+				return get_earthq()
+				
+	# time = [hour, min, sec, frac]
+	return time 
+# end of get_earthq
+
+def get_leading():
+	"""get the simulation leading time"""
+	lt = ''
+	while not lt:
+		t = raw_input("== Enter the simulation leading time (sec): ")
+		try: 
+			lt = float(t)
+		except ValueError:
+			print "[ERROR]: invalid leading time."
+	return lt 
+# end of get_leading
+
+def cut_signal(t_diff, signal):
+	if not isinstance(signal, seism_psignal):
+		return 
+	num = int(t_diff/signal.dt) 
+	signal.samples -= num 
+	signal.accel = signal.accel[num:]
+	signal.velo = signal.velo[num:]
+	signal.displ = signal.displ[num:]
+	return signal
+
+def add_signal(t_diff, signal):
+	if not isinstance(signal, seism_psignal):
+		return  
+	num = int(t_diff/signal.dt) 
+	zeros = np.zeros(num)
+	signal.samples += num 
+	signal.accel = np.insert(signal.accel, 0, zeros)
+	signal.velo = np.insert(signal.velo, 0, zeros)
+	signal.displ = np.insert(signal.displ, 0, zeros)
+	return signal
+
+
+def synchronize(signal1, signal2):
+	"""synchronize the stating time and ending time of data arrays in two signals
+	signal1 = data signal; signal2 = simulation signal """
+	dt = signal1.dt # same dt of two signals 
+	stamp = [15, 03, 13, 52]	# time stamp get from data file. 
+	eq = get_earthq()
+	lt = get_leading()
+
+	# time in sec = hr*3600 + min*60 + sec + frac*0.1
+	start = stamp[0]*3600 + stamp[1]*60 + stamp[2] + stamp[3]*0.1 
+	eq_time = eq[0]*3600 + eq[1]*60 + eq[2] + eq[3]*0.1 
+	sim_start = eq_time - lt 
+
+	# synchronize the start time 
+	if start < sim_start: 
+		# data time < sim time < earthquake time; cutting data array 
+		signal1 = cut_signal((sim_start - start), signal1)
+
+	elif start > eq_time:
+		# sim time < earthquake time < data time; adding zeros in front 
+		signal1 = add_signal((start - eq_time), signal1)
+
+	else: 
+		# sim time < data time < earthquake time; adding zeros 
+		signal1 = add_signal((start - sim_start), signal1)
+
+	# synchronize the ending time 
+	data_time = dt * signal1.samples # total time of data signal 
+	end = start + data_time
+	sim_time = dt * signal2.samples # total simulation time 
+	sim_end = sim_start + sim_time 
+
+
+	if sim_end < end: 
+		# adding zeros in simulation signal
+		num = int((end - sim_end)/dt)
+		zeros = np.zeros(num)
+		signal2.samples += num 
+		signal2.accel = np.insert(signal2.accel, signal2.accel.size, zeros)
+		signal2.velo = np.insert(signal2.velo, signal2.velo.size, zeros)
+		signal2.displ = np.insert(signal2.displ, signal2.displ.size, zeros)
+
+	elif end < sim_end:
+		# cutting from simulation signal 
+		num = int((sim_end - end)/dt) 
+		signal2.samples -= num 
+		num *= -1 
+		signal2.accel = signal2.accel[:num]
+		signal2.velo = signal2.velo[:num]
+		signal2.displ = signal2.displ[:num]
+	else:
+		pass 
+
+	return signal1, signal2
+# end of synchronize
 
 
 
+# =============================================================================================================== 
 def read_file(filename):
 	"""
 	The function is to read 10-column .her files. 
@@ -165,7 +281,13 @@ def read_file(filename):
 
 station1 = read_file('1/2-CICHN-2.sim')
 station2 = read_file('1/2-CICHN-1.dat')
+
 process_dt(station1, station2)
+station1[0].print_attr()
+station2[0].print_attr()
+s1, s2 = synchronize(station1[0], station2[0])
+s1.print_attr()
+s2.print_attr()
 # station[0].print_attr()
 # station[1].print_attr()
 # station[2].print_attr()

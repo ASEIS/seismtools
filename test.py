@@ -105,15 +105,47 @@ import os
 #            ' ', ETA(), ' ', FileTransferSpeed()]
 
 
-from scipy import interpolate
-import matplotlib.pyplot as plt
+# from scipy import interpolate
+# import matplotlib.pyplot as plt
 
-x = np.arange(0, 10)
-y = np.exp(-x/3.0)
-f = interpolate.interp1d(x, y)
+# x = np.arange(0, 10)
+# y = np.exp(-x/3.0)
+# f = interpolate.interp1d(x, y)
 
-xnew = np.arange(0,9, 0.1)
-ynew = f(xnew)   # use interpolation function returned by `interp1d`
-plt.plot(x, y, 'o', xnew, ynew, '-')
-plt.show()
+# xnew = np.arange(0,9, 0.1)
+# ynew = f(xnew)   # use interpolation function returned by `interp1d`
+# plt.plot(x, y, 'o', xnew, ynew, '-')
+# plt.show()
+
+def get_leading():
+	"""get the simulation leading time"""
+	leading = []
+	while not leading: 
+		t =  raw_input("== Enter the simulation leading time (#:#:#.#): ").replace('.', ':')
+		t = t.split(':')
+		if len(t) < 4:
+			print "[ERROR]: invalid time format."
+			return get_leading()
+		else: 
+			for time in t:
+				try: 
+					float(time)
+				except ValueError:
+					print "[ERROR]: invalid time format."
+					return get_leading()
+
+		print t 
+		# else: 
+		# 	try: 
+		# 		hour = float(t[0])
+		# 		minute = float(t[1])
+
+		# 	except ValueError:
+		# 		print '----'
+		# 		pass 
+			
+
+get_leading()
+
+
 

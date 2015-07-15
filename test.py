@@ -3,7 +3,8 @@ from __future__ import division
 import numpy as np
 import math 
 import os
-
+import sys 
+import time 
 # z = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], float)
 # y = np.array([z, z, z, z, z, z, z, z], float)
 # x = np.array([y, y, y], float)
@@ -117,35 +118,29 @@ import os
 # plt.plot(x, y, 'o', xnew, ynew, '-')
 # plt.show()
 
-def get_leading():
-	"""get the simulation leading time"""
-	leading = []
-	while not leading: 
-		t =  raw_input("== Enter the simulation leading time (#:#:#.#): ").replace('.', ':')
-		t = t.split(':')
-		if len(t) < 4:
-			print "[ERROR]: invalid time format."
-			return get_leading()
-		else: 
-			for time in t:
-				try: 
-					float(time)
-				except ValueError:
-					print "[ERROR]: invalid time format."
-					return get_leading()
+# toolbar_width = 40
+# count = 0
 
-		print t 
-		# else: 
-		# 	try: 
-		# 		hour = float(t[0])
-		# 		minute = float(t[1])
+# # setup toolbar
+# sys.stdout.write("[%s]" % (" " * toolbar_width))
+# sys.stdout.flush()
+# sys.stdout.write("\b" * (toolbar_width+1)) # return to start of line, after '['
 
-		# 	except ValueError:
-		# 		print '----'
-		# 		pass 
-			
+# for i in xrange(toolbar_width):
+# 	count += 1 
+# 	time.sleep(0.1) # do real work here
 
-get_leading()
+# 	sys.stdout.write("-")
+# 	sys.stdout.write(str(count*100/toolbar_width)+'%') 
+# 	sys.stdout.flush()
 
+# sys.stdout.write("\n")
+
+count = '-' 
+sys.stdout.write(count)
+sys.stdout.flush()
+count = ' '
+sys.stdout.write(count)
+sys.stdout.flush()
 
 

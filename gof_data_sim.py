@@ -27,26 +27,18 @@ def get_azimuth():
 			print "[ERROR]: invalid azimuth."
 	return azimuth
 
-# def rotate(signal1, signal2):
-# 	""" Rotation of simulation signal; 
-# 	signal1 = data reference
-# 	signal2 = simulation signal"""
-# 	azimuth = get_azimuth()
-# 	if not azimuth:
-# 		return 
-# 	pass 
 
 def rotate(station):
 	""" station = [psignal_ns, psignal_ew, psignal_up] """
 	# checking instance 
 	if len(station) != 3:
-		return 
+		return station 
 	for s in station:
 		if not isinstance(s, seism_psignal):
-			return 
+			return station 
 	azimuth = get_azimuth()
 	if not azimuth:
-		return
+		return station
 
 	psignal_ns = station[0]
 	psignal_ew = station[1]
@@ -93,15 +85,17 @@ def get_fmax():
 
 def interp(data, t, samples, dt):
 	""" call interpolate on given data """
-	f = interpolate.interp1d(t, data, bounds_error = False)
+	f = interpolate.interp1d(t, data, 'linear', bounds_error = False)
 	new_t = np.arange(0, samples*dt, dt)
 	new_data = f(new_t)
 
 	# using plot to test 
 	# plt.plot(t,data,'r',new_t,new_data,'b')
 	# plt.show()
-	print data 
-	print new_data
+
+	# print data 
+	# print new_data
+
 	return new_data
 # end of interpolate
 
@@ -193,10 +187,9 @@ def add_signal(t_diff, signal):
 	return signal
 
 
-def synchronize(signal1, signal2):
+def synchronize(station1, station2):
 	"""synchronize the stating time and ending time of data arrays in two signals
 	signal1 = data signal; signal2 = simulation signal """
-	dt = signal1.dt # same dt of two signals 
 	stamp = [15, 03, 13, 52]	# time stamp get from data file. 
 	eq = get_earthq()
 	lt = get_leading()
@@ -206,52 +199,63 @@ def synchronize(signal1, signal2):
 	eq_time = eq[0]*3600 + eq[1]*60 + eq[2] + eq[3]*0.1 
 	sim_start = eq_time - lt 
 
-	# synchronize the start time 
-	if start < sim_start: 
-		# data time < sim time < earthquake time; cutting data array 
-		signal1 = cut_signal((sim_start - start), signal1)
+	for i in range(0, 3):
+		signal1 = station1[i]
+		signal2 = station2[i]
 
-	elif start > eq_time:
-		# sim time < earthquake time < data time; adding zeros in front 
-		signal1 = add_signal((start - eq_time), signal1)
+		dt = signal1.dt # same dt of two signals 
+		samples = signal1.samples # original samples 
 
-	else: 
-		# sim time < data time < earthquake time; adding zeros 
-		signal1 = add_signal((start - sim_start), signal1)
+		# synchronize the start time 
+		if start < sim_start: 
+			# data time < sim time < earthquake time; cutting data array 
+			signal1 = cut_signal((sim_start - start), signal1)
 
-	# synchronize the ending time 
-	data_time = dt * signal1.samples # total time of data signal 
-	end = start + data_time
-	sim_time = dt * signal2.samples # total simulation time 
-	sim_end = sim_start + sim_time 
+		elif start > eq_time:
+			# sim time < earthquake time < data time; adding zeros in front 
+			signal1 = add_signal((start - eq_time), signal1)
+			signal2 = cut_signal((eq_time - sim_start), signal2)
 
-
-	if sim_end < end: 
-		# adding zeros in simulation signal
-		num = int((end - sim_end)/dt)
-		zeros = np.zeros(num)
-		signal2.samples += num 
-		signal2.accel = np.insert(signal2.accel, signal2.accel.size, zeros)
-		signal2.velo = np.insert(signal2.velo, signal2.velo.size, zeros)
-		signal2.displ = np.insert(signal2.displ, signal2.displ.size, zeros)
-
-	elif end < sim_end:
-		# cutting from simulation signal 
-		num = int((sim_end - end)/dt) 
-		signal2.samples -= num 
-		num *= -1 
-		signal2.accel = signal2.accel[:num]
-		signal2.velo = signal2.velo[:num]
-		signal2.displ = signal2.displ[:num]
-	else:
-		pass 
-
-	return signal1, signal2
-# end of synchronize
+		else: 
+			# sim time < data time < earthquake time; adding zeros 
+			signal1 = add_signal((start - sim_start), signal1)
 
 
+		# synchronize the ending time 
+		data_time = dt * samples # total time of data signal 
+		end = start + data_time
+		sim_time = dt * samples # total simulation time 
+		sim_end = sim_start + sim_time 
 
-# =============================================================================================================== 
+		if sim_end < end: 
+			# adding zeros in simulation signal
+			num = int((end - sim_end)/dt)
+			zeros = np.zeros(num)
+			signal2.samples += num 
+			signal2.accel = np.insert(signal2.accel, signal2.accel.size, zeros)
+			signal2.velo = np.insert(signal2.velo, signal2.velo.size, zeros)
+			signal2.displ = np.insert(signal2.displ, signal2.displ.size, zeros)
+
+		elif end < sim_end:
+			# cutting from simulation signal 
+			num = int((sim_end - end)/dt) 
+			signal2.samples -= num 
+			num *= -1 
+			signal2.accel = signal2.accel[:num]
+			signal2.velo = signal2.velo[:num]
+			signal2.displ = signal2.displ[:num]
+		else:
+			pass 
+
+
+		station1[i] = signal1
+		station2[i] = signal2
+
+	return station1, station2
+# end of synchronize 
+
+
+# ====================================================Testing=========================================================== 
 def read_file(filename):
 	"""
 	The function is to read 10-column .her files. 
@@ -279,15 +283,17 @@ def read_file(filename):
 
 
 
-station1 = read_file('1/2-CICHN-2.sim')
-station2 = read_file('1/2-CICHN-1.dat')
+# station1 = read_file('1/2-CICHN-2.sim')
+# station2 = read_file('1/2-CICHN-1.dat')
 
-process_dt(station1, station2)
-station1[0].print_attr()
-station2[0].print_attr()
-s1, s2 = synchronize(station1[0], station2[0])
-s1.print_attr()
-s2.print_attr()
+# station1, station2 = process_dt(station1, station2)
+# station1[0].print_attr()
+# station2[0].print_attr()
+# s1, s2 = synchronize(station1[0], station2[0])
+# s1.print_attr()
+# s2.print_attr()
+
+# =====
 # station[0].print_attr()
 # station[1].print_attr()
 # station[2].print_attr()

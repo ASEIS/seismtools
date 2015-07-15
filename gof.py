@@ -12,18 +12,10 @@ import math
 from seism import *
 from stools import *
 from gof_engine import * 
+from gof_data_sim import * 
 import time
 
 np.seterr(divide='ignore', invalid='ignore')
-
-f0 = 0.05
-f1 = 0.1
-f2 = 0.25 
-f3 = 0.5
-f4 = 1
-f5 = 2
-f6 = 4 
-bands = [f0, f1, f2, f3, f4, f5, f6]
 
 def get_in():
 	""" get the path of input directories """
@@ -101,7 +93,14 @@ def get_bands():
 	The function is to allow user specify sample rates. 
 	Without user input, sample rates are setting to default values. 
 	"""
-	global bands
+	f0 = 0.05
+	f1 = 0.1
+	f2 = 0.25 
+	f3 = 0.5
+	f4 = 1
+	f5 = 2
+	f6 = 4 
+	bands = [f0, f1, f2, f3, f4, f5, f6]
 	freq = []
 	flag = True 
 
@@ -110,9 +109,10 @@ def get_bands():
 		freq = raw_input('== Enter the sequence of sample rates: ').replace(',', ' ').split()
 		if not freq:
 			#setting to default values 
-			return
+			return bands 
 
 		if len(freq) == 1:
+			print "[ERROR]: invalid sample rates"
 			flag = True 
 		else: 
 			bands = []
@@ -129,7 +129,7 @@ def get_bands():
 					print "[ERROR]: invalid sequence of sample rates"
 					flag = True 
 					break 
-
+	return bands 
 # enf of get_bands
 
 # ================================================================== READING ================================================================
@@ -159,42 +159,45 @@ def read_file(filename):
 # end of read_file
 
 # =========================================================== MAIN =================================================================
+def main(file1, file2):
+	"""reads two files and gets two stations; 
+	then processes signals in each stations 
+	station1 = data 
+	station2 = simulation """
+
+	station1 = read_file(file1)
+	station2 = read_file(file2)
+
+	station2 = rotate(station2) #rotate 
+
+	# process signals to have the same dt 
+	station1, station2 = process_dt(station1, station2)
+
+	# synchronize starting and ending time of data arrays 
+	station1, station2 = synchronize(station1, station2)
+
+	return station1, station2
+# end of main
 
 if __name__ == "__main__":
 	# getting files or lists of files from user; return tuple 
 	files = get_files()
 
-	toolbar_width = 40
-
-	# setup toolbar
-	sys.stdout.write("[%s]" % (" " * toolbar_width))
-	sys.stdout.flush()
-	sys.stdout.write("\b" * (toolbar_width+1)) # return to start of line, after '['
-
-	for i in xrange(toolbar_width):
-	    time.sleep(0.1) # do real work here
-	    # update the bar
-	    sys.stdout.write("-")
-	    sys.stdout.flush()
-
-	sys.stdout.write("\n")
-
 	if isinstance(files[0], str):
 		file1, file2 = files
-		station1 = read_file(file1)
-		station2 = read_file(file2)
 
 		path = get_out()
-		get_bands()
+		bands = get_bands()
 
-		matrix = scores_matrix(station1, station2)
+		station1, station2 = main(file1, file2)
+		matrix = scores_matrix(station1, station2, bands)
 		print_matrix(path, matrix)
 
 	elif isinstance(files[0], list):
 		list1, list2 = files
 		indir1, indir2 = get_in()
 		path = get_out()
-		get_bands()
+		bands = get_bands()
 
 		try:
 			f = open(path, 'w')
@@ -209,10 +212,13 @@ if __name__ == "__main__":
 		for i in range(0, len(list1)):
 			file1 = indir1 + '/' + list1[i]
 			file2 = indir1 + '/' + list2[i]
-			station1 = read_file(file1)
-			station2 = read_file(file2)
-			matrix = scores_matrix(station1, station2)
+
+			station1, station2 = main(file1, file2)
+			matrix = scores_matrix(station1, station2, bands)
+			
 			print_scores(path, matrix)
+
+	print "[DONE]"
 	
 
 

@@ -15,6 +15,13 @@ import time
 
 np.seterr(divide='ignore', invalid='ignore')
 
+
+def update():
+	"""showing progress"""
+	sys.stdout.write('-')
+	sys.stdout.flush()
+
+
 def filter_data(psignal, fmin, fmax):
 	if not isinstance(psignal, seism_psignal):
 		print "[ERROR]: encounter error filting psignal."
@@ -41,6 +48,7 @@ def cal_peak(data1, data2):
 	calculate the socres for peak acc/vel/dis.
 	score = S(max|data1|, max|data2|) 
 	"""
+	update()
 	p1 = np.amax(np.absolute(data1))
 	p2 = np.amax(np.absolute(data2))
 	score = S(p1, p2)
@@ -56,6 +64,7 @@ def cal_SI(signal1, signal2):
 	score = S(IA1, IA2) for Arias intensity 
 	score = S(IE1, IE2) for Energy integral 
 	"""
+	update()
 	I1 = I(signal1.accel, signal1.dt)
 	I2 = I(signal2.accel, signal2.dt)
 	SIa = S(I1, I2)
@@ -75,6 +84,7 @@ def F(N1, N2):
 
 def cal_SD(signal1, signal2):
 	"""SD = 10*(1-max(F))"""
+	update()
 	N1 = N(signal1.accel, signal1.dt)
 	N2 = N(signal2.accel, signal2.dt)
 	SDa = 10*(1-np.amax(F(N1, N2)))
@@ -90,6 +100,7 @@ def cal_Sfs(signal1, signal2, fmin, fmax):
 	calculate the score for Fourier Spectra
 	Sfs = mean(S(FS1, FS2))
 	"""
+	update()
 	points = get_points(signal1.samples, signal2.samples)
 	fs1 = FAS(signal1.velo, signal1.dt, points, fmin, fmax, 3)[-1]
 	fs2 = FAS(signal2.velo, signal2.dt, points, fmin, fmax, 3)[-1]
@@ -108,6 +119,7 @@ def cal_C(a1, a2, dt):
 	C* = 10*max(C(a1, a2), 0)
 	C = integral(a1, a2)dt/((integral(a1^2)dt^1/2)*(integral(a2^2)dt^1/2))
 	"""
+	update()
 	x = np.cumsum(a1*a2)*dt
 	y = np.cumsum(a1*a1)*dt
 	z = np.cumsum(a2*a2)*dt
@@ -118,6 +130,7 @@ def cal_C(a1, a2, dt):
 
 def cal_Ssa(signal1, signal2, fmin, fmax):
 	"""Calculate the score for Reponse Spectra"""
+	update()
 	period = get_period(fmin, fmax)
 	SA1 = []
 	SA2 = []
@@ -156,18 +169,21 @@ def duration(signal):
 
 def cal_D(signal1, signal2):
 	""" calculate the score for duration """
+	update()
+
 	D1 = duration(signal1)
 	D2 = duration(signal2)
 	return S(D1, D2)
 
 
 
-#  ======================================================================== GENERATING ===========================================================
+#  ========================================================= GENERATING =======================================================
 
 def scores_matrix(station1, station2, bands):
 	"""
 	Generate the 3D matrix of scores 
 	"""
+	print "...Generating main matrix..."
 	# global bands 
 	bands.insert(0, bands[len(bands)-1])
 	# print bands 
@@ -177,6 +193,7 @@ def scores_matrix(station1, station2, bands):
 
 	for i in range(1, len(station1)+1):
 		for j in range(0, len(bands)-1): 
+
 			if j == 0:
 				# BB-Bn
 				fmin = bands[j+1]
@@ -364,4 +381,21 @@ def set_labels():
 			for k in range(0, len(s)):
 				labels.append(o[i]+'_'+b[j]+'_'+s[k])
 	return labels
+
+# def progress():
+# 	""" showing the progress of generating matrix """
+# 	toolbar_width = 40
+
+# 	# setup toolbar
+# 	sys.stdout.write("[%s]" % (" " * toolbar_width))
+# 	sys.stdout.flush()
+# 	sys.stdout.write("\b" * (toolbar_width+1)) # return to start of line, after '['
+
+# 	for i in xrange(toolbar_width):
+# 	    time.sleep(0.1) # do real work here
+# 	    # update the bar
+# 	    sys.stdout.write("-")
+# 	    sys.stdout.flush()
+
+# 	sys.stdout.write("\n")
 

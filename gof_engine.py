@@ -58,21 +58,31 @@ def I(data, dt):
 	# I(t) = max|integral(data^2)dt|
 	return np.amax(np.cumsum(data*data)*dt)
 
-
-def cal_SI(signal1, signal2):
+def cal_SI(data1, data2, dt):
 	"""
 	score = S(IA1, IA2) for Arias intensity 
 	score = S(IE1, IE2) for Energy integral 
 	"""
 	update()
-	I1 = I(signal1.accel, signal1.dt)
-	I2 = I(signal2.accel, signal2.dt)
-	SIa = S(I1, I2)
+	I1 = I(data1, dt)
+	I2 = I(data2, dt)
+	SI = S(I1, I2)
+	return SI 
 
-	I1 = I(signal1.velo, signal1.dt)
-	I2 = I(signal2.velo, signal2.dt)
-	SIv = S(I1, I2)
-	return SIa, SIv 
+# def cal_SI(signal1, signal2):
+# 	"""
+# 	score = S(IA1, IA2) for Arias intensity 
+# 	score = S(IE1, IE2) for Energy integral 
+# 	"""
+# 	update()
+# 	I1 = I(signal1.accel, signal1.dt)
+# 	I2 = I(signal2.accel, signal2.dt)
+# 	SIa = S(I1, I2)
+
+# 	I1 = I(signal1.velo, signal1.dt)
+# 	I2 = I(signal2.velo, signal2.dt)
+# 	SIv = S(I1, I2)
+# 	return SIa, SIv 
 
 def N(data, dt):
 	"""N = Ie(t)/IE = Ia(t)/IA"""
@@ -82,18 +92,27 @@ def F(N1, N2):
 	return np.absolute(N1-N2)
 
 
-def cal_SD(signal1, signal2):
+def cal_SD(data1, data2, dt):
 	"""SD = 10*(1-max(F))"""
 	update()
-	N1 = N(signal1.accel, signal1.dt)
-	N2 = N(signal2.accel, signal2.dt)
-	SDa = 10*(1-np.amax(F(N1, N2)))
+	N1 = N(data1, dt)
+	N2 = N(data2, dt)
+	SD = 10*(1-np.amax(F(N1, N2)))
 
-	N1 = N(signal1.velo, signal1.dt)
-	N2 = N(signal2.velo, signal2.dt)
-	SDe = 10*(1-np.amax(F(N1, N2)))
+	return SD 
 
-	return SDa, SDe
+# def cal_SD(signal1, signal2):
+# 	"""SD = 10*(1-max(F))"""
+# 	update()
+# 	N1 = N(signal1.accel, signal1.dt)
+# 	N2 = N(signal2.accel, signal2.dt)
+# 	SDa = 10*(1-np.amax(F(N1, N2)))
+
+# 	N1 = N(signal1.velo, signal1.dt)
+# 	N2 = N(signal2.velo, signal2.dt)
+# 	SDe = 10*(1-np.amax(F(N1, N2)))
+
+# 	return SDa, SDe
 
 def cal_Sfs(signal1, signal2, fmin, fmax):
 	"""
@@ -212,9 +231,17 @@ def scores_matrix(station1, station2, bands):
 			signal1 = filter_data(signal1, fmin, fmax)
 			signal2 = filter_data(signal2, fmin, fmax)
 
+			dt = signal1.dt 
 
-			c1, c2 = cal_SD(signal1, signal2)
-			c3, c4 = cal_SI(signal1, signal2)
+			# c1, c2 = cal_SD(signal1, signal2) = SDa, SDe
+			# c3, c4 = cal_SI(signal1, signal2) = SIa, SIv
+			c1 = cal_SD(signal1.accel, signal2.accel, dt)
+			c2 = cal_SD(signal1.velo, signal2.velo, dt)
+
+			c3 = cal_SI(signal1.accel, signal2.accel, dt)
+			c4 = cal_SI(signal1.velo, signal2.velo, dt)
+
+
 			c5 = cal_peak(signal1.accel, signal2.accel)
 			c6 = cal_peak(signal1.velo, signal2.velo)
 			c7 = cal_peak(signal1.displ, signal2.displ)
@@ -261,7 +288,7 @@ def scores_matrix(station1, station2, bands):
 
 	# insert the slide contain all AVERAGE values in front 
 	for i in range(0, len(bands)+1):
-		for j in range(0, 12):
+		for j in range(0, 13):
 			average = (matrix[1][i][j] + matrix[2][i][j] + matrix[3][i][j])/3
 			matrix[0][i][j] = round(average, 2)
 	

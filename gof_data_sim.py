@@ -95,7 +95,6 @@ def interp(data, t, samples, dt):
 
 	# print data 
 	# print new_data
-
 	return new_data
 # end of interpolate
 
@@ -167,7 +166,7 @@ def get_leading():
 
 def cut_signal(t_diff, signal):
 	if not isinstance(signal, seism_psignal):
-		return 
+		return signal
 	num = int(t_diff/signal.dt) 
 	signal.samples -= num 
 	signal.accel = signal.accel[num:]
@@ -177,7 +176,7 @@ def cut_signal(t_diff, signal):
 
 def add_signal(t_diff, signal):
 	if not isinstance(signal, seism_psignal):
-		return  
+		return signal
 	num = int(t_diff/signal.dt) 
 	zeros = np.zeros(num)
 	signal.samples += num 

@@ -6,9 +6,34 @@
 # ==========================================================================
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import gridspec
 # import math 
 from seism import *
 from stools import *
+
+def set_axis():
+	"""setting the bound for ploting"""
+	xfmin = raw_input('== Enter fmin for ploting: ')
+	xfmax = raw_input('== Enter fmax for ploting: ')
+	try: 
+		xfmin = float(xfmin)
+		xfmax = float(xfmax)
+	except ValueError:
+		print "[ERROR]: invalid input type: floats or integers ONLY."
+		return set_bound()
+
+	while xfmin >= xfmax:
+		print "[ERROR]: fmax must be greater than fmin."
+		return set_bound()
+
+	# TODO: adjust values 
+	if xfmin < 0.05: 
+		xfmin = 0.05 
+
+	if xfmax > 5:
+		pass 
+
+	return xfmin, xfmax 
 
 def set_bound():
 	fmin = raw_input('== Enter fmin for FAS: ')
@@ -99,6 +124,7 @@ def plot_signals(title, signal1, signal2):
 	"""
 	This function is to plot Signals with Fourier Amplitude Spectura. 
 	"""
+	xfmin, xfmax = set_axis()
 	fmin, fmax = set_bound()
 	flag = set_filter()
 
@@ -126,16 +152,26 @@ def plot_signals(title, signal1, signal2):
 	freq1, fas1 = FAS(signal1.data, dt1, points, fmin, fmax, 3)
 	freq2, fas2 = FAS(signal2.data, dt2, points, fmin, fmax, 3)
 
-	f, axarr = plt.subplots(nrows = 1, ncols = 2, figsize = (12, 5))
+	# gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1]) 
+	f, axarr = plt.subplots(nrows = 1, ncols = 2, figsize = (9, 3))
+
+	# axarr[0].set_title(title)
+	# axarr[0].plot(t1,data1,'r',t2,data2,'b')
+
+	# axarr[1].set_title('Fourier Amplitude Spectra')
+	# axarr[1].plot(freq1,fas1,'r',freq2,fas2,'b')
+
+	axarr[0] = plt.subplot2grid((1, 3), (0, 0), colspan=2)
 	axarr[0].set_title(title)
 	axarr[0].plot(t1,data1,'r',t2,data2,'b')
 
-
-	axarr[1].set_title('Fourier Amplitude Spectra')
+	axarr[1] = plt.subplot2grid((1, 3), (0, 2))
+	axarr[1].set_title('Fourier Amplitude Spectra') 
 	axarr[1].plot(freq1,fas1,'r',freq2,fas2,'b')
-	plt.xlim(0, fmax)
 
-	# f.tight_layout()
+	plt.xlim(xfmin, xfmax)
+
+	f.tight_layout()
 	plt.show()
 # end of plot_signals
 
@@ -146,6 +182,7 @@ def plot_stations(station1, station2):
 	This function is to plot two lists of psignals with Fourier Amplitude Spectra. 
 	station = a list of 3 psignals for three orientation. 
 	"""
+	xfmin, xfmax = set_axis()
 	fmin, fmax = set_bound()
 	flag = set_filter()
 
@@ -159,7 +196,7 @@ def plot_stations(station1, station2):
 
 	# from displacement to velocity to acceleration
 	for i in range(0, 3):
-		f, axarr = plt.subplots(nrows = 3, ncols = 2, figsize = (12, 9))
+		f, axarr = plt.subplots(nrows = 3, ncols = 2, figsize = (9, 9))
 		# iterative through psignals in each station 
 		for j in range(0, 3):
 			title = dtype[i] + ' in ' + orientation[j]
@@ -195,12 +232,23 @@ def plot_stations(station1, station2):
 			freq1, fas1 = FAS(data1, dt1, points, fmin, fmax, 3)
 			freq2, fas2 = FAS(data2, dt2, points, fmin, fmax, 3)
 
+			# axarr[j][0].set_title(title)
+			# axarr[j][0].plot(t1,data1,'r',t2,data2,'b')
+			# axarr[j][1].set_title('Fourier Amplitude Spectra')
+			# axarr[j][1].plot(freq1,fas1,'r',freq2,fas2,'b')
+
+
+			axarr[j][0] = plt.subplot2grid((3, 3), (j, 0), colspan=2, rowspan=1)
 			axarr[j][0].set_title(title)
 			axarr[j][0].plot(t1,data1,'r',t2,data2,'b')
-			axarr[j][1].set_title('Fourier Amplitude Spectra')
+
+			axarr[j][1] = plt.subplot2grid((3, 3), (j, 2), rowspan=1)
+			axarr[j][1].set_title('Fourier Amplitude Spectra') 
 			axarr[j][1].plot(freq1,fas1,'r',freq2,fas2,'b')
-			plt.xlim(0, fmax)
-			# f.tight_layout()
+
+			plt.xlim(xfmin, xfmax)
+
+		f.tight_layout()
 
 		plt.show()
 # end of plot_stations

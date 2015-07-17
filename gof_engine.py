@@ -27,6 +27,7 @@ def filter_data(psignal, fmin, fmax):
 		print "[ERROR]: encounter error filting psignal."
 		return False 
 	dt = psignal.dt 
+
 	psignal.accel = bandpass_filter(psignal.accel, dt, fmin, fmax)
 	psignal.velo = bandpass_filter(psignal.velo, dt, fmin, fmax)
 	psignal.displ = bandpass_filter(psignal.displ, dt, fmin, fmax)
@@ -230,6 +231,7 @@ def scores_matrix(station1, station2, bands):
 			# filtering data
 			signal1 = filter_data(signal1, fmin, fmax)
 			signal2 = filter_data(signal2, fmin, fmax)
+
 
 			dt = signal1.dt 
 

@@ -10,6 +10,7 @@ from seism import *
 from stools import * 
 # import matplotlib.pyplot as plt
 
+stamp = [] 
 
 def get_azimuth():
 	""" get the azimuth for rotation from user. """
@@ -130,6 +131,14 @@ def process_dt(station1, station2):
 # end of process_dt
 
 # =============================================================================================================== 
+def set_stamp(s): 
+	"""getting time stamp from gof.py """
+	global stamp 
+	for i in range(0, len(s)):
+		s[i] = float(s[i])
+	stamp = s 
+# end of set_stamp
+
 def get_earthq():
 	"""get the earthquake start time"""
 	time =  raw_input("== Enter the earthquake start time (#:#:#.#): ").replace('.', ':')
@@ -189,7 +198,8 @@ def add_signal(t_diff, signal):
 def synchronize(station1, station2):
 	"""synchronize the stating time and ending time of data arrays in two signals
 	signal1 = data signal; signal2 = simulation signal """
-	stamp = [15, 03, 13, 52]	# time stamp get from data file. 
+	# global stamp 
+	stamp = [15, 00, 13, 52] 
 	eq = get_earthq()
 	lt = get_leading()
 
@@ -249,6 +259,9 @@ def synchronize(station1, station2):
 
 		station1[i] = signal1
 		station2[i] = signal2
+
+	# signal1.print_attr()
+	# signal2.print_attr()
 
 	return station1, station2
 # end of synchronize 

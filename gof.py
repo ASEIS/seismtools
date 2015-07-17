@@ -140,6 +140,19 @@ def read_file(filename):
 	"""
 	time = dis_ns = dis_ew = dis_up = vel_ns = vel_ew = vel_up = acc_ns = acc_ew = acc_up = np.array([],float)
 
+	# get the time stamp from file's header 
+	# try: 
+	# 	with open(filename) as f: 
+	# 		header = f.readlines()[0].split()
+	# 		stamp = header[4].split(',')[-1].split(':')
+	# 		tmp = stamp[2].split('.')
+	# 		stamp[2] = tmp[0]
+	# 		stamp.append(tmp[1])
+	# 		set_stamp(stamp)
+	# 		f.close()
+	# except IOError:
+	# 	return False 
+
 	try:
 		time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up = np.loadtxt(filename, comments='#', unpack = True)
 	except IOError:
@@ -173,8 +186,14 @@ def main(file1, file2):
 	# process signals to have the same dt 
 	station1, station2 = process_dt(station1, station2)
 
+	# station1[0].print_attr()
+	# station2[0].print_attr()
+
 	# synchronize starting and ending time of data arrays 
 	station1, station2 = synchronize(station1, station2)
+
+	# station1[0].print_attr()
+	# station2[0].print_attr()
 
 	return station1, station2
 # end of main

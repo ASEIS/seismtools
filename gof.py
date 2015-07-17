@@ -13,7 +13,6 @@ from seism import *
 from stools import *
 from gof_engine import * 
 from gof_data_sim import * 
-import time
 
 np.seterr(divide='ignore', invalid='ignore')
 
@@ -133,25 +132,34 @@ def get_bands():
 # enf of get_bands
 
 # ================================================================== READING ================================================================
+def read_stamp(filename):
+	"""get the time stamp from file's header"""
+	try: 
+		with open(filename) as f: 
+			header = f.readlines()[0].split()
+			stamp = header[4].split(',')[-1].split(':')
+			tmp = stamp[2].split('.')
+			stamp[2] = tmp[0]
+			stamp.append(tmp[1])
+
+			f.close()
+	except IOError:
+		print "[ERROR]: missing time stamp."
+		return []
+
+	# converting time stamps to floats
+	for i in range(0, len(stamp)):
+		stamp[i] = float(stamp[i])
+	return stamp 
+# end of read_stamp
+
+
 def read_file(filename):
 	"""
 	The function is to read 10-column .her files. 
 	Return a list of psignals for each orientation. 
 	"""
 	time = dis_ns = dis_ew = dis_up = vel_ns = vel_ew = vel_up = acc_ns = acc_ew = acc_up = np.array([],float)
-
-	# get the time stamp from file's header 
-	# try: 
-	# 	with open(filename) as f: 
-	# 		header = f.readlines()[0].split()
-	# 		stamp = header[4].split(',')[-1].split(':')
-	# 		tmp = stamp[2].split('.')
-	# 		stamp[2] = tmp[0]
-	# 		stamp.append(tmp[1])
-	# 		set_stamp(stamp)
-	# 		f.close()
-	# except IOError:
-	# 	return False 
 
 	try:
 		time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up = np.loadtxt(filename, comments='#', unpack = True)
@@ -172,6 +180,28 @@ def read_file(filename):
 # end of read_file
 
 # =========================================================== MAIN =================================================================
+def check_data(station):
+	"""checks the data after rotation, process_dt, and synchronization 
+	to avoid encountering errors in gof_engine """
+	for i in range(0, len(station)):
+		signal = station[i]
+
+		if signal.accel.size == 0: 
+			return False 
+		if signal.velo.size == 0: 
+			return False 
+		if signal.displ.size == 0: 
+			return False 
+
+		if np.isnan(np.sum(signal.accel)):
+			return False 
+		if np.isnan(np.sum(signal.velo)):
+			return False 
+		if np.isnan(np.sum(signal.displ)):
+			return False 
+	return station
+# end of check_data 
+
 def main(file1, file2):
 	"""reads two files and gets two stations; 
 	then processes signals in each stations 
@@ -181,7 +211,9 @@ def main(file1, file2):
 	station1 = read_file(file1)
 	station2 = read_file(file2)
 
-	station2 = rotate(station2) #rotate 
+	stamp = read_stamp(file1) # get time stamp from data file 
+
+	station2 = rotate(station2) # rotate simulation 
 
 	# process signals to have the same dt 
 	station1, station2 = process_dt(station1, station2)
@@ -190,10 +222,13 @@ def main(file1, file2):
 	# station2[0].print_attr()
 
 	# synchronize starting and ending time of data arrays 
-	station1, station2 = synchronize(station1, station2)
+	station1, station2 = synchronize(station1, station2, stamp)
 
 	# station1[0].print_attr()
 	# station2[0].print_attr()
+
+	station1 = check_data(station1)
+	station2 = check_data(station2)
 
 	return station1, station2
 # end of main
@@ -209,8 +244,11 @@ if __name__ == "__main__":
 		bands = get_bands()
 
 		station1, station2 = main(file1, file2)
-		matrix = scores_matrix(station1, station2, bands)
-		print_matrix(path, matrix)
+		if station1 and station2:
+			matrix = scores_matrix(station1, station2, bands)
+			print_matrix(path, matrix)
+		else: 
+			print "[ERROR]: NaN data or empty array after processing signals."
 
 	elif isinstance(files[0], list):
 		list1, list2 = files
@@ -223,7 +261,7 @@ if __name__ == "__main__":
 		except IOError, e:
 			print e
 
-		labels = set_labels()
+		labels = set_labels(bands)
 		d = '{:>12}'*len(labels) + '\n'
 		f.write(d.format(*labels))
 		f.close()
@@ -231,26 +269,14 @@ if __name__ == "__main__":
 		for i in range(0, len(list1)):
 			file1 = indir1 + '/' + list1[i]
 			file2 = indir1 + '/' + list2[i]
+			print "[...processing " + file1 + ' and ' + file2 + '...]'
 
 			station1, station2 = main(file1, file2)
-			matrix = scores_matrix(station1, station2, bands)
-			
-			print_scores(path, matrix)
+			if station1 and station2: 
+				matrix = scores_matrix(station1, station2, bands)
+				print_scores(path, matrix)
+			else: 
+				print "[ERROR]: NaN data or empty array after processing signals."
 
 	print "[DONE]"
 	
-
-
-	# print_matrix(path, matrix)
-
-
-	# else:
-	# 	return 
-
-
-# for i in range(0, 4):
-# 	for j in range(0, len(bands)+1):
-# 		print matrix[i][j]
-# 	print "---------------------------------------------------------------------------------------"
-
-

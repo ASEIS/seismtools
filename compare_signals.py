@@ -25,13 +25,8 @@ def set_axis():
 	while xfmin >= xfmax:
 		print "[ERROR]: fmax must be greater than fmin."
 		return set_bound()
-
-	# TODO: adjust values 
-	if xfmin < 0.05: 
-		xfmin = 0.05 
-
-	if xfmax > 5:
-		pass 
+	if xfmin < 0.1: 
+		xfmin = 0
 
 	return xfmin, xfmax 
 

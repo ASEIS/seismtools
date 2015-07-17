@@ -13,7 +13,7 @@ fmax = 5.0
 
 def integrate(data, dt):
 	data = np.cumsum(data*dt) #integrate
-	data = highpass_filter(data, dt) #filt  
+	# data = highpass_filter(data, dt) #filt  
 	# data = highpass_filter(np.cumsum(data*self.dt), self.dt, Wn = 0.075/((1.0/self.dt)/2.0), N = 7)
 	return data
 
@@ -22,15 +22,19 @@ def derivative(data, dt):
 	"""compute derivative of an numpy."""
 	data = np.insert(data, 0, data[0])
 	data = np.diff(data/dt)
-	data = highpass_filter(data, dt) #filt
+	# data = highpass_filter(data, dt) #filt
 	return data 
+
+def filter(*args, **kwargs):
+    # TODO
+    pass 
 
 
 def bandpass_filter(data, dt, fmin, fmax):
     # TODO: allow specifying N, rp, and rs 
     if not isinstance(data, np.ndarray): 
         print "\n[ERROR]: data is not an numpy array.\n"
-        return 
+        return data 
     # N = 5 
     N = 3
     rp = 0.1

@@ -10,8 +10,6 @@ from seism import *
 from stools import * 
 # import matplotlib.pyplot as plt
 
-stamp = [] 
-
 def get_azimuth():
 	""" get the azimuth for rotation from user. """
 	azimuth = ''
@@ -37,24 +35,26 @@ def rotate(station):
 	for s in station:
 		if not isinstance(s, seism_psignal):
 			return station 
-	azimuth = get_azimuth()
-	if not azimuth:
-		return station
 
 	psignal_ns = station[0]
 	psignal_ew = station[1]
 	psignal_up = station[2]
+
+	# rotate data in Up/Down
+	psignal_up.accel *= -1 
+	psignal_up.velo *= -1 
+	psignal_up.displ *= -1 
+
+
+	azimuth = get_azimuth()
+	if not azimuth:
+		return station
 
 	# rotate data in North and East 
 	matrix = np.array([(math.cos(math.radians(azimuth)), -math.sin(math.radians(azimuth))), (math.sin(math.radians(azimuth)), math.cos(math.radians(azimuth)))])
 	[psignal_ns.accel, psignal_ew.accel] = matrix.dot([psignal_ns.accel, psignal_ew.accel])
 	[psignal_ns.velo, psignal_ew.velo] = matrix.dot([psignal_ns.velo, psignal_ew.velo])
 	[psignal_ns.disp, psignal_ew.disp] = matrix.dot([psignal_ns.displ, psignal_ew.displ])
-
-	# rotate data in Up
-	psignal_up.accel *= -1 
-	psignal_up.velo *= -1 
-	psignal_up.displ *= -1 
 
 	station = [psignal_ns, psignal_ew, psignal_up]
 	return station 
@@ -131,14 +131,6 @@ def process_dt(station1, station2):
 # end of process_dt
 
 # =============================================================================================================== 
-def set_stamp(s): 
-	"""getting time stamp from gof.py """
-	global stamp 
-	for i in range(0, len(s)):
-		s[i] = float(s[i])
-	stamp = s 
-# end of set_stamp
-
 def get_earthq():
 	"""get the earthquake start time"""
 	time =  raw_input("== Enter the earthquake start time (#:#:#.#): ").replace('.', ':')
@@ -150,9 +142,6 @@ def get_earthq():
 		for i in range(0, len(time)):
 			try:
 				time[i] = float(time[i])
-		# for t in time:
-		# 	try: 
-		# 		float(t)
 			except ValueError:
 				print "[ERROR]: invalid time format."
 				return get_earthq()
@@ -189,17 +178,21 @@ def add_signal(t_diff, signal):
 	num = int(t_diff/signal.dt) 
 	zeros = np.zeros(num)
 	signal.samples += num 
-	signal.accel = np.insert(signal.accel, 0, zeros)
-	signal.velo = np.insert(signal.velo, 0, zeros)
-	signal.displ = np.insert(signal.displ, 0, zeros)
+	
+	signal.accel = np.append(zeros, signal.accel)
+	signal.velo = np.append(zeros, signal.velo)
+	signal.displ = np.append(zeros, signal.displ)
+
 	return signal
 
 
-def synchronize(station1, station2):
+def synchronize(station1, station2, stamp):
 	"""synchronize the stating time and ending time of data arrays in two signals
 	signal1 = data signal; signal2 = simulation signal """
-	# global stamp 
-	stamp = [15, 00, 13, 52] 
+	if not stamp: 
+		stamp = [0, 0, 0, 0]
+	print stamp
+
 	eq = get_earthq()
 	lt = get_leading()
 
@@ -241,9 +234,10 @@ def synchronize(station1, station2):
 			num = int((end - sim_end)/dt)
 			zeros = np.zeros(num)
 			signal2.samples += num 
-			signal2.accel = np.insert(signal2.accel, signal2.accel.size, zeros)
-			signal2.velo = np.insert(signal2.velo, signal2.velo.size, zeros)
-			signal2.displ = np.insert(signal2.displ, signal2.displ.size, zeros)
+
+			signal2.accel = np.append(signal2.accel, zeros)
+			signal2.velo = np.append(signal2.velo, zeros)
+			signal2.displ = np.append(signal2.displ, zeros)
 
 		elif end < sim_end:
 			# cutting from simulation signal 
@@ -260,58 +254,7 @@ def synchronize(station1, station2):
 		station1[i] = signal1
 		station2[i] = signal2
 
-	# signal1.print_attr()
-	# signal2.print_attr()
 
 	return station1, station2
 # end of synchronize 
 
-
-# ====================================================Testing=========================================================== 
-def read_file(filename):
-	"""
-	The function is to read 10-column .her files. 
-	Return a list of psignals for each orientation. 
-	"""
-	time = dis_ns = dis_ew = dis_up = vel_ns = vel_ew = vel_up = acc_ns = acc_ew = acc_up = np.array([],float)
-
-	try:
-		time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up = np.loadtxt(filename, comments='#', unpack = True)
-	except IOError:
-		print "[ERROR]: error loading her file. "
-		return False  
-
-	samples = dis_ns.size 
-	dt = time[1]
-
-	# samples, dt, data, acceleration, velocity, displacement 
-	psignal_ns = seism_psignal(samples, dt, np.c_[dis_ns, vel_ns, acc_ns], 'c', acc_ns, vel_ns, dis_ns)
-	psignal_ew = seism_psignal(samples, dt, np.c_[dis_ew, vel_ew, acc_ew], 'c', acc_ew, vel_ew, dis_ew)
-	psignal_up = seism_psignal(samples, dt, np.c_[dis_up, vel_up, acc_up], 'c', acc_up, vel_up, dis_up)
-
-	station = [psignal_ns, psignal_ew, psignal_up]
-	return station 
-# end of read_file
-
-
-
-# station1 = read_file('1/2-CICHN-2.sim')
-# station2 = read_file('1/2-CICHN-1.dat')
-
-# station1, station2 = process_dt(station1, station2)
-# station1[0].print_attr()
-# station2[0].print_attr()
-# s1, s2 = synchronize(station1[0], station2[0])
-# s1.print_attr()
-# s2.print_attr()
-
-# =====
-# station[0].print_attr()
-# station[1].print_attr()
-# station[2].print_attr()
-
-
-# station = rotate(station)
-# station[0].print_attr()
-# station[1].print_attr()
-# station[2].print_attr()

@@ -143,19 +143,19 @@ import time
 # sys.stdout.write(count)
 # sys.stdout.flush()
 
-import numpy as np
-import matplotlib.pyplot as plt
+# import numpy as np
+# import matplotlib.pyplot as plt
 
 
-# generate some data
-x = np.arange(0, 10, 0.2)
-y = np.sin(x)
+# # generate some data
+# x = np.arange(0, 10, 0.2)
+# y = np.sin(x)
 
-# plot it
-fig = plt.figure(figsize=(8, 6))
-ax0 = plt.subplot2grid((1, 3), (0, 0), colspan=2)
-ax0.plot(x, y)
-ax1 = plt.subplot2grid((1, 3), (0, 2))
-ax1.plot(y, x)
+# # plot it
+# fig = plt.figure(figsize=(8, 6))
+# ax0 = plt.subplot2grid((1, 3), (0, 0), colspan=2)
+# ax0.plot(x, y)
+# ax1 = plt.subplot2grid((1, 3), (0, 2))
+# ax1.plot(y, x)
 
-plt.show()
+# plt.show()

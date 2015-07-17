@@ -11,7 +11,6 @@ import numpy as np
 import math 
 from seism import *
 from stools import *
-import time
 
 np.seterr(divide='ignore', invalid='ignore')
 
@@ -70,20 +69,6 @@ def cal_SI(data1, data2, dt):
 	SI = S(I1, I2)
 	return SI 
 
-# def cal_SI(signal1, signal2):
-# 	"""
-# 	score = S(IA1, IA2) for Arias intensity 
-# 	score = S(IE1, IE2) for Energy integral 
-# 	"""
-# 	update()
-# 	I1 = I(signal1.accel, signal1.dt)
-# 	I2 = I(signal2.accel, signal2.dt)
-# 	SIa = S(I1, I2)
-
-# 	I1 = I(signal1.velo, signal1.dt)
-# 	I2 = I(signal2.velo, signal2.dt)
-# 	SIv = S(I1, I2)
-# 	return SIa, SIv 
 
 def N(data, dt):
 	"""N = Ie(t)/IE = Ia(t)/IA"""
@@ -102,18 +87,6 @@ def cal_SD(data1, data2, dt):
 
 	return SD 
 
-# def cal_SD(signal1, signal2):
-# 	"""SD = 10*(1-max(F))"""
-# 	update()
-# 	N1 = N(signal1.accel, signal1.dt)
-# 	N2 = N(signal2.accel, signal2.dt)
-# 	SDa = 10*(1-np.amax(F(N1, N2)))
-
-# 	N1 = N(signal1.velo, signal1.dt)
-# 	N2 = N(signal2.velo, signal2.dt)
-# 	SDe = 10*(1-np.amax(F(N1, N2)))
-
-# 	return SDa, SDe
 
 def cal_Sfs(signal1, signal2, fmin, fmax):
 	"""
@@ -145,6 +118,7 @@ def cal_C(a1, a2, dt):
 	z = np.cumsum(a2*a2)*dt
 	c = x/(np.power(y, 0.5)*np.power(z, 0.5))
 	cc = 10*np.amax(c, 0)
+	cc = abs(cc)
 	return cc 
 
 
@@ -235,8 +209,6 @@ def scores_matrix(station1, station2, bands):
 
 			dt = signal1.dt 
 
-			# c1, c2 = cal_SD(signal1, signal2) = SDa, SDe
-			# c3, c4 = cal_SI(signal1, signal2) = SIa, SIv
 			c1 = cal_SD(signal1.accel, signal2.accel, dt)
 			c2 = cal_SD(signal1.velo, signal2.velo, dt)
 
@@ -255,7 +227,6 @@ def scores_matrix(station1, station2, bands):
 			c11 = cal_D(signal1, signal2)
 
 			scores = np.array([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11], float)
-			# scores = np.append(scores, np.average(scores))
 			T = ((c1+c2)/2 + (c3+c4)/2 + c5 + c6 + c7 + c8 + c9 + c10 + c11)/9 
 			A = (c1+c2+c3+c4+c5+c6+c7+c8+c9+c10)/10 
 			scores = np.insert(scores, 0, T)
@@ -268,8 +239,6 @@ def scores_matrix(station1, station2, bands):
 		CA = np.array([],float)
 
 		# calculate the average score of all bands 
-		# FS2 = avg(b1-b6)
-		# FS1 = avg(bb-b6)
 		for j in range(0, 13):
 			# SA = avg(B1...Bn)
 			avg2 = np.average(matrix[i][:,j][1:len(bands)-1])
@@ -281,9 +250,6 @@ def scores_matrix(station1, station2, bands):
 			CA = np.append(CA, avg1)
 			CA = np.around(CA, decimals=2)
 
-
-		# print fs1 
-		# print fs2
 		matrix[i][-1] = CA
 		matrix[i][-2] = SA
 
@@ -392,9 +358,8 @@ def print_scores(path, matrix):
 	f.close()
 # end of print_scores
 
-def set_labels():
+def set_labels(bands):
 	# generate labels for scores file 
-	global bands 
 	o = ['A', 'N', 'E', 'U']
 	b = ['CA', 'SA'] 
 	s = ['T', 'A', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'C11']
@@ -411,20 +376,4 @@ def set_labels():
 				labels.append(o[i]+'_'+b[j]+'_'+s[k])
 	return labels
 
-# def progress():
-# 	""" showing the progress of generating matrix """
-# 	toolbar_width = 40
-
-# 	# setup toolbar
-# 	sys.stdout.write("[%s]" % (" " * toolbar_width))
-# 	sys.stdout.flush()
-# 	sys.stdout.write("\b" * (toolbar_width+1)) # return to start of line, after '['
-
-# 	for i in xrange(toolbar_width):
-# 	    time.sleep(0.1) # do real work here
-# 	    # update the bar
-# 	    sys.stdout.write("-")
-# 	    sys.stdout.flush()
-
-# 	sys.stdout.write("\n")
 

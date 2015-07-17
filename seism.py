@@ -640,8 +640,12 @@ class seism_station(object):
 
             if record.type == 'a': 
                 # get velocity and displacement
+                # TODO: filter acc
                 velocity = integrate(record.data, record.dt)
+                # TODO: add filter 
                 displacement = integrate(velocity, record.dt)
+                # TODO: add filter 
+                
 
                 data = np.c_[displacement, velocity, record.data]
 

@@ -177,8 +177,8 @@ def plot_signals(filenames, signal1, signal2):
 
 	# filtering data
 	if f_flag:
-		data1 = bandpass_filter(data1, dt1, fmin, fmax)
-		data2 = bandpass_filter(data2, dt2, fmin, fmax)
+		data1 = s_filter(data1, dt1, type = 'bandpass', family = 'ellip', fmin = fmin, fmax = fmax, N = 3, rp = 0.1, rs = 100) 
+		data2 = s_filter(data2, dt2, type = 'bandpass', family = 'ellip', fmin = fmin, fmax = fmax, N = 3, rp = 0.1, rs = 100) 
 
 	# cutting signals by bounds
 	min_i = int(xtmin/dt1) 
@@ -349,8 +349,8 @@ def plot_stations(filenames, station1, station2):
 
 			# filtering data
 			if f_flag:
-				data1 = bandpass_filter(data1, dt1, fmin, fmax)
-				data2 = bandpass_filter(data2, dt2, fmin, fmax)
+				data1 = s_filter(data1, dt1, type = 'bandpass', family = 'ellip', fmin = fmin, fmax = fmax, N = 3, rp = 0.1, rs = 100) 
+				data2 = s_filter(data2, dt2, type = 'bandpass', family = 'ellip', fmin = fmin, fmax = fmax, N = 3, rp = 0.1, rs = 100) 
 
 			# cutting signal by bounds
 			# min_i = int(xtmin/dt1) 

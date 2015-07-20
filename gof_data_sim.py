@@ -102,9 +102,9 @@ def interp(data, t, samples, dt):
 def process(signal, dt, fmax):
 	""" processes signal with common dt and fmax."""
 	# call low_pass filter at fmax 
-	signal.accel = lowpass_filter(signal.accel, dt, fmax)
-	signal.velo = lowpass_filter(signal.velo, dt, fmax)
-	signal.displ = lowpass_filter(signal.displ, dt, fmax)
+	signal.accel = s_filter(signal.accel, dt, type = 'lowpass', family = 'ellip', max = fmax, N = 3, rp = 0.1, rs = 100) 
+	signal.velo = s_filter(signal.velo, dt, type = 'lowpass', family = 'ellip', fmax = fmax, N = 3, rp = 0.1, rs = 100) 
+	signal.displ = s_filter(signal.displ, dt, type = 'lowpass', family = 'ellip', fmax = fmax, N = 3, rp = 0.1, rs = 100) 
 
 	# interpolate 
 	t = np.arange(0, signal.samples*signal.dt, signal.dt)

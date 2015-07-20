@@ -27,10 +27,10 @@ def filter_data(psignal, fmin, fmax):
 		return False 
 	dt = psignal.dt 
 
-	psignal.accel = bandpass_filter(psignal.accel, dt, fmin, fmax)
-	psignal.velo = bandpass_filter(psignal.velo, dt, fmin, fmax)
-	psignal.displ = bandpass_filter(psignal.displ, dt, fmin, fmax)
-
+	psignal.accel = s_filter(psignal.accel, dt, type = 'bandpass', family = 'ellip', fmin = fmin, fmax = fmax, N = 3, rp = 0.1, rs = 100) 
+	psignal.velo = s_filter(psignal.velo, dt, type = 'bandpass', family = 'ellip', fmin = fmin, fmax = fmax, N = 3, rp = 0.1, rs = 100) 
+	psignal.displ = s_filter(psignal.displ, dt, type = 'bandpass', family = 'ellip', fmin = fmin, fmax = fmax, N = 3, rp = 0.1, rs = 100) 
+	
 	psignal.data = np.c_[psignal.displ, psignal.velo, psignal.accel]
 
 	return psignal

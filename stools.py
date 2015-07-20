@@ -6,15 +6,10 @@
 from __future__ import division
 import numpy as np
 import math 
-from scipy.signal import filtfilt, ellip
-
-fmin = 0.05 
-fmax = 5.0 
+from scipy.signal import filtfilt, ellip, butter 
 
 def integrate(data, dt):
 	data = np.cumsum(data*dt) #integrate
-	# data = highpass_filter(data, dt) #filt  
-	# data = highpass_filter(np.cumsum(data*self.dt), self.dt, Wn = 0.075/((1.0/self.dt)/2.0), N = 7)
 	return data
 
 
@@ -22,73 +17,38 @@ def derivative(data, dt):
 	"""compute derivative of an numpy."""
 	data = np.insert(data, 0, data[0])
 	data = np.diff(data/dt)
-	# data = highpass_filter(data, dt) #filt
 	return data 
 
-def filter(*args, **kwargs):
-    # TODO
-    pass 
+def s_filter(*args, **kwargs):
+    """
+    correct order for unlabeled arguments is data, dt; 
+    """
+    data = np.array([],float)
+    dt = 0.0 
+    fami = {'ellip': ellip, 'butter': butter}
 
-
-def bandpass_filter(data, dt, fmin, fmax):
-    # TODO: allow specifying N, rp, and rs 
-    if not isinstance(data, np.ndarray): 
-        print "\n[ERROR]: data is not an numpy array.\n"
+    if len(args) >= 2:
+        data = args[0]
+        dt = args[1]
+    else: 
+        print "[ERROR]: filter missing data and dt."
         return data 
-    # N = 5 
-    N = 3
-    rp = 0.1
-    rs = 100 
 
-    w_min = fmin/((1.0/dt)/2.0)
-    w_max = fmax/((1.0/dt)/2.0)
+    if not isinstance(data, np.ndarray):
+        print "[ERROR]: data input for filter is not an numpy array."
+        return data 
 
-    b, a = ellip(N = N, rp = rp, rs = rs, Wn = [w_min, w_max], btype = 'bandpass', analog=False)
-    data = filtfilt(b, a, data)
-    return data
-# end of bandpass_filter
-
-def lowpass_filter(data, dt, fmax):
-    # TODO: allow specifying N, rp, and rs 
-    if not isinstance(data, np.ndarray): 
-        print "\n[ERROR]: data is not an numpy array.\n"
-        return 
-    # N = 5 
-    N = 3
-    rp = 0.1
-    rs = 100 
-    w_max = fmax/((1.0/dt)/2.0)
-
-    b, a = ellip(N = N, rp = rp, rs = rs, Wn = w_max, btype = 'lowpass', analog=False)
-    data = filtfilt(b, a, data)
-    return data
-# end of lowpass_filter
-
-
-def highpass_filter(data, dt, *args, **kwargs):
-    """
-    Correct order for unlabeled arguments is: data, dt, order N, rp, rs, Wn 
-    """
-    if not isinstance(data, np.ndarray): 
-        print "\n[ERROR]: data is not an numpy array.\n"
-        return 
+    # default values 
     N = 5
     rp = 0.1
     rs = 100 
     Wn = 0.05/((1.0/dt)/2.0)
+    fmin = 0.0 
+    fmax = 0.0
 
-    if len(args) > 0:
-        args_range = range(len(args))
-        if 0 in args_range:
-            N = args[0]
-        if 1 in args_range:
-            rp = args[1]
-        if 2 in args_range:
-            rs = args[2]
-        if 3 in args_range:
-            Wn = args[3]
-
-    if len(kwargs) > 0:
+    if len(kwargs) > 0: 
+        if 'type' in kwargs:
+            btype = kwargs['type']
         if 'N' in kwargs:
             N = kwargs['N']
         if 'rp' in kwargs:
@@ -97,12 +57,24 @@ def highpass_filter(data, dt, *args, **kwargs):
             rs = kwargs['rs']
         if 'Wn' in kwargs:
             Wn = kwargs['Wn']
+        if 'fmin' in kwargs :
+            fmin = kwargs['fmin']
+            w_min = fmin/((1.0/dt)/2.0)
+        if 'fmax' in kwargs:
+            fmax = kwargs['fmax']
+            w_max = fmax/((1.0/dt)/2.0)
 
-    # create highpass elliptic filter 
-    b, a = ellip(N = N, rp = rp, rs = rs, Wn = Wn, btype = 'highpass', analog=False)
-    data = filtfilt(b, a, data)
-    return data 
-# end of highpass_filter
+        if fmin and fmax: 
+            Wn = [w_min, w_max]
+        elif fmax:
+            Wn = w_max
+
+        # calling filter 
+        b, a = fami[kwargs['family']](N = N, rp = rp, rs = rs, Wn = Wn, btype = btype, analog=False)
+        data = filtfilt(b, a, data)
+        return data 
+# end of s_filter 
+
 
 def smooth(data, factor): 
     # factor = 3; c = 0.5, 0.25, 0.25

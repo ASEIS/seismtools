@@ -320,16 +320,10 @@ class seism_record(seism_signal):
              # handling other degrees.
              return False 
              pass
- 
-        # filter data 
-        self.data = highpass_filter(self.data, self.dt) 
 
         # make average on first 10% of samples; minus average and multiply by 981 
         # self.data = 981*(self.data - np.average(self.data))
         self.data = 981*(self.data - np.average(self.data[0:int(self.samples*0.1)]))
-
-        # filename = network + "." + station_id + ".V1" + orientation + ".txt"
-        # return filename
         return 
     #end process_smc_V1 
 
@@ -640,11 +634,14 @@ class seism_station(object):
 
             if record.type == 'a': 
                 # get velocity and displacement
-                # TODO: filter acc
+                # filter data 
+                record.data = s_filter(record.data, record.dt, type = 'highpass', family = 'ellip')
+
                 velocity = integrate(record.data, record.dt)
-                # TODO: add filter 
+                velocity = s_filter(velocity, record.dt, type = 'highpass', family = 'ellip')
+
                 displacement = integrate(velocity, record.dt)
-                # TODO: add filter 
+                displacement = s_filter(displacement, record.dt, type = 'highpass', family = 'ellip')
                 
 
                 data = np.c_[displacement, velocity, record.data]

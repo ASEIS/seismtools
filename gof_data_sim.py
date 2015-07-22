@@ -162,28 +162,28 @@ def get_leading():
 	return lt 
 # end of get_leading
 
-def cut_signal(t_diff, signal):
-	if not isinstance(signal, seism_psignal):
-		return signal
-	num = int(t_diff/signal.dt) 
-	signal.samples -= num 
-	signal.accel = signal.accel[num:]
-	signal.velo = signal.velo[num:]
-	signal.displ = signal.displ[num:]
-	return signal
+# def cut_signal(t_diff, signal):
+# 	if not isinstance(signal, seism_psignal):
+# 		return signal
+# 	num = int(t_diff/signal.dt) 
+# 	signal.samples -= num 
+# 	signal.accel = signal.accel[num:]
+# 	signal.velo = signal.velo[num:]
+# 	signal.displ = signal.displ[num:]
+# 	return signal
 
-def add_signal(t_diff, signal):
-	if not isinstance(signal, seism_psignal):
-		return signal
-	num = int(t_diff/signal.dt) 
-	zeros = np.zeros(num)
-	signal.samples += num 
+# def add_signal(t_diff, signal):
+# 	if not isinstance(signal, seism_psignal):
+# 		return signal
+# 	num = int(t_diff/signal.dt) 
+# 	zeros = np.zeros(num)
+# 	signal.samples += num 
 	
-	signal.accel = np.append(zeros, signal.accel)
-	signal.velo = np.append(zeros, signal.velo)
-	signal.displ = np.append(zeros, signal.displ)
+# 	signal.accel = np.append(zeros, signal.accel)
+# 	signal.velo = np.append(zeros, signal.velo)
+# 	signal.displ = np.append(zeros, signal.displ)
 
-	return signal
+# 	return signal
 
 
 def synchronize(station1, station2, stamp):
@@ -211,16 +211,20 @@ def synchronize(station1, station2, stamp):
 		# synchronize the start time 
 		if start < sim_start: 
 			# data time < sim time < earthquake time; cutting data array 
-			signal1 = cut_signal((sim_start - start), signal1)
+			# signal1 = cut_signal((sim_start - start), signal1)
+			signal1 = seism_cutting('front', (sim_start - start), 20, signal1)
 
 		elif start > eq_time:
 			# sim time < earthquake time < data time; adding zeros in front 
-			signal1 = add_signal((start - eq_time), signal1)
-			signal2 = cut_signal((eq_time - sim_start), signal2)
+			signal1 = seism_appendzeros('front', (start - eq_time), 20, signal1)
+			signal2 = seism_cutting('front', (eq_time - sim_start), 20, signal2)
+			# signal1 = add_signal((start - eq_time), signal1)
+			# signal2 = cut_signal((eq_time - sim_start), signal2)
 
 		else: 
 			# sim time < data time < earthquake time; adding zeros 
-			signal1 = add_signal((start - sim_start), signal1)
+			# signal1 = add_signal((start - sim_start), signal1)
+			signal1 = seism_appendzeros('front', (start - sim_start), 20, signal1)
 
 
 		# synchronize the ending time 
@@ -231,22 +235,24 @@ def synchronize(station1, station2, stamp):
 
 		if sim_end < end: 
 			# adding zeros in simulation signal
-			num = int((end - sim_end)/dt)
-			zeros = np.zeros(num)
-			signal2.samples += num 
+			signal2 = seism_appendzeros('end', (end - sim_end), 20, signal2)
+			# num = int((end - sim_end)/dt)
+			# zeros = np.zeros(num)
+			# signal2.samples += num 
 
-			signal2.accel = np.append(signal2.accel, zeros)
-			signal2.velo = np.append(signal2.velo, zeros)
-			signal2.displ = np.append(signal2.displ, zeros)
+			# signal2.accel = np.append(signal2.accel, zeros)
+			# signal2.velo = np.append(signal2.velo, zeros)
+			# signal2.displ = np.append(signal2.displ, zeros)
 
 		elif end < sim_end:
 			# cutting from simulation signal 
-			num = int((sim_end - end)/dt) 
-			signal2.samples -= num 
-			num *= -1 
-			signal2.accel = signal2.accel[:num]
-			signal2.velo = signal2.velo[:num]
-			signal2.displ = signal2.displ[:num]
+			signal2 = seism_cutting('end', (sim_end - end), 20, signal2)
+			# num = int((sim_end - end)/dt) 
+			# signal2.samples -= num 
+			# num *= -1 
+			# signal2.accel = signal2.accel[:num]
+			# signal2.velo = signal2.velo[:num]
+			# signal2.displ = signal2.displ[:num]
 		else:
 			pass 
 

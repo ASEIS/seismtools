@@ -159,3 +159,54 @@ import time
 # ax1.plot(y, x)
 
 # plt.show()
+
+from scipy import signal
+from scipy.fftpack import fft, fftshift
+import matplotlib.pyplot as plt
+
+window = signal.kaiser(51, beta=14)
+plt.plot(window)
+plt.title(r"Kaiser window ($\beta$=14)")
+plt.ylabel("Amplitude")
+plt.xlabel("Sample")
+
+plt.figure()
+A = fft(window, 2048) / (len(window)/2.0)
+freq = np.linspace(-0.5, 0.5, len(A))
+response = 20 * np.log10(np.abs(fftshift(A / abs(A).max())))
+plt.plot(freq, response)
+plt.axis([-0.5, 0.5, -120, 0])
+plt.title(r"Frequency response of the Kaiser window ($\beta$=14)")
+plt.ylabel("Normalized magnitude [dB]")
+plt.xlabel("Normalized frequency [cycles per sample]")
+plt.show()
+
+def taper(flag, n, m, samples):
+    # n = samples for adding zeros 
+    # m = samples for taper 
+    # samples = total samples
+    print n, m, samples
+    ones = np.ones(samples - m -n)
+    print ones.size 
+
+    window = signal.kaiser((m+n)*2, beta=14)
+    print window.size 
+
+    if flag == 'front':
+        window = window[0:(m+n)] #cutting the second half of window 
+        print window.size 
+        window = np.concatenate([window, ones])
+        print window.size 
+
+    elif flag == 'end':
+        window = window[(m+n):] #cutting the first half of window 
+        print window.size 
+
+        window = np.concatenate([ones, window])
+        print window.size 
+    print samples
+    return window 
+    pass 
+
+taper('front', 10, 20, 1200)
+taper('end', 10, 20, 1200)

@@ -59,6 +59,8 @@ def read_list(file_list):
 			# if the file is V1/raw data file: generate text file for acceleration, and .her file 
 			if f.upper().endswith(".V1") or f.upper().endswith(".RAW"):
 				station = load_smc_v1(f)
+				station = process(station)
+
 				if not station: 
 					print_message(f, 'unprocessed')
 				else: 
@@ -69,6 +71,7 @@ def read_list(file_list):
 			# if the file is V2/processed data file; generate text file for acceleration, and .her file 
 			elif f.upper().endswith(".V2"):
 				station = load_smc_v2(f)
+
 				if not station: 
 					print_message(f, 'unprocessed')
 				else:

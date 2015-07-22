@@ -103,7 +103,7 @@ def load_smc_v1(filename):
         signal = str()
         for s in tmp:
             signal += s
-        data = process_signal(signal)
+        data = read_data(signal)
 
 
 
@@ -115,15 +115,7 @@ def load_smc_v1(filename):
         record_list.append(record)
 
     station = seism_station(record_list, network, station_id, 'V1')
-
-    # process the records in station to precords 
-    # if the station does not contain 3 channles or it has special orientations, return False 
-    if not station.list: 
-        return False 
-    elif station.process_list() == False: 
-        return False 
-    else:
-        return station 
+    return station 
 
 
 def load_smc_v2(filename):
@@ -238,9 +230,9 @@ def load_smc_v2(filename):
                 elif dtype == 'd':
                     d_signal += s 
 
-        a_data = process_signal(a_signal)
-        v_data = process_signal(v_signal)
-        d_data = process_signal(d_signal)
+        a_data = read_data(a_signal)
+        v_data = read_data(v_signal)
+        d_data = read_data(d_signal)
         data = np.c_[d_data, v_data, a_data] 
 
         precord = seism_precord(samples, dt, data, 'c', station_name, accel = a_data, displ = d_data, velo = v_data, orientation = orientation, date = date, time = time, depth = depth,
@@ -252,10 +244,21 @@ def load_smc_v2(filename):
         return False 
     else: 
         return station 
+# end of load_smc_v2
+
+def process(station):
+    # process the [records] in station to [precords] 
+    # if the station does not contain 3 channles or it has special orientations, return False 
+    if not station.list: 
+        return False 
+    elif station.process_list() == False: 
+        return False 
+    else:
+        return station 
+# end of process
 
 
-
-def process_signal(signal):
+def read_data(signal):
     """
     The function is to convert signal data into an numpy array of float numbers 
     """

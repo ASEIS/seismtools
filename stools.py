@@ -6,7 +6,8 @@
 from __future__ import division
 import numpy as np
 import math 
-from scipy.signal import filtfilt, ellip, butter 
+from scipy.signal import filtfilt, ellip, butter, kaiser
+from scipy.fftpack import fft, fftshift
 
 def integrate(data, dt):
 	data = np.cumsum(data*dt) #integrate
@@ -27,7 +28,7 @@ def s_filter(*args, **kwargs):
     dt = 0.0 
     fami = {'ellip': ellip, 'butter': butter}
 
-    if len(args) >= 2:
+    if len(args) == 2:
         data = args[0]
         dt = args[1]
     else: 
@@ -107,16 +108,6 @@ def get_points(samples1, samples2):
 	return 2**power 
 # end of get_points
 
-# def set_bound(f1, f2): 
-# 	""" get fmin and fmax from other programs """
-# 	global fmin 
-# 	global fmax 
-# 	fmin = f1 
-# 	fmax = f2
-
-# 	print fmin, fmax 
-# end of set_bound
-
 def get_period(fmin, fmax):
     """ Return an array of period T """
     tmin = 1/fmax 
@@ -176,5 +167,96 @@ def max_osc_response(acc, dt, csi, period, ini_disp, ini_vel):
 
     return maxdisp, maxvel, maxacc
 
+def taper(flag, n, m, samples):
+    # n = samples for adding zeros 
+    # m = samples for taper 
+    # samples = total samples
+    ones = np.ones(samples - m -n)
+    window = kaiser((m+n)*2, beta=14)
 
+    if flag == 'front':
+        # cut and replace the second half of window with 1s
+        window = window[0:(m+n)] 
+        window = np.concatenate([window, ones]) 
+
+    elif flag == 'end':
+        # cut and replace the first half of window with 1s
+        window = window[(m+n):] 
+        window = np.concatenate([ones, window])
+    
+    return window 
+
+
+def seism_appendzeros(flag, t_diff, m, signal):
+    """adds zeros in the front and/or at the end of an numpy array
+    apply taper before adding
+    """
+    # if not isinstance(signal, seism_psignal):
+    #     return signal
+
+    num = int(t_diff/signal.dt) 
+    zeros = np.zeros(num)
+
+    if flag == 'front':
+        # applying taper in the front 
+        window = taper('front', num, m, signal.samples)
+        signal.accel = signal.accel*window 
+        signal.velo = signal.velo*window 
+        signal.displ = signal.displ*window 
+
+        # adding zeros in front of data 
+        signal.accel = np.append(zeros, signal.accel)
+        signal.velo = np.append(zeros, signal.velo)
+        signal.displ = np.append(zeros, signal.displ)
+
+    elif flag == 'end':
+        # applying taper in the front 
+        window = taper('end', num, m, signal.samples)
+        signal.accel = signal.accel*window 
+        signal.velo = signal.velo*window 
+        signal.displ = signal.displ*window 
+
+        signal.accel = np.append(signal.accel, zeros)
+        signal.velo = np.append(signal.velo, zeros)
+        signal.displ = np.append(signal.displ, zeros)
+
+    signal.samples += num 
+    return signal
+# end of seism_appendzeros
+
+def seism_cutting(flag, t_diff, m, signal):
+    """cut data in the front or at the end of an numpy array 
+    apply taper after cutting 
+    """
+    # if not isinstance(signal, seism_psignal):
+    #     return signal
+
+    num = int(t_diff/signal.dt) 
+
+    if flag == 'front':
+        signal.accel = signal.accel[num:]
+        signal.velo = signal.velo[num:]
+        signal.displ = signal.displ[num:]
+
+        # applying taper in the front 
+        window = taper('front', num, m, signal.samples)
+        signal.accel = signal.accel*window 
+        signal.velo = signal.velo*window 
+        signal.displ = signal.displ*window 
+
+
+    elif flag == 'end': 
+        num *= -1 
+        signal.accel = signal.accel[:num]
+        signal.velo = signal.velo[:num]
+        signal.displ = signal.displ[:num]
+
+        # applying taper in the front 
+        window = taper('end', num, m, signal.samples)
+        signal.accel = signal.accel*window 
+        signal.velo = signal.velo*window 
+
+    signal.samples -= num 
+    return signal
+# end of seism_cutting
 

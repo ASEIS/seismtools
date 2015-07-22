@@ -239,6 +239,7 @@ def plot_signals(filenames, signal1, signal2):
 
 	axarr[2] = plt.subplot2grid((1, 4), (0, 3))
 	axarr[2].set_title("Response Spectra")
+	axarr[2].set_xscale('log')
 	axarr[2].plot(period,rsp1,'r',period,rsp2,'b')
 
 	plt.xlim(tmin, tmax)
@@ -400,6 +401,7 @@ def plot_stations(filenames, station1, station2):
 
 			axarr[j][2] = plt.subplot2grid((3, 4), (j, 3), rowspan=1, colspan=1)
 			axarr[j][2].set_title("Response Spectra")
+			axarr[j][2].set_xscale('log')
 			axarr[j][2].plot(period,rsp1[j][i],'r',period,rsp2[j][i],'b')
 
 			plt.xlim(tmin, tmax)

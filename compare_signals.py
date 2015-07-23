@@ -390,7 +390,8 @@ def plot_stations(filenames, station1, station2):
 			axarr[j][0].set_title(title)
 			axarr[j][0].plot(t1,c_data1,'r',t2,c_data2,'b')
 
-			plt.legend([file1, file2])
+			if j == 0: 
+				plt.legend([file1, file2])
 			plt.xlim(xtmin, xtmax)
 
 			axarr[j][1] = plt.subplot2grid((3, 4), (j, 2), rowspan=1, colspan=1)

@@ -634,7 +634,8 @@ class seism_station(object):
 
             if record.type == 'a': 
                 # get velocity and displacement
-                # filter data 
+                window = taper('all', 0, 20, record.samples)
+                record.data =  record.data*window 
                 record.data = s_filter(record.data, record.dt, type = 'highpass', family = 'ellip')
 
                 velocity = integrate(record.data, record.dt)

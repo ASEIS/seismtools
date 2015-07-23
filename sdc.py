@@ -81,7 +81,7 @@ def load_file(filename):
 		return 
 
 	data = np.loadtxt(filename, comments = '#', unpack = True)
-	samples = data.size -1 
+	samples = data.size
 
 	for line in f:
 		# get header 
@@ -137,19 +137,41 @@ def process(signal):
 	dt = signal.dt 
 
 	if signal.type == 'a':
+		
 		acc = signal.data 
+		window = taper('all', 0, 20, signal.samples)
+		acc = acc*window
+
 		vel = integrate(acc, dt)
+		vel = s_filter(vel, signal.dt, type = 'highpass', family = 'ellip')
+
 		dis = integrate(vel, dt)
+		dis = s_filter(dis, signal.dt, type = 'highpass', family = 'ellip')
 
 	elif signal.type == 'v':
 		vel = signal.data 
+		window = taper('all', 0, 20, signal.samples)
+		vel = vel*window
+
+
 		acc = derivative(vel, dt)
+		acc = s_filter(acc, signal.dt, type = 'highpass', family = 'ellip')
+
 		dis = integrate(vel, dt)
+		dis = s_filter(dis, signal.dt, type = 'highpass', family = 'ellip')
+
 
 	elif signal.type == 'd':
 		dis = signal.data 
+		window = taper('all', 0, 20, signal.samples)
+		dis = dis*window
+
 		vel = derivative(dis, dt)
+		vel = s_filter(vel, signal.dt, type = 'highpass', family = 'ellip')
+
 		acc = derivative(vel, dt)
+		acc = s_filter(acc, signal.dt, type = 'highpass', family = 'ellip')
+
 	else:
 		pass 
 

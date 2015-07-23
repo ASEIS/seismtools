@@ -46,6 +46,8 @@ def s_filter(*args, **kwargs):
     Wn = 0.05/((1.0/dt)/2.0)
     fmin = 0.0 
     fmax = 0.0
+    a = np.array([],float)
+    b = np.array([],float)
 
     if len(kwargs) > 0: 
         if 'type' in kwargs:
@@ -71,7 +73,11 @@ def s_filter(*args, **kwargs):
             Wn = w_max
 
         # calling filter 
-        b, a = fami[kwargs['family']](N = N, rp = rp, rs = rs, Wn = Wn, btype = btype, analog=False)
+        if kwargs['family'] == 'ellip': 
+            b, a = fami[kwargs['family']](N = N, rp = rp, rs = rs, Wn = Wn, btype = btype, analog=False)
+        elif kwargs['family'] == 'butter':
+            b, a = fami[kwargs['family']](N = N, Wn = Wn, btype = btype, analog=False)
+
         data = filtfilt(b, a, data)
         return data 
 # end of s_filter 
@@ -171,18 +177,24 @@ def taper(flag, n, m, samples):
     # n = samples for adding zeros 
     # m = samples for taper 
     # samples = total samples
-    ones = np.ones(samples - m -n)
     window = kaiser((m+n)*2, beta=14)
 
     if flag == 'front':
         # cut and replace the second half of window with 1s
+        ones = np.ones(samples-m-n)
         window = window[0:(m+n)] 
         window = np.concatenate([window, ones]) 
 
     elif flag == 'end':
         # cut and replace the first half of window with 1s
+        ones = np.ones(samples-m-n)
         window = window[(m+n):] 
         window = np.concatenate([ones, window])
+
+    elif flag == 'all':
+        ones = np.ones(samples-2*m-2*n)
+        window = np.concatenate([window[0:(m+n)], ones, window[(m+n):]])
+        return window 
     
     return window 
 
@@ -199,10 +211,11 @@ def seism_appendzeros(flag, t_diff, m, signal):
 
     if flag == 'front':
         # applying taper in the front 
-        window = taper('front', num, m, signal.samples)
-        signal.accel = signal.accel*window 
-        signal.velo = signal.velo*window 
-        signal.displ = signal.displ*window 
+        if m != 0: 
+            window = taper('front', num, m, signal.samples)
+            signal.accel = signal.accel*window 
+            signal.velo = signal.velo*window 
+            signal.displ = signal.displ*window 
 
         # adding zeros in front of data 
         signal.accel = np.append(zeros, signal.accel)
@@ -210,11 +223,12 @@ def seism_appendzeros(flag, t_diff, m, signal):
         signal.displ = np.append(zeros, signal.displ)
 
     elif flag == 'end':
-        # applying taper in the front 
-        window = taper('end', num, m, signal.samples)
-        signal.accel = signal.accel*window 
-        signal.velo = signal.velo*window 
-        signal.displ = signal.displ*window 
+        if m != 0: 
+            # applying taper in the front 
+            window = taper('end', num, m, signal.samples)
+            signal.accel = signal.accel*window 
+            signal.velo = signal.velo*window 
+            signal.displ = signal.displ*window 
 
         signal.accel = np.append(signal.accel, zeros)
         signal.velo = np.append(signal.velo, zeros)

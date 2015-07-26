@@ -173,28 +173,31 @@ def max_osc_response(acc, dt, csi, period, ini_disp, ini_vel):
 
     return maxdisp, maxvel, maxacc
 
-def taper(flag, n, m, samples):
-    # n = samples for adding zeros 
+def taper(flag, m, samples):
     # m = samples for taper 
     # samples = total samples
-    window = kaiser((m+n)*2, beta=14)
+    window = kaiser(2*m+1, beta=14)
 
     if flag == 'front':
         # cut and replace the second half of window with 1s
-        ones = np.ones(samples-m-n)
-        window = window[0:(m+n)] 
+        ones = np.ones(samples-m-1)
+        window = window[0:(m+1)] 
         window = np.concatenate([window, ones]) 
 
     elif flag == 'end':
         # cut and replace the first half of window with 1s
-        ones = np.ones(samples-m-n)
-        window = window[(m+n):] 
+        ones = np.ones(samples-m-1)
+        window = window[(m+1):] 
         window = np.concatenate([ones, window])
 
     elif flag == 'all':
-        ones = np.ones(samples-2*m-2*n)
-        window = np.concatenate([window[0:(m+n)], ones, window[(m+n):]])
-        return window 
+        ones = np.ones(samples-2*m-1)
+        window = np.concatenate([window[0:(m+1)], ones, window[(m+1):]])
+
+    # avoid concatenate error 
+    if window.size != samples:
+        print "[ERROR]: taper and data do not have the same number of samples."
+        window = np.ones(samples)
     
     return window 
 
@@ -212,7 +215,7 @@ def seism_appendzeros(flag, t_diff, m, signal):
     if flag == 'front':
         # applying taper in the front 
         if m != 0: 
-            window = taper('front', num, m, signal.samples)
+            window = taper('front', m, signal.samples)
             signal.accel = signal.accel*window 
             signal.velo = signal.velo*window 
             signal.displ = signal.displ*window 
@@ -225,7 +228,7 @@ def seism_appendzeros(flag, t_diff, m, signal):
     elif flag == 'end':
         if m != 0: 
             # applying taper in the front 
-            window = taper('end', num, m, signal.samples)
+            window = taper('end', m, signal.samples)
             signal.accel = signal.accel*window 
             signal.velo = signal.velo*window 
             signal.displ = signal.displ*window 
@@ -253,7 +256,7 @@ def seism_cutting(flag, t_diff, m, signal):
         signal.displ = signal.displ[num:]
 
         # applying taper in the front 
-        window = taper('front', num, m, signal.samples)
+        window = taper('front', m, signal.samples)
         signal.accel = signal.accel*window 
         signal.velo = signal.velo*window 
         signal.displ = signal.displ*window 
@@ -266,7 +269,7 @@ def seism_cutting(flag, t_diff, m, signal):
         signal.displ = signal.displ[:num]
 
         # applying taper in the front 
-        window = taper('end', num, m, signal.samples)
+        window = taper('end', m, signal.samples)
         signal.accel = signal.accel*window 
         signal.velo = signal.velo*window 
 

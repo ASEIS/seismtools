@@ -246,17 +246,6 @@ def load_smc_v2(filename):
         return station 
 # end of load_smc_v2
 
-def process(station):
-    # process the [records] in station to [precords] 
-    # if the station does not contain 3 channles or it has special orientations, return False 
-    if not station.list: 
-        return False 
-    elif station.process_list() == False: 
-        return False 
-    else:
-        return station 
-# end of process
-
 
 def read_data(signal):
     """

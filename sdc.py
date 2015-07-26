@@ -139,7 +139,7 @@ def process(signal):
 	if signal.type == 'a':
 		
 		acc = signal.data 
-		window = taper('all', 0, 20, signal.samples)
+		window = taper('all', 20, signal.samples)
 		acc = acc*window
 
 		vel = integrate(acc, dt)
@@ -150,7 +150,7 @@ def process(signal):
 
 	elif signal.type == 'v':
 		vel = signal.data 
-		window = taper('all', 0, 20, signal.samples)
+		window = taper('all', 20, signal.samples)
 		vel = vel*window
 
 
@@ -163,7 +163,7 @@ def process(signal):
 
 	elif signal.type == 'd':
 		dis = signal.data 
-		window = taper('all', 0, 20, signal.samples)
+		window = taper('all', 20, signal.samples)
 		dis = dis*window
 
 		vel = derivative(dis, dt)

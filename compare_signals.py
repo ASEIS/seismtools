@@ -33,8 +33,8 @@ def set_axis(xtype):
 	while xfmin >= xfmax:
 		print "[ERROR]: max must be greater than min."
 		return set_axis(xtype)
-	if xfmin < 0.1: 
-		xfmin = 0
+	# if xfmin < 0.1: 
+	# 	xfmin = 0
 
 	return xfmin, xfmax 
 
@@ -153,10 +153,18 @@ def plot_signals(filenames, signal1, signal2):
 	# t_flag = cut()
 
 	xfmin, xfmax = set_axis('freq')
+	f_flag = set_flag('filter')
+
 	fmin, fmax = set_bound('fas')
+	# if f_flag: 
+	# 	fmin, fmax = set_bound('fas')
+	# else: 
+	# 	fmin = xfmin
+	# 	fmax = xfmax
+
 	tmin, tmax = set_bound('resp')
 
-	f_flag = set_flag('filter')
+	
 	c_flag = set_flag('cut')
 
 	plt.close('all')
@@ -221,6 +229,9 @@ def plot_signals(filenames, signal1, signal2):
 			rsp1.append(max_osc_response(c_data1, dt1, 0.05, p, 0, 0)[-1])
 			rsp2.append(max_osc_response(c_data2, dt2, 0.05, p, 0, 0)[-1])
 
+	# i1 = np.where(freq1>=[xfmin])[0][0]
+	# i2 = np.where(freq2>=[xfmax])[0][0]
+
 
 	f, axarr = plt.subplots(nrows = 1, ncols = 3, figsize = (12, 3))
 
@@ -233,8 +244,12 @@ def plot_signals(filenames, signal1, signal2):
 
 	axarr[1] = plt.subplot2grid((1, 4), (0, 2), colspan=1)
 	axarr[1].set_title('Fourier Amplitude Spectra') 
+	# axarr[1].plot(freq1[i1:i2],fas1[i1:i2],'r',freq2[i1:i2],fas2[i1:i2],'b')
 	axarr[1].plot(freq1,fas1,'r',freq2,fas2,'b')
 
+	if xfmin <0.1:
+		xfmin = 0 
+		
 	plt.xlim(xfmin, xfmax)
 
 	axarr[2] = plt.subplot2grid((1, 4), (0, 3))

@@ -177,7 +177,7 @@ response = 20 * np.log10(np.abs(fftshift(A / abs(A).max())))
 plt.plot(freq, response)
 plt.axis([-0.5, 0.5, -120, 0])
 plt.title(r"Frequency response of the Kaiser window ($\beta$=14)")
-plt.ylabel("Normalized magnitude [dB]")
+plt.ylabel("Normalized magnitude [dB]")+
 plt.xlabel("Normalized frequency [cycles per sample]")
 plt.show()
 

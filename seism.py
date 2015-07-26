@@ -614,7 +614,7 @@ class seism_station(object):
         return record_list
     # end of rotate
 
-    def process_list(self):
+    def process(self):
         """The function is take a list of records get from V1 files; 
         then use their data to all three types of data (acc, vel, dis),
         then return a list of precords. 
@@ -634,7 +634,7 @@ class seism_station(object):
 
             if record.type == 'a': 
                 # get velocity and displacement
-                window = taper('all', 0, 20, record.samples)
+                window = taper('all', 20, record.samples)
                 record.data =  record.data*window 
                 record.data = s_filter(record.data, record.dt, type = 'highpass', family = 'ellip')
 
@@ -658,9 +658,9 @@ class seism_station(object):
                 return False 
             else: 
                 self.list = record_list
-            return self.process_list() # recursively calling the function to continue processing
+            return self.process() # recursively calling the function to continue processing
         self.list = precord_list
-    # end of process_list
+    # end of process
 #end station class
 
 

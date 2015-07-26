@@ -8,10 +8,11 @@ import os
 from smc import *
 
 destination = ''
-file_list = []
+# file_list = []
 
 def get_filename(): 
-	global file_list
+	# global file_list
+	file_list = []
 	global destination
 
 	# if filenam is not given with command 
@@ -37,6 +38,7 @@ def get_filename():
 			clear(destination + '/warning.txt')
 
 	get_destination(destination)
+	return file_list
 # end of get_filename
 
 
@@ -59,9 +61,17 @@ def read_list(file_list):
 			# if the file is V1/raw data file: generate text file for acceleration, and .her file 
 			if f.upper().endswith(".V1") or f.upper().endswith(".RAW"):
 				station = load_smc_v1(f)
-				station = process(station)
+
+				# if encounters errors with records in station 
+				if not station.list: 
+					station = False 
+				else: 
+				# process records in station 
+					station.process()
+					# print station.data 
 
 				if not station: 
+					# print '===' 
 					print_message(f, 'unprocessed')
 				else: 
 					print_smc(station)
@@ -141,7 +151,7 @@ def clear(filename):
 
 
 
-get_filename()
+file_list = get_filename()
 read_list(file_list) 
 
 

@@ -91,8 +91,6 @@ def search():
 	else: 
 		path_list = sys.argv[1:]
 
-
-	# print path_list
 	# iterate through paths; search for files with matched options 
 	for p in path_list:
 		if not os.path.isdir(p):
@@ -149,7 +147,6 @@ def search_pairs(file_list):
 		info = tmp[3]
 		info = info[0:2]
 		for i in range(0, 3):
-			# target = tmp[0] + '.' + tmp[1] + '.' + tmp[2] + '.' + info + orientation[i] + '.ascii'
 			target = '.' + tmp[1] + '.' + tmp[2] + '.' + info + orientation[i]
 			for ff in file_list:
 				if target in ff:
@@ -157,12 +154,6 @@ def search_pairs(file_list):
 					if not ff == f: 
 						file_list.remove(ff) 
 
-			# if target in file_list:
-			# 	file_dict[orientation[i]] = path + '/' + target
-			# 	file_list.remove(target)
-
-
-		# print file_dict
 
 		# process the directory with sdc.py
 		if len(file_dict) == 3: 
@@ -171,7 +162,6 @@ def search_pairs(file_list):
 			print "[ERROR]: No pair found."
 			print_message(f, 'unprocessed')
 		
-	# print file_list 
 # end of search_pairs
 
 def print_message(message, ftype):

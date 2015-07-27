@@ -8,10 +8,8 @@ import os
 from smc import *
 
 destination = ''
-# file_list = []
 
 def get_filename(): 
-	# global file_list
 	file_list = []
 	global destination
 
@@ -68,10 +66,8 @@ def read_list(file_list):
 				else: 
 				# process records in station 
 					station.process()
-					# print station.data 
 
 				if not station: 
-					# print '===' 
 					print_message(f, 'unprocessed')
 				else: 
 					print_smc(station)
@@ -105,7 +101,6 @@ def read_list(file_list):
 						# file_list += lines[1:]
 		else:
 			print "[ERROR]: no such file or directory: " + f
-		# file_list = list(set(file_list)) #remove duplicated ones from list 
 # end of read_list 
 
 

@@ -51,9 +51,6 @@ def get_filename():
 		compare_her(file1, file2)
 	else:
 		return 
-
-	
-
 # end of get_filename
 
 get_filename()

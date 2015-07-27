@@ -33,8 +33,6 @@ def set_axis(xtype):
 	while xfmin >= xfmax:
 		print "[ERROR]: max must be greater than min."
 		return set_axis(xtype)
-	# if xfmin < 0.1: 
-	# 	xfmin = 0
 
 	return xfmin, xfmax 
 
@@ -155,12 +153,14 @@ def plot_signals(filenames, signal1, signal2):
 	xfmin, xfmax = set_axis('freq')
 	f_flag = set_flag('filter')
 
-	fmin, fmax = set_bound('fas')
-	# if f_flag: 
-	# 	fmin, fmax = set_bound('fas')
-	# else: 
-	# 	fmin = xfmin
-	# 	fmax = xfmax
+	# fmin, fmax = set_bound('fas')
+	# if user chooses to filter; ask for fmin and fmax 
+	if f_flag: 
+		fmin, fmax = set_bound('fas')
+	else: 
+		# else setting plot limits as fmin and fmax 
+		fmin = xfmin
+		fmax = xfmax
 
 	tmin, tmax = set_bound('resp')
 
@@ -285,9 +285,16 @@ def plot_stations(filenames, station1, station2):
 
 	xtmin, xtmax = set_axis('time')
 	xfmin, xfmax = set_axis('freq')
-	fmin, fmax = set_bound('fas')
-	tmin, tmax = set_bound('resp')
 	f_flag = set_flag('filter')
+	# fmin, fmax = set_bound('fas')
+	if f_flag: 
+		fmin, fmax = set_bound('fas')
+	else: 
+		# else setting plot limits as fmin and fmax 
+		fmin = xfmin
+		fmax = xfmax
+	tmin, tmax = set_bound('resp')
+	
 	c_flag = set_flag('cut')
 
 	min_i1 = int(xtmin/dt1) 
@@ -360,21 +367,13 @@ def plot_stations(filenames, station1, station2):
 			data1 = signal1.data[:,i]
 			data2 = signal2.data[:,i]
 
-			# dt1 = signal1.dt 
-			# dt2 = signal2.dt 
-
 			# filtering data
 			if f_flag:
 				data1 = s_filter(data1, dt1, type = 'bandpass', family = 'ellip', fmin = fmin, fmax = fmax, N = 3, rp = 0.1, rs = 100) 
 				data2 = s_filter(data2, dt2, type = 'bandpass', family = 'ellip', fmin = fmin, fmax = fmax, N = 3, rp = 0.1, rs = 100) 
 
 			# cutting signal by bounds
-			# min_i = int(xtmin/dt1) 
-			# max_i = int(xtmax/dt1)
 			c_data1 = data1[min_i1:max_i1]
-
-			# min_i = int(xtmin/dt2) 
-			# max_i = int(xtmax/dt2)
 			c_data2 = data2[min_i2:max_i2]
 
 			t1 = np.arange(xtmin, xtmax, dt1)
@@ -392,15 +391,6 @@ def plot_stations(filenames, station1, station2):
 				freq1, fas1 = FAS(c_data1, dt1, points, fmin, fmax, 3)
 				freq2, fas2 = FAS(c_data2, dt2, points, fmin, fmax, 3)
 
-			# 	t1 = np.arange(0, samples1*dt1, dt1)
-			# 	t2 = np.arange(0, samples2*dt2, dt2)
-
-			# axarr[j][0].set_title(title)
-			# axarr[j][0].plot(t1,data1,'r',t2,data2,'b')
-			# axarr[j][1].set_title('Fourier Amplitude Spectra')
-			# axarr[j][1].plot(freq1,fas1,'r',freq2,fas2,'b')
-
-
 			axarr[j][0] = plt.subplot2grid((3, 4), (j, 0), colspan=2, rowspan=1)
 			axarr[j][0].set_title(title)
 			axarr[j][0].plot(t1,c_data1,'r',t2,c_data2,'b')
@@ -413,6 +403,8 @@ def plot_stations(filenames, station1, station2):
 			axarr[j][1].set_title('Fourier Amplitude Spectra') 
 			axarr[j][1].plot(freq1,fas1,'r',freq2,fas2,'b')
 
+			if xfmin <0.1:
+				xfmin = 0 
 			plt.xlim(xfmin, xfmax)
 
 			axarr[j][2] = plt.subplot2grid((3, 4), (j, 3), rowspan=1, colspan=1)
@@ -428,16 +420,16 @@ def plot_stations(filenames, station1, station2):
 # end of plot_stations
 
 
-def test(psignal):
-	"""to test with psignal's data"""
-	print psignal.data[:,0], psignal.data[:,1], psignal.data[:,2]
-	print psignal.accel
-	print psignal.velo
-	print psignal.displ
-	print (psignal.data[:,0]==psignal.displ).all()
-	print (psignal.data[:,1]==psignal.velo).all()
-	print (psignal.data[:,2]==psignal.accel).all()
-	print psignal.data.shape[1]
+# def test(psignal):
+# 	"""to test with psignal's data"""
+# 	print psignal.data[:,0], psignal.data[:,1], psignal.data[:,2]
+# 	print psignal.accel
+# 	print psignal.velo
+# 	print psignal.displ
+# 	print (psignal.data[:,0]==psignal.displ).all()
+# 	print (psignal.data[:,1]==psignal.velo).all()
+# 	print (psignal.data[:,2]==psignal.accel).all()
+# 	print psignal.data.shape[1]
 
 
 def compare_txt(file1, file2):
@@ -460,7 +452,5 @@ def compare_her(file1, file2):
 
 	filenames = [file1, file2]
 	plot_stations(filenames, station1, station2)
-
-	# test(station1[0])
 # end of compare_her
 

@@ -49,9 +49,6 @@ def load_smc_v1(filename):
             dtype = 'a'
 
 
-        # tmp = channels[i][3].split('.')
-        # network = tmp[1]
-        # station_id = tmp[2]
         network = filename.split('/')[-1].split('.')[0][0:2].upper()
         station_id = filename.split('/')[-1].split('.')[0][2:].upper()
 
@@ -107,10 +104,8 @@ def load_smc_v1(filename):
 
 
 
-        # record = seism_record(samples, dt, data, dtype, station, location_lati, location_longi, depth, date, time, orientation)
         record = seism_record(samples, dt, data, dtype, station_name, location_lati, location_longi, depth = depth, 
             orientation = orientation, date = date, time = time)
-        # record.print_attr()
 
         record_list.append(record)
 
@@ -153,8 +148,6 @@ def load_smc_v2(filename):
             return channels, 0
 
         # get network code and station id 
-        # network = tmp[2].split('.')[1]
-        # station_id = tmp[2].split('.')[2]
         network = filename.split('/')[-1].split('.')[0][0:2].upper()
         station_id = filename.split('/')[-1].split('.')[0][2:].upper()
 
@@ -171,8 +164,7 @@ def load_smc_v2(filename):
         if orientation.isdigit():
             orientation = int(orientation)
         location = channels[i][7][36:].strip()
-        # print location 
-        
+
         # if 'Depth' in location: 
         #     depth = float(location.split()[2])
         # else:
@@ -268,10 +260,6 @@ def print_smc(station):
     """
     global destination
     orientation = ''
-    band = {'H': '80-250Hz', 'B': '10-80Hz', 'E': '80-250Hz'}
-    data_type = {'H': 'v', 'L': 'v', 'N': 'a'}
-    # network = filename.split('.')[0]
-    # station = filename.split('.')[1]
 
     for record in station.list:
         if record.orientation in [0, 180, 360, -180]:
@@ -280,13 +268,6 @@ def print_smc(station):
             orientation = 'E'
         elif record.orientation in ['Up', 'Down']:
             orientation = 'Z'
-
-        if record.dt in band.values():
-            pass 
-            # sample_rate = ?
-
-        if record.type in data_type.values():
-            pass 
 
         filename = station.network + '.' + station.id + '.' + station.type + orientation + '.txt'
         
@@ -299,11 +280,9 @@ def print_smc(station):
             # return 
         
         f.write(header)
-        # descriptor = '{:>12.7f}' + '\n'
         descriptor = '{:>f}' + '\n'
         if record.accel.size != 0: 
             for d in np.nditer(record.accel):
-                # f.write(str(d)+"\n")
                 f.write(descriptor.format(float(d)))
         f.close()
         print "*Generated .txt file at: " + destination + "/" + filename

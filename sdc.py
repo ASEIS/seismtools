@@ -35,7 +35,6 @@ def load_event(eventfile):
 
 	latitude = header[3]
 	longitude = header[4]
-
 # end of load_event
 
 
@@ -52,27 +51,19 @@ def load_file(filename):
 		return 
 
 	global header 
-	band = {'H': '80-250Hz', 'B': '10-80Hz', 'E': '80-250Hz'}
 	data_type = {'H': 'v', 'L': 'v', 'N': 'a'}
 	# v for velocity; a for acceleration, d for displacement 
 
 	network = ''
 	station = ''
 	dt = 0.0
-	# orientation = ''
 	date = ''
 	dtype = ''
 
 	f = filename.split('/')[-1]
 	tmp = f.split('.')
 	event = tmp[0]
-	# network = tmp[1].upper()
-	# station_id = tmp[2].upper()
-	# info = tmp[3]
 
-	# sample_rate = info[0].upper()
-	# instr_type = info[1].upper()
-	# orientation = info[2]
 
 	try:
 		f = open(filename, 'r')
@@ -103,21 +94,13 @@ def load_file(filename):
 	
 			break 
 
-	if sample_rate in band:
-		pass 
-		# TODO
 
 	if instr_type in data_type:
 		dtype = data_type[instr_type]
 
 	signal = seism_signal(samples, dt, data, dtype)
-	# print date 
 	header = "# " + network + " " + station + " " + "ASCII" + " " + date + " " + str(samples) + " " + str(dt) + "\n"
-	# print header 
-	# filename = event + '.' + network + '.' + station + '.' + sample_rate + instr_type
-	# record = seism_record(samples, dt, data, dtype, station, '', '', )
-	# samples, dt, data, signal type, station, 
- #        location_lati, location_longi, depth, date, time, orientation
+
 	return signal
 # end of load_file
 
@@ -192,14 +175,12 @@ def print_her(file_dict):
 
     # compose filename
     filename = file_dict['N'].split('/')[-1]
-    filename = filename.replace('N.', '.')
-    filename = filename.replace('.ascii', '.her')
+    filename = filename.replace('N.ascii', '.her')
 
     try:
         f = open(destination + '/' + filename, 'w')
     except IOError, e:
         print e
-        # return 
 
     # load files in dictionary; generate siganls and processes them
     file_dict['N'] = process(load_file(file_dict['N']))
@@ -258,28 +239,3 @@ def print_her(file_dict):
     f.close()
     print "*Generated .her file at: " + destination + "/" + filename
 #end of print_her 
-
-
-# process(load_file('data-sdc/14383980.CI.WNS.BLN.ascii'))
-# load_event('data-sdc/14383980.evnt')
-# file_list = ['data-sdc/14383980.CI.CHN.HHN.ascii', 'data-sdc/14383980.CI.CHN.HHE.ascii', 'data-sdc/14383980.CI.CHN.HHZ.ascii']
-
-
-
-# def main(file_dict):
-# 	"""
-# 	The function reads the dictionary getting from process_sdc; 
-# 	INPUT: dictionary holding paths to files 
-# 	OUTUTS: dictionary holding psignals. 
-# 	"""
-# 	# dict = {}
-# 	# if len(file_list) < 3: 
-# 	# 	print "[ERROR]: Missing file. The program processes three files in a group. "
-# 	# 	return 
-		
-# 	file_dict['N'] = process(load_file(file_dict['N']))
-# 	file_dict['E'] = process(load_file(file_dict['E']))
-# 	file_dict['Z'] = process(load_file(file_dict['Z']))
-# 	print_her(file_dict)
-
-# end of main

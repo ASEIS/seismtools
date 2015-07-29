@@ -41,7 +41,6 @@ def load_event(eventfile):
 
 
 
-
 def load_file(filename): 
 	"""
 	The function is to read general 1-column text files. Return a signal object. 
@@ -158,7 +157,7 @@ def process(signal):
 	else:
 		pass 
 
-	psignal = seism_psignal(signal.samples, signal.dt, np.c_[dis, vel, acc], 'a', acc, vel, dis)
+	psignal = seism_psignal(signal.samples, signal.dt, np.c_[dis, vel, acc], 'c', acc, vel, dis)
 	return psignal
 # end of process
 

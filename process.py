@@ -58,16 +58,16 @@ def read_list(file_list):
 		elif os.path.isfile(f) and os.stat(f).st_size != 0:
 			# if the file is V1/raw data file: generate text file for acceleration, and .her file 
 			if f.upper().endswith(".V1") or f.upper().endswith(".RAW"):
+				processed = False  
 				station = load_smc_v1(f)
 
 				# if encounters errors with records in station 
 				if not station.list: 
 					station = False 
 				else: 
-				# process records in station 
-					station.process()
+					processed = station.process_v1()
 
-				if not station: 
+				if not processed: 
 					print_message(f, 'unprocessed')
 				else: 
 					print_smc(station)
@@ -76,9 +76,11 @@ def read_list(file_list):
 
 			# if the file is V2/processed data file; generate text file for acceleration, and .her file 
 			elif f.upper().endswith(".V2"):
+				processed = False 
 				station = load_smc_v2(f)
+				processed = station.process_v2() # rotate 
 
-				if not station: 
+				if not processed: 
 					print_message(f, 'unprocessed')
 				else:
 					print_smc(station)

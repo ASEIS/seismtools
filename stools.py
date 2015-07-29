@@ -10,7 +10,7 @@ from scipy.signal import filtfilt, ellip, butter, kaiser
 from scipy.fftpack import fft, fftshift
 
 def integrate(data, dt):
-	data = np.cumsum(data*dt) #integrate
+	data = np.cumsum(data*dt) 
 	return data
 
 

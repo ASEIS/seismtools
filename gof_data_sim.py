@@ -86,6 +86,8 @@ def get_fmax():
 
 def interp(data, t, samples, dt):
 	""" call interpolate on given data """
+	print t.size 
+	print data.size 
 	f = interpolate.interp1d(t, data, 'linear', bounds_error = False)
 	new_t = np.arange(0, samples*dt, dt)
 	new_data = f(new_t)
@@ -108,6 +110,7 @@ def process(signal, dt, fmax):
 
 	# interpolate 
 	t = np.arange(0, signal.samples*signal.dt, signal.dt)
+	# t = t[1:]
 	signal.accel = interp(signal.accel, t, signal.samples, dt)
 	signal.velo = interp(signal.velo, t, signal.samples, dt)
 	signal.displ = interp(signal.displ, t, signal.samples, dt)

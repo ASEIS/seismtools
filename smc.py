@@ -281,6 +281,7 @@ def print_smc(station):
         
         f.write(header)
         descriptor = '{:>f}' + '\n'
+
         if record.accel.size != 0: 
             for d in np.nditer(record.accel):
                 f.write(descriptor.format(float(d)))

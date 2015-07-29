@@ -54,11 +54,6 @@ class seism_signal(object):
         If no parameters, samples set to 0, dt set to 0.01, type is accelerogram and array is empty
         Acceptable
         """
-
-        # lines used for debugging
-        # print 'args:   ', args
-        # print 'kwargs: ', kwargs
-
         # Initialize to default values
         self.samples = 0
         self.dt = 0.01
@@ -230,23 +225,23 @@ class seism_record(seism_signal):
         elif isinstance(orientation, int) and orientation <= 360 and orientation >= 0:
             self.orientation = orientation
         else: 
-            print "\n**Error with orientation (Invalid orientation).**\n"
+            print "[ERROR]: Invalid orientation."
     #end set_orientation
 
     def set_date(self, date):
         # check the format of date string being #/#/#
         if not isinstance(date, str):
-            print "\n**Error with date.**\n"
+            print "[ERROR]: invalid date."
         else: 
             for x in date.split('/'):
                 if x.isdigit() == False:
-                    print "\n**Error with date.**\n"
+                    print "[ERROR]: invalid date."
                     break 
         self.date = date 
 
     def set_time(self, time):
         if not isinstance(time, str):
-            print "\n**Error with date.**\n"
+            print "[ERROR]: invalid date."
         self.time = time 
 
     # the function is to split time string into hour, minute, seconds, fraction, and tzone 
@@ -263,7 +258,7 @@ class seism_record(seism_signal):
             seconds = float(seconds)
             fraction = float(fraction)
         except ValueError:
-            print "\n**Error with record start time.**\n"
+            print "[ERROR]: invalid start time."
             
         self.hour = hour 
         self.minute = minute 
@@ -292,39 +287,75 @@ class seism_record(seism_signal):
         print "orientation: " + str(self.orientation)
     #end print_attr 
 
-    def process_smc_v1(self):
-        """
-        The function process record by converting orientation and multiplying data 
-        """
-        # If the orientation was not set properly, it would be empty string by default 
-        if not self.orientation:
-            print "[ERROR]: invalid orientation"
-            return False 
-            orientation = " "
-        elif self.orientation in [0, 360]:
-            orientation = 'N'
-        elif self.orientation in [180, -180]:
-            orientation = 'N'
-            self.data = self.data*-1
-        elif self.orientation in [90, -270]:
-            orientation = 'E'
-        elif self.orientation in [-90, 270]:
-            orientation = 'E'
-            self.data = self.data*-1
-        elif self.orientation == "Up":
-            orientation = 'Z'
-        elif self.orientation == "Down":
-            orientation = 'Z'
-            self.data = self.data*-1
-        else: 
-             # handling other degrees.
-             return False 
-             pass
+    def process_ori(self):
+        # process data by orientation
+        if isinstance(self.orientation, int): 
+            if self.orientation in [0, 360, 90, -270]:
+                pass 
+            elif self.orientation in [180, -180, -90, 270]:
+                # if negative/down orientation, multiply by -1 
+                self.data = self.data*-1 
+                self.orientation += 180
+
+                if self.orientation > 360:
+                    self.orientation -= 360
+
+            else: 
+                # encounter special orientation; pass to rotate 
+                return True 
+
+        elif isinstance(self.orientation, str):
+            if self.orientation == 'Up': 
+                pass 
+            elif self.orientation == 'Down': 
+                self.data = self.data*-1 
+                self.orientation = 'Up'
+            else: 
+                # encounter invalid orientation
+                return False 
+    # end of process_ori
+
+    def convert(self):
+        # make average on first 10% of samples; minus average and multiply by 981 
+        self.data = 981*(self.data - np.average(self.data[0:int(self.samples*0.1)]))
+        pass 
+
+    # def process_smc_v1(self):
+    #     """
+    #     The function process record by converting orientation and multiplying data 
+    #     """
+    #     # If the orientation was not set properly, it would be empty string by default 
+    #     # if not self.orientation:
+    #     #     pass 
+    #         # print "[ERROR]: invalid orientation"
+    #         # return False 
+    #         # orientation = " "
+    #     if self.orientation in [0, 360]:
+    #         orientation = 'N'
+    #     elif self.orientation in [180, -180]:
+    #         orientation = 'N'
+    #         self.data = self.data*-1
+    #     elif self.orientation in [90, -270]:
+    #         orientation = 'E'
+    #     elif self.orientation in [-90, 270]:
+    #         orientation = 'E'
+    #         self.data = self.data*-1
+    #     elif self.orientation == "Up":
+    #         orientation = 'Z'
+    #     elif self.orientation == "Down":
+    #         orientation = 'Z'
+    #         self.data = self.data*-1
+    #     elif isinstance(self.orientation, int): 
+    #         # orientation needed to be roated 
+    #          return True 
+    #     else: 
+    #         # invalid orientation
+    #         return False  
 
         # make average on first 10% of samples; minus average and multiply by 981 
         # self.data = 981*(self.data - np.average(self.data))
-        self.data = 981*(self.data - np.average(self.data[0:int(self.samples*0.1)]))
-        return 
+        # self.data = 981*(self.data - np.average(self.data[0:int(self.samples*0.1)]))
+        # return 
     #end process_smc_V1 
 
 # end record class
@@ -373,19 +404,19 @@ class seism_psignal(seism_signal):
     def set_accel(self, accel):
         # check if the data passed is a numpy array
         if not isinstance(accel, np.ndarray): 
-            print "\n[ERROR]: signal acceleration data - not a numpy array.\n"
+            print "[ERROR]: signal acceleration data - not a numpy array."
         self.accel = accel
     #end set_accel
 
     def set_velo(self, velo):
         if not isinstance(velo, np.ndarray): 
-            print "\n[ERROR]: signal velocity data - not a numpy array.\n"
+            print "[ERROR]: signal velocity data - not a numpy array."
         self.velo = velo
     #end set_velo
 
     def set_displ(self, displ):
         if not isinstance(displ, np.ndarray): 
-            print "\n[ERROR]: signal displacement data - not a numpy array.\n"
+            print "[ERROR]: signal displacement data - not a numpy array."
         self.displ = displ
     #end set_displ
 
@@ -582,7 +613,7 @@ class seism_station(object):
     # end of set_location
 
 
-    def rotate(self, record_list):
+    def rotate(self, record_list, flag):
         """
         The function is to transfrom data for channels with special orientations. 
         """
@@ -598,23 +629,40 @@ class seism_station(object):
         if x > y: 
             list(reversed(tmp))
 
-        # rotate 
-        matrix = np.array([(math.cos(math.radians(x)), -math.sin(math.radians(x))), (math.sin(math.radians(x)), math.cos(math.radians(x)))])
-        data = matrix.dot([tmp[0].data, tmp[1].data])
+        if flag == 'v1': 
+            # rotate 
+            matrix = np.array([(math.cos(math.radians(x)), -math.sin(math.radians(x))), (math.sin(math.radians(x)), math.cos(math.radians(x)))])
+            data = matrix.dot([tmp[0].data, tmp[1].data])
 
-        # transform the first record with North orientation 
-        tmp[0].data = data[0]
-        tmp[0].orientation = 0
+            # transform the first record with North orientation 
+            tmp[0].data = data[0]
+            tmp[0].orientation = 0
 
-        # transform the second record with East orientation
-        tmp[1].data = data[1]
-        tmp[1].orientation = 90
+            # transform the second record with East orientation
+            tmp[1].data = data[1]
+            tmp[1].orientation = 90
 
-        record_list += tmp
-        return record_list
+            record_list += tmp
+            return record_list
+
+        if flag == 'v2': 
+            matrix = np.array([(math.cos(math.radians(x)), -math.sin(math.radians(x))), (math.sin(math.radians(x)), math.cos(math.radians(x)))])
+            [tmp[0].accel, tmp[1].accel] = matrix.dot([tmp[0].accel, tmp[1].accel])
+            [tmp[0].velo, tmp[1].velo] = matrix.dot([tmp[0].velo, tmp[1].velo])
+            [tmp[0].disp, tmp[1].disp] = matrix.dot([tmp[0].displ, tmp[1].displ])
+
+            tmp[0].orientation = 0
+            tmp[1].orientation = 90
+
+            record_list += tmp
+            return record_list
+
+
+
+
     # end of rotate
 
-    def process(self):
+    def process_v1(self):
         """The function is take a list of records get from V1 files; 
         then use their data to all three types of data (acc, vel, dis),
         then return a list of precords. 
@@ -624,13 +672,19 @@ class seism_station(object):
 
         for record in self.list:
             # process data of record 
-            if not record.orientation: 
-                print "[ERROR]: invalid orientation."
-                return False 
+            # if not record.orientation: 
+            #     print record.orientation
+            #     print "[ERROR]: invalid orientation."
+            #     return False 
 
-            if record.process_smc_v1() == False: # if encounter special orientations. 
+            record.convert() # convert the unit of data 
+
+            # reverse the data by orientation 
+            if record.process_ori() == True: # if encounter special orientations. 
                 rotate_flag = True 
                 break 
+            elif record.process_ori() == False: # if encouter invalid orientations. 
+                return False 
 
             if record.type == 'a': 
                 # get velocity and displacement
@@ -653,14 +707,34 @@ class seism_station(object):
 
         # rotation 
         if rotate_flag:
-            record_list = self.rotate(self.list)
+            record_list = self.rotate(self.list, 'v1')
             if not record_list: 
                 return False 
             else: 
                 self.list = record_list
-            return self.process() # recursively calling the function to continue processing
+            return self.process_v1() # recursively calling the function to continue processing
+        
         self.list = precord_list
-    # end of process
+        return True 
+    # end of process_v1 
+
+    def process_v2(self):
+        """checks records from V2 files; rotate if necessary"""
+        rotate_flag = False 
+        for record in self.list: 
+            if (isinstance(record.orientation, int)) and (record.orientation not in [0, 360, 180, -180, 90, 270, -90, -270]): 
+                rotate_flag = True 
+                break 
+
+        if rotate_flag: 
+            record_list = self.rotate(self.list, 'v2')
+            if not record_list: 
+                return False 
+            else: 
+                self.list = record_list
+                return True 
+    # end of process_v2
+
 #end station class
 
 

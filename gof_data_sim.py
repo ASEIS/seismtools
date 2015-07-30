@@ -86,18 +86,22 @@ def get_fmax():
 
 def interp(data, t, samples, dt):
 	""" call interpolate on given data """
-	print t.size 
-	print data.size 
+	# print t.size 
+	# print data.size 
+	# print samples
 	f = interpolate.interp1d(t, data, 'linear', bounds_error = False)
 	new_t = np.arange(0, samples*dt, dt)
+	if new_t.size != samples:
+		new_t = new_t[:-1]
 	new_data = f(new_t)
 
 	# using plot to test 
 	# plt.plot(t,data,'r',new_t,new_data,'b')
 	# plt.show()
 
-	# print data 
-	# print new_data
+	# print data.size 
+	# print new_data.size 
+	# print samples
 	return new_data
 # end of interpolate
 
@@ -110,6 +114,9 @@ def process(signal, dt, fmax):
 
 	# interpolate 
 	t = np.arange(0, signal.samples*signal.dt, signal.dt)
+	if t.size > signal.samples:
+		t = t[:-1]
+	# print t.size 
 	# t = t[1:]
 	signal.accel = interp(signal.accel, t, signal.samples, dt)
 	signal.velo = interp(signal.velo, t, signal.samples, dt)
@@ -160,9 +167,10 @@ def get_leading():
 		t = raw_input("== Enter the simulation leading time (sec): ")
 		try: 
 			lt = float(t)
+			return lt 
 		except ValueError:
 			print "[ERROR]: invalid leading time."
-	return lt 
+	# return lt      
 # end of get_leading
 
 # def cut_signal(t_diff, signal):
@@ -193,7 +201,8 @@ def synchronize(station1, station2, stamp):
 	"""synchronize the stating time and ending time of data arrays in two signals
 	signal1 = data signal; signal2 = simulation signal """
 	if not stamp: 
-		stamp = [0, 0, 0, 0]
+		return station1, station2
+		# stamp = [0, 0, 0, 0]
 	print stamp
 
 	eq = get_earthq()

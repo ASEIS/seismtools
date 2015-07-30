@@ -333,7 +333,7 @@ def print_matrix(path, matrix):
 	pass 
 # end of print_matrix
 
-def print_scores(path, matrix):
+def print_scores(file1, file2, path, matrix):
 	""" generate the file containing all the scores of a list of files. """
 
 	try:
@@ -341,8 +341,9 @@ def print_scores(path, matrix):
 	except IOError, e:
 		print e
 
-	file1 = 'testtest1'
-	file2 = 'testtest2'
+	file1 = file1.split('/')[-1]
+	file2 = file2.split('/')[-1]
+
 	scores = [file1, file2]
 	for i in range(0, len(matrix)):
 		for j in range(0, 13):
@@ -364,10 +365,12 @@ def set_labels(bands):
 	b = ['CA', 'SA'] 
 	s = ['T', 'A', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'C11']
 	b_label = "BB" 
-	for i in range(1, len(bands)-1):
+
+	for i in range(1, len(bands)):
 		b_label += ',B'+str(i)
 	b_label = b_label.split(',')
 	b += b_label
+	print b 
 
 	labels = ['# SIGNAL1', 'SIGNAL2']
 	for i in range(0, len(o)):

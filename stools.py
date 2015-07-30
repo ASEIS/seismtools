@@ -195,7 +195,12 @@ def taper(flag, m, samples):
         window = np.concatenate([window[0:(m+1)], ones, window[(m+1):]])
 
     # avoid concatenate error 
+    if window.size < samples:
+        window = np.append(window, 1)
+
     if window.size != samples:
+        print window.size 
+        print samples
         print "[ERROR]: taper and data do not have the same number of samples."
         window = np.ones(samples)
     
@@ -216,6 +221,9 @@ def seism_appendzeros(flag, t_diff, m, signal):
         # applying taper in the front 
         if m != 0: 
             window = taper('front', m, signal.samples)
+            # print signal.samples 
+            # print signal.accel.size 
+            # print window.size 
             signal.accel = signal.accel*window 
             signal.velo = signal.velo*window 
             signal.displ = signal.displ*window 
@@ -254,6 +262,7 @@ def seism_cutting(flag, t_diff, m, signal):
         signal.accel = signal.accel[num:]
         signal.velo = signal.velo[num:]
         signal.displ = signal.displ[num:]
+        signal.samples -= num 
 
         # applying taper in the front 
         window = taper('front', m, signal.samples)
@@ -267,13 +276,13 @@ def seism_cutting(flag, t_diff, m, signal):
         signal.accel = signal.accel[:num]
         signal.velo = signal.velo[:num]
         signal.displ = signal.displ[:num]
+        signal.samples -= num 
 
         # applying taper in the front 
         window = taper('end', m, signal.samples)
         signal.accel = signal.accel*window 
         signal.velo = signal.velo*window 
 
-    signal.samples -= num 
     return signal
 # end of seism_cutting
 

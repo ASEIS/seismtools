@@ -136,15 +136,19 @@ def read_stamp(filename):
 	"""get the time stamp from file's header"""
 	try: 
 		with open(filename) as f: 
-			header = f.readlines()[0].split()
-			stamp = header[4].split(',')[-1].split(':')
-			tmp = stamp[2].split('.')
-			stamp[2] = tmp[0]
-			stamp.append(tmp[1])
+			try: 
+				header = f.readlines()[0].split()
+				stamp = header[4].split(',')[-1].split(':')
+				tmp = stamp[2].split('.')
+				stamp[2] = tmp[0]
+				stamp.append(tmp[1])
 
-			f.close()
+				f.close()
+			except IndexError:
+				print "[ERROR]: missing time stamp."
+				return []
 	except IOError:
-		print "[ERROR]: missing time stamp."
+		print "[ERROR]: No such file."
 		return []
 
 	# converting time stamps to floats
@@ -187,17 +191,23 @@ def check_data(station):
 		signal = station[i]
 
 		if signal.accel.size == 0: 
+			print "[ERROR]: Empty array after processing signals."
 			return False 
 		if signal.velo.size == 0: 
+			print "[ERROR]: Empty array after processing signals."
 			return False 
 		if signal.displ.size == 0: 
+			print "[ERROR]: Empty array after processing signals."
 			return False 
 
 		if np.isnan(np.sum(signal.accel)):
+			print "[ERROR]: NaN data after processing signals."
 			return False 
 		if np.isnan(np.sum(signal.velo)):
+			print "[ERROR]: NaN data after processing signals."
 			return False 
 		if np.isnan(np.sum(signal.displ)):
+			print "[ERROR]: NaN data after processing signals."
 			return False 
 	return station
 # end of check_data 
@@ -211,24 +221,36 @@ def main(file1, file2):
 	station1 = read_file(file1)
 	station2 = read_file(file2)
 
-	stamp = read_stamp(file1) # get time stamp from data file 
+	if (not station1) or (not station2):
+		return False, False 
 
 	station2 = rotate(station2) # rotate simulation 
 
 	# process signals to have the same dt 
 	station1, station2 = process_dt(station1, station2)
 
+	# print station1[0].samples
+	# print station1[0].accel.size 
 	# station1[0].print_attr()
 	# station2[0].print_attr()
 
 	# synchronize starting and ending time of data arrays 
+	stamp = read_stamp(file1) # get time stamp from data file 
 	station1, station2 = synchronize(station1, station2, stamp)
+
 
 	# station1[0].print_attr()
 	# station2[0].print_attr()
 
+	if station1[0].samples != station2[0].samples: 
+		print "[ERROR]: two files do not have the same number of samples after processing."
+		return False, False 
+		# print station1[0].accel.size
+		# print station2[0].accel.size
+
 	station1 = check_data(station1)
 	station2 = check_data(station2)
+
 
 	return station1, station2
 # end of main
@@ -248,7 +270,7 @@ if __name__ == "__main__":
 			matrix = scores_matrix(station1, station2, bands)
 			print_matrix(path, matrix)
 		else: 
-			print "[ERROR]: NaN data or empty array after processing signals."
+			pass 
 
 	elif isinstance(files[0], list):
 		list1, list2 = files
@@ -262,8 +284,10 @@ if __name__ == "__main__":
 			print e
 
 		labels = set_labels(bands)
-		d = '{:>12}'*len(labels) + '\n'
+		d = '{:>12}'*2 + '{:>12.8}'*(len(labels)-2) + '\n'
+		# d = '{:>12}'*len(labels) + '\n'
 		f.write(d.format(*labels))
+		print len(labels)
 		f.close()
 
 		for i in range(0, len(list1)):
@@ -274,9 +298,10 @@ if __name__ == "__main__":
 			station1, station2 = main(file1, file2)
 			if station1 and station2: 
 				matrix = scores_matrix(station1, station2, bands)
-				print_scores(path, matrix)
+				print matrix.size 
+				print_scores(file1, file2, path, matrix)
 			else: 
-				print "[ERROR]: NaN data or empty array after processing signals."
+				pass 
 
 	print "[DONE]"
 	

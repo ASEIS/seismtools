@@ -11,6 +11,50 @@ from matplotlib import gridspec
 from seism import *
 from stools import *
 
+def set_parameter(para):
+	"""to set all the paramters for plotting and calculating
+	including fmin, fmax, tmin, tmax etc."""
+
+	# if given by user in command line 
+	if para: 
+		f_flag = set_flag('filter')
+		c_flag = set_flag('cut')
+		if f_flag and (len(para) >= 8):
+			para = para[:8]
+			para.append(f_flag)
+			para.append(c_flag)
+			return para 
+		elif len(para) == 6: 
+			# if not filtering; set fmin/fmax to xfmin/xfmax
+			para.insert(4, para[2])
+			para.insert(5, para[3])
+			para.append(f_flag)
+			para.append(c_flag)
+			return para 
+		else: 
+			return []
+
+	# if paramters not given in command
+	xtmin, xtmax = set_axis('time')
+	xfmin, xfmax = set_axis('freq')
+	f_flag = set_flag('filter')
+	if f_flag: 
+		fmin, fmax = set_bound('fas')
+	else: 
+		# else setting plot limits as fmin and fmax 
+		fmin = xfmin
+		fmax = xfmax
+
+	tmin, tmax = set_bound('resp')
+	if tmin == 0: 
+		tmin = 0.1
+
+	c_flag = set_flag('cut')
+
+	para = [xtmin, xtmax, xfmin, xfmax, fmin, fmax, tmin, tmax, f_flag, c_flag]
+	return para 
+# end of set_parameter
+
 def set_axis(xtype):
 	"""setting bounds for ploting"""
 	msg = ['', '']
@@ -139,40 +183,47 @@ def read_her(filename):
 
 
 
-def plot_signals(filenames, signal1, signal2):
+def plot_signals(parameter, filenames, signal1, signal2):
 	"""
 	This function is to plot Signals with Fourier Amplitude Spectura. 
 	"""
-	if (not isinstance(signal1, seism_signal)) or (not isinstance(signal2, seism_signal)):
-		print "[ERROR]: Invalid instance type: can only plot signal objects."
-		return 
+	# xtmin, xtmax = set_axis('time')
+	# # t_flag = cut()
 
-	xtmin, xtmax = set_axis('time')
-	# t_flag = cut()
+	# xfmin, xfmax = set_axis('freq')
+	# f_flag = set_flag('filter')
 
-	xfmin, xfmax = set_axis('freq')
-	f_flag = set_flag('filter')
+	# # fmin, fmax = set_bound('fas')
+	# # if user chooses to filter; ask for fmin and fmax 
+	# if f_flag: 
+	# 	fmin, fmax = set_bound('fas')
+	# else: 
+	# 	# else setting plot limits as fmin and fmax 
+	# 	fmin = xfmin
+	# 	fmax = xfmax
 
-	# fmin, fmax = set_bound('fas')
-	# if user chooses to filter; ask for fmin and fmax 
-	if f_flag: 
-		fmin, fmax = set_bound('fas')
-	else: 
-		# else setting plot limits as fmin and fmax 
-		fmin = xfmin
-		fmax = xfmax
-
-	tmin, tmax = set_bound('resp')
-	if tmin == 0: 
-		tmin = 0.1
+	# tmin, tmax = set_bound('resp')
+	# if tmin == 0: 
+	# 	tmin = 0.1
 
 	
-	c_flag = set_flag('cut')
+	# c_flag = set_flag('cut')
 
 	plt.close('all')
 
 	file1 = filenames[0]
 	file2 = filenames[1]
+
+	xtmin = parameter[0]
+	xtmax = parameter[1]
+	xfmin = parameter[2]
+	xfmax = parameter[3]
+	fmin = parameter[4]
+	fmax = parameter[5]
+	tmin = parameter[6]
+	tmax = parameter[7]
+	f_flag = parameter[8]
+	c_flag = parameter[9]
 
 	title = 'Acceleration ONLY: '
 
@@ -215,8 +266,8 @@ def plot_signals(filenames, signal1, signal2):
 
 	if not c_flag:
 		# if user chooses not to cut; use origina/filted data for FAS and Response 
-		freq1, fas1 = FAS(data1, dt1, points, fmin, fmax, 3)
-		freq2, fas2 = FAS(data2, dt2, points, fmin, fmax, 3)
+		freq1, fas1 = FAS(data1, dt1, points, xfmin, xfmax, 3)
+		freq2, fas2 = FAS(data2, dt2, points, xfmin, xfmax, 3)
 
 		for p in period:
 			rsp1.append(max_osc_response(data1, dt1, 0.05, p, 0, 0)[-1])
@@ -224,8 +275,8 @@ def plot_signals(filenames, signal1, signal2):
 
 	else: 
 		# else uses cutted data for FAS and Response 
-		freq1, fas1 = FAS(c_data1, dt1, points, fmin, fmax, 3)
-		freq2, fas2 = FAS(c_data2, dt2, points, fmin, fmax, 3)
+		freq1, fas1 = FAS(c_data1, dt1, points, xfmin, xfmax, 3)
+		freq2, fas2 = FAS(c_data2, dt2, points, xfmin, xfmax, 3)
 
 		for p in period:
 			rsp1.append(max_osc_response(c_data1, dt1, 0.05, p, 0, 0)[-1])
@@ -249,7 +300,7 @@ def plot_signals(filenames, signal1, signal2):
 	# axarr[1].plot(freq1[i1:i2],fas1[i1:i2],'r',freq2[i1:i2],fas2[i1:i2],'b')
 	axarr[1].plot(freq1,fas1,'r',freq2,fas2,'b')
 
-	if xfmin <0.1:
+	if xfmin < 0.5:
 		xfmin = 0 
 		
 	plt.xlim(xfmin, xfmax)
@@ -267,7 +318,7 @@ def plot_signals(filenames, signal1, signal2):
 
 
 
-def plot_stations(filenames, station1, station2):
+def plot_stations(parameter, filenames, station1, station2):
 	"""
 	This function is to plot two lists of psignals with Fourier Amplitude Spectra. 
 	station = a list of 3 psignals for three orientation. 
@@ -275,31 +326,39 @@ def plot_stations(filenames, station1, station2):
 	dtype = ['Displacement', 'Velocity', 'Acceleration']
 	orientation = ['N/S', 'E/W', 'Up/Down']
 
-	if len(station1) != 3 or len(station2) != 3:
-		print "[ERROR]: plot_stations only handles stations with 3 channels."
-		return 
-
 	dt1 = station1[0].dt 
 	dt2 = station2[0].dt 
 
 	file1 = filenames[0]
 	file2 = filenames[1]
 
-	xtmin, xtmax = set_axis('time')
-	xfmin, xfmax = set_axis('freq')
-	f_flag = set_flag('filter')
-	# fmin, fmax = set_bound('fas')
-	if f_flag: 
-		fmin, fmax = set_bound('fas')
-	else: 
-		# else setting plot limits as fmin and fmax 
-		fmin = xfmin
-		fmax = xfmax
-	tmin, tmax = set_bound('resp')
-	if tmin == 0:
-		tmin = 0.1
+	xtmin = parameter[0]
+	xtmax = parameter[1]
+	xfmin = parameter[2]
+	xfmax = parameter[3]
+	fmin = parameter[4]
+	fmax = parameter[5]
+	tmin = parameter[6]
+	tmax = parameter[7]
+	f_flag = parameter[8]
+	c_flag = parameter[9]
+
+
+	# xtmin, xtmax = set_axis('time')
+	# xfmin, xfmin = set_axis('freq')
+	# f_flag = set_flag('filter')
+	# # fmin, fmax = set_bound('fas')
+	# if f_flag: 
+	# 	fmin, fmax = set_bound('fas')
+	# else: 
+	# 	# else setting plot limits as fmin and fmax 
+	# 	fmin = xfmin
+	# 	fmax = xfmax
+	# tmin, tmax = set_bound('resp')
+	# if tmin == 0:
+	# 	tmin = 0.1
 	
-	c_flag = set_flag('cut')
+	# c_flag = set_flag('cut')
 
 	min_i1 = int(xtmin/dt1) 
 	max_i1 = int(xtmax/dt1)
@@ -387,13 +446,13 @@ def plot_stations(filenames, station1, station2):
 
 			if not c_flag:
 				# if user chooses not to cut; use original data to calculate FAS and Response
-				freq1, fas1 = FAS(data1, dt1, points, fmin, fmax, 3)
-				freq2, fas2 = FAS(data2, dt2, points, fmin, fmax, 3)
+				freq1, fas1 = FAS(data1, dt1, points, xfmin, xfmax, 3)
+				freq2, fas2 = FAS(data2, dt2, points, xfmin, xfmax, 3)
 
 			else: 
 				# use cutted signals to calculate FAS
-				freq1, fas1 = FAS(c_data1, dt1, points, fmin, fmax, 3)
-				freq2, fas2 = FAS(c_data2, dt2, points, fmin, fmax, 3)
+				freq1, fas1 = FAS(c_data1, dt1, points, xfmin, xfmax, 3)
+				freq2, fas2 = FAS(c_data2, dt2, points, xfmin, xfmax, 3)
 
 			axarr[j][0] = plt.subplot2grid((3, 4), (j, 0), colspan=2, rowspan=1)
 			axarr[j][0].set_title(title)
@@ -407,9 +466,12 @@ def plot_stations(filenames, station1, station2):
 			axarr[j][1].set_title('Fourier Amplitude Spectra') 
 			axarr[j][1].plot(freq1,fas1,'r',freq2,fas2,'b')
 
-			if xfmin <0.1:
-				xfmin = 0 
-			plt.xlim(xfmin, xfmax)
+			tmp_xfmin = 0 
+			if xfmin < 0.5:
+				tmp_xfmin = 0
+			else:
+				tmp_xmin = xfmin 
+			plt.xlim(tmp_xfmin, xfmax)
 
 			axarr[j][2] = plt.subplot2grid((3, 4), (j, 3), rowspan=1, colspan=1)
 			axarr[j][2].set_title("Response Spectra")
@@ -436,25 +498,37 @@ def plot_stations(filenames, station1, station2):
 # 	print psignal.data.shape[1]
 
 
-def compare_txt(file1, file2):
+def compare_txt(parameter, file1, file2):
+	if not parameter:
+		print "[ERROR]: error with parameters for ploting and computing."
+		return 
+
 	signal1 = read_txt(file1)
 	signal2 = read_txt(file2)
+
 	if (not isinstance(signal1, seism_signal)) or (not isinstance(signal2, seism_signal)):
 		print "[ERROR]: Invalid instance type: can only compare signal objects."
 		return 
 
 	filenames = [file1, file2]
-	plot_signals(filenames, signal1, signal2)
+	plot_signals(parameter, filenames, signal1, signal2)
 # end of compare_txt
 
 
 
-def compare_her(file1, file2):
+def compare_her(parameter, file1, file2):
+	if not parameter:
+		print "[ERROR]: error with parameters for ploting and computing."
+		return 
+
 	# station = [psignal_ns, psignal_ew, psignal_up]
 	station1 = read_her(file1) 
 	station2 = read_her(file2)
+	if len(station1) != 3 or len(station2) != 3:
+		print "[ERROR]: plot_stations only handles stations with 3 channels."
+		return 
 
 	filenames = [file1, file2]
-	plot_stations(filenames, station1, station2)
+	plot_stations(parameter, filenames, station1, station2)
 # end of compare_her
 

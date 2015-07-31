@@ -30,6 +30,7 @@ def check_type(filename):
 def get_filename():
 	file1 = ''
 	file2 = ''
+	para = []
 
 	# get paths of two files 
 	if len(sys.argv) >= 2:
@@ -37,6 +38,18 @@ def get_filename():
 
 	if len(sys.argv) >= 3:
 		file2 = sys.argv[2]
+
+	if len(sys.argv) > 3: 
+		para = sys.argv[3:]
+		for i in range(0, len(para)):
+			try:
+				para[i] = float(para[i])
+			except ValueError:
+				print "[ERROR]: invalid parameter."
+				para = []
+				break
+	parameter = set_parameter(para)
+
 
 	while not file1:
 		file1 = raw_input('== Enter the path of file1: ')
@@ -46,9 +59,9 @@ def get_filename():
 
 
 	if check_type(file1) == check_type(file2) == 'TXT':
-		compare_txt(file1, file2)
+		compare_txt(parameter, file1, file2)
 	elif check_type(file1) == check_type(file2) == 'HER':
-		compare_her(file1, file2)
+		compare_her(parameter, file1, file2)
 	else:
 		return 
 # end of get_filename

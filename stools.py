@@ -273,14 +273,14 @@ def seism_cutting(flag, t_diff, m, signal):
 
     elif flag == 'end': 
         num *= -1 
-        print num 
-        print signal.accel.size 
+        # print num 
+        # print signal.accel.size 
         signal.accel = signal.accel[:num]
         signal.velo = signal.velo[:num]
         signal.displ = signal.displ[:num]
         signal.samples += num 
-        print signal.samples 
-        print signal.accel.size 
+        # print signal.samples 
+        # print signal.accel.size 
 
         # applying taper in the front 
         window = taper('end', m, signal.samples)

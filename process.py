@@ -78,7 +78,9 @@ def read_list(file_list):
 			elif f.upper().endswith(".V2"):
 				processed = False 
 				station = load_smc_v2(f)
-				processed = station.process_v2() # rotate 
+
+				if station: 
+					processed = station.process_v2() #rotate 
 
 				if not processed: 
 					print_message(f, 'unprocessed')

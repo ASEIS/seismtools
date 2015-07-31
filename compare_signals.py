@@ -163,6 +163,8 @@ def plot_signals(filenames, signal1, signal2):
 		fmax = xfmax
 
 	tmin, tmax = set_bound('resp')
+	if tmin == 0: 
+		tmin = 0.1
 
 	
 	c_flag = set_flag('cut')
@@ -294,6 +296,8 @@ def plot_stations(filenames, station1, station2):
 		fmin = xfmin
 		fmax = xfmax
 	tmin, tmax = set_bound('resp')
+	if tmin == 0:
+		tmin = 0.1
 	
 	c_flag = set_flag('cut')
 

@@ -23,6 +23,10 @@ def set_parameter(para):
 			para = para[:8]
 			para.append(f_flag)
 			para.append(c_flag)
+
+			# make sure tmin != 0
+			if para[-4] == 0: 
+				para[-4] = 0.1 
 			return para 
 		elif len(para) == 6: 
 			# if not filtering; set fmin/fmax to xfmin/xfmax
@@ -30,6 +34,8 @@ def set_parameter(para):
 			para.insert(5, para[3])
 			para.append(f_flag)
 			para.append(c_flag)
+			if para[-4] == 0: 
+				para[-4] = 0.1 
 			return para 
 		else: 
 			return []
@@ -48,6 +54,9 @@ def set_parameter(para):
 	tmin, tmax = set_bound('resp')
 	if tmin == 0: 
 		tmin = 0.1
+
+	print tmin 
+	return []
 
 	c_flag = set_flag('cut')
 
@@ -343,23 +352,6 @@ def plot_stations(parameter, filenames, station1, station2):
 	f_flag = parameter[8]
 	c_flag = parameter[9]
 
-
-	# xtmin, xtmax = set_axis('time')
-	# xfmin, xfmin = set_axis('freq')
-	# f_flag = set_flag('filter')
-	# # fmin, fmax = set_bound('fas')
-	# if f_flag: 
-	# 	fmin, fmax = set_bound('fas')
-	# else: 
-	# 	# else setting plot limits as fmin and fmax 
-	# 	fmin = xfmin
-	# 	fmax = xfmax
-	# tmin, tmax = set_bound('resp')
-	# if tmin == 0:
-	# 	tmin = 0.1
-	
-	# c_flag = set_flag('cut')
-
 	min_i1 = int(xtmin/dt1) 
 	max_i1 = int(xtmax/dt1)
 
@@ -485,6 +477,104 @@ def plot_stations(parameter, filenames, station1, station2):
 		plt.show()
 # end of plot_stations
 
+def simple_plot(parameter, filenames, station1, station2):
+	"""plotting velocity for data and FAS only
+	acceleration for Response"""
+	dtype = ['Displacement', 'Velocity', 'Acceleration']
+	orientation = ['N/S', 'E/W', 'Up/Down']
+
+	dt1 = station1[0].dt 
+	dt2 = station2[0].dt 
+
+	file1 = filenames[0]
+	file2 = filenames[1]
+
+	xtmin = parameter[0]
+	xtmax = parameter[1]
+	xfmin = parameter[2]
+	xfmax = parameter[3]
+	fmin = parameter[4]
+	fmax = parameter[5]
+	tmin = parameter[6]
+	tmax = parameter[7]
+	f_flag = parameter[8]
+	c_flag = parameter[9]
+
+	min_i1 = int(xtmin/dt1) 
+	max_i1 = int(xtmax/dt1)
+
+	min_i2 = int(xtmin/dt2) 
+	max_i2 = int(xtmax/dt2)
+
+	# calculating Response Spectra
+
+	period = get_period(tmin, tmax)
+
+	f, axarr = plt.subplots(nrows = 3, ncols = 3, figsize = (12, 9))
+	for i in range(0, 3):
+		title = file1 + ' ' + file2
+
+		signal1 = station1[i]
+		signal2 = station2[i]
+
+		samples1 = signal1.samples
+		samples2 =  signal2.samples 
+
+		vel1 = signal1.velo[min_i1:max_i1]
+		vel2 = signal2.velo[min_i1:max_i1]
+
+		acc1 = signal1.accel
+		acc2 = signal2.accel
+
+		t1 = np.arange(xtmin, xtmax, dt1)
+		t2 = np.arange(xtmin, xtmax, dt2)
+
+		points = get_points(samples1, samples2)
+
+		freq1, fas1 =  FAS(vel1, dt1, points, xfmin, xfmax, 3)
+		freq2, fas2 =  FAS(vel2, dt2, points, xfmin, xfmax, 3)
+
+		rsp1 = []
+		rsp2 = []
+		for p in period: 
+			rsp = max_osc_response(acc1, dt1, 0.05, p, 0, 0)
+			rsp1.append(rsp[2])
+
+			rsp = max_osc_response(acc2, dt1, 0.05, p, 0, 0)
+			rsp2.append(rsp[2])
+
+
+		axarr[i][0] = plt.subplot2grid((3, 4), (i, 0), colspan=2, rowspan=1)
+		axarr[i][0].set_title(title)
+		axarr[i][0].plot(t1,vel1,'r',t2,vel2,'b')
+
+		if i == 0: 
+			plt.legend([file1, file2])
+			plt.xlim(xtmin, xtmax)
+
+		axarr[i][1] = plt.subplot2grid((3, 4), (i, 2), rowspan=1, colspan=1)
+		axarr[i][1].set_title('Fourier Amplitude Spectra') 
+		axarr[i][1].plot(freq1,fas1,'r',freq2,fas2,'b')
+
+		tmp_xfmin = 0 
+		if xfmin < 0.5:
+			tmp_xfmin = 0
+		else:
+			tmp_xmin = xfmin 
+		plt.xlim(tmp_xfmin, xfmax)
+
+		axarr[i][2] = plt.subplot2grid((3, 4), (i, 3), rowspan=1, colspan=1)
+		axarr[i][2].set_title("Response Spectra")
+		axarr[i][2].set_xscale('log')
+		axarr[i][2].plot(period,rsp1,'r',period,rsp2,'b')
+
+		plt.xlim(tmin, tmax)
+	f.tight_layout()
+	plt.show()
+
+	pass 
+
+
 
 # def test(psignal):
 # 	"""to test with psignal's data"""
@@ -516,7 +606,7 @@ def compare_txt(parameter, file1, file2):
 
 
 
-def compare_her(parameter, file1, file2):
+def compare_her(parameter, file1, file2, s_flag):
 	if not parameter:
 		print "[ERROR]: error with parameters for ploting and computing."
 		return 
@@ -529,6 +619,13 @@ def compare_her(parameter, file1, file2):
 		return 
 
 	filenames = [file1, file2]
-	plot_stations(parameter, filenames, station1, station2)
+
+	# calling simple compare
+	if s_flag:
+		simple_plot(parameter, filenames, station1, station2)
+	else: 
+		plot_stations(parameter, filenames, station1, station2)
 # end of compare_her
+
+
 

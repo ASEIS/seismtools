@@ -56,15 +56,16 @@ def get_filename():
 
 	while not file2:
 		file2 = raw_input('== Enter the path of file2: ')
+	return parameter, file1, file2
 
+# end of get_filename
 
+if __name__ == "__main__":
+	parameter, file1, file2 = get_filename()
+
+	# checking file types 
 	if check_type(file1) == check_type(file2) == 'TXT':
 		compare_txt(parameter, file1, file2)
 	elif check_type(file1) == check_type(file2) == 'HER':
-		compare_her(parameter, file1, file2)
-	else:
-		return 
-# end of get_filename
-
-get_filename()
+		compare_her(parameter, file1, file2, False)
 

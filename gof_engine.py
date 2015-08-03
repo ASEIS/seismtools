@@ -125,7 +125,7 @@ def cal_C(a1, a2, dt):
 def cal_Ssa(signal1, signal2, fmin, fmax):
 	"""Calculate the score for Response Spectra"""
 	update()
-	period = get_period(fmin, fmax)
+	period = get_period(1/fmax, 1/fmin)
 	SA1 = []
 	SA2 = []
 	for p in period:

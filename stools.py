@@ -114,10 +114,10 @@ def get_points(samples1, samples2):
 	return 2**power 
 # end of get_points
 
-def get_period(fmin, fmax):
+def get_period(tmin, tmax):
     """ Return an array of period T """
-    tmin = 1/fmax 
-    tmax = 1/fmin 
+    # tmin = 1/fmax 
+    # tmax = 1/fmin 
     a = np.log10(tmin)
     b = np.log10(tmax) 
 

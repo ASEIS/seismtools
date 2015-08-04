@@ -178,9 +178,7 @@ def scores_matrix(station1, station2, bands):
 	Generate the 3D matrix of scores 
 	"""
 	print "...Generating main matrix..."
-	# global bands 
 	bands.insert(0, bands[len(bands)-1])
-	# print bands 
 	c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c9 = c10 = c11 = avg = 0.0
 
 	matrix = np.empty((4, len(bands)+1, 13))
@@ -333,7 +331,7 @@ def print_matrix(path, matrix):
 	pass 
 # end of print_matrix
 
-def print_scores(file1, file2, path, matrix):
+def print_scores(file1, file2, coord, path, matrix):
 	""" generate the file containing all the scores of a list of files. """
 
 	try:
@@ -354,6 +352,12 @@ def print_scores(file1, file2, path, matrix):
 			for k in range(0, len(matrix[i])-2):
 				# append BB...Bn
 				scores.append(col[k])
+	
+	# insert coordinates of station and epi_distance
+	scores.insert(2, coord[0])
+	scores.insert(3, coord[1])
+	scores.insert(4, coord[2])
+
 	d = '{:>12}'*2 + '{:>12.2f}'*(len(scores)-2) + '\n'
 	f.write(d.format(*scores))
 	f.close()
@@ -370,9 +374,8 @@ def set_labels(bands):
 		b_label += ',B'+str(i)
 	b_label = b_label.split(',')
 	b += b_label
-	print b 
 
-	labels = ['# SIGNAL1', 'SIGNAL2']
+	labels = ['# SIGNAL1', 'SIGNAL2', 'X_COOR', 'Y_COOR', 'EPI_DIS']
 	for i in range(0, len(o)):
 		for j in range(0, len(b)):
 			for k in range(0, len(s)):

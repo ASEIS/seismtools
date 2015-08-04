@@ -16,6 +16,29 @@ from gof_data_sim import *
 
 np.seterr(divide='ignore', invalid='ignore')
 
+def get_epicenter():
+	"""get x and y coordinates of epicenter"""
+	epi = ''
+	x = 0.0
+	y = 0.0 
+	while not epi:
+		epi = raw_input('== Enter the X and Y coordinates of epicenter: ')
+		epi = epi.replace(',', ' ')
+		epi = epi.split()
+		if len(epi) == 2:
+			try: 
+				x = float(epi[0])
+				y = float(epi[1])
+				return x, y 
+			except ValueError:
+				print "[ERROR]: invalid coordinates."
+				epi = ''
+
+		print "[ERROR]: invalid coordinates."
+		epi = ''
+# end of get_epicenter
+
+
 def get_in():
 	""" get the path of input directories """
 	indir1 = ''
@@ -59,7 +82,11 @@ def get_files():
 	file1 = ''
 	file2 = ''
 	filelist = ''
-	list1 = list2 = np.array([],str)
+	# list1 = list2 = np.array([],str)
+	list1 = []
+	list2 = []
+	coorX = []
+	coorY = []
 
 	if len(sys.argv) == 2:
 		filelist =  sys.argv[1]
@@ -75,16 +102,42 @@ def get_files():
 	# if receive a file containing a list of files 
 	if filelist:
 		try:
-			# list1, list2 = np.loadtxt(filelist, comments = '#', unpack = True)
-			list1, list2 = np.genfromtxt(filelist, comments = '#', dtype = 'str', unpack = True)
-			return list1.tolist(), list2.tolist()
+			# list1, list2 = np.genfromtxt(filelist, comments = '#', dtype = 'str', unpack = True)
+			# return list1.tolist(), list2.tolist()
+			f = open(filelist, 'r')
 		except IOError:
 			print "[ERROR]: error loading filelist."
-			return False, False
+			return False
+
+		for line in f: 
+			if '#' in line: 
+				pass 
+			else: 
+				line = line.split()
+				# not containing coordinate 
+				if len(line) == 2: 
+					list1.append(line[0])
+					list2.append(line[1])
+					coorX.append(0.0)
+					coorY.append(0.0)
+
+				# containing coordinate
+				elif len(line) == 4: 
+					list1.append(line[0])
+					list2.append(line[1])
+					try: 
+						coorX.append(float(line[2]))
+						coorY.append(float(line[3]))
+					except ValueError:
+						coorX.append(0.0)
+						coorY.append(0.0)
+
+		return list1, list2, coorX, coorY
+
 
 	# if encounter other inputs
 	print "[ERROR]: Invalid inputs."
-	return False, False
+	return False
 # end of get_files
 
 def get_bands():
@@ -261,20 +314,28 @@ if __name__ == "__main__":
 
 	if isinstance(files[0], str):
 		file1, file2 = files
+		coor = []
 
 		path = get_out()
 		bands = get_bands()
 
 		station1, station2 = main(file1, file2)
 		if station1 and station2:
-			matrix = scores_matrix(station1, station2, bands)
+			matrix = scores_matrix(station1, station2, coor, bands)
 			print_matrix(path, matrix)
 		else: 
 			pass 
 
 	elif isinstance(files[0], list):
-		list1, list2 = files
+		list1, list2, coorX, coorY = files
 		indir1, indir2 = get_in()
+
+		# if coordinates are given; ask for epicenter 
+		if coorX[0] and coorY[0]:
+			Ex, Ey = get_epicenter()
+		else: 
+			Ex = Ey = 0.0 
+
 		path = get_out()
 		bands = get_bands()
 
@@ -287,7 +348,6 @@ if __name__ == "__main__":
 		d = '{:>12}'*2 + '{:>12.8}'*(len(labels)-2) + '\n'
 		# d = '{:>12}'*len(labels) + '\n'
 		f.write(d.format(*labels))
-		print len(labels)
 		f.close()
 
 		for i in range(0, len(list1)):
@@ -295,11 +355,16 @@ if __name__ == "__main__":
 			file2 = indir1 + '/' + list2[i]
 			print "[...processing " + file1 + ' and ' + file2 + '...]'
 
+			x = coorX[i]
+			y = coorY[i]
+
+			epdist = math.sqrt((x-Ex)**2+(y-Ey)**2)
+			coord = [x, y, epdist]
+
 			station1, station2 = main(file1, file2)
 			if station1 and station2: 
 				matrix = scores_matrix(station1, station2, bands)
-				print matrix.size 
-				print_scores(file1, file2, path, matrix)
+				print_scores(file1, file2, coord, path, matrix)
 			else: 
 				pass 
 

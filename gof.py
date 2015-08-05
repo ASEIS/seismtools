@@ -61,7 +61,8 @@ def get_in():
 def get_out():
 	""" get the path of output directory and output file from user"""
 	outdir = ''
-	outname = ''
+	outname1 = ''
+	outname2 = ''
 
 	# get the destination saving outputs 
 	while not outdir: 
@@ -71,11 +72,15 @@ def get_out():
 	if not os.path.exists(outdir):
 		os.makedirs(outdir)
 
-	while not outname:
-		outname = raw_input('== Enter name of score file: ')
+	while not outname1:
+		outname1 = raw_input('== Enter name of scores file: ')
 
-	path = outdir + '/' + outname
-	return  path 
+	while not outname2:
+		outname2 = raw_input('== Enter name of matrics file: ')
+
+	path1 = outdir + '/' + outname1
+	path2 = outdir + '/' + outname2
+	return  path1, path2
 
 
 def get_files(): 
@@ -321,7 +326,7 @@ if __name__ == "__main__":
 
 		station1, station2 = main(file1, file2)
 		if station1 and station2:
-			matrix = scores_matrix(station1, station2, coor, bands)
+			parameter, matrix = scores_matrix(station1, station2, coor, bands)
 			print_matrix(path, matrix)
 		else: 
 			pass 
@@ -336,19 +341,29 @@ if __name__ == "__main__":
 		else: 
 			Ex = Ey = 0.0 
 
-		path = get_out()
+		# s_path = get_out('scores')
+		# m_path = get_out('matrics')
+		s_path, m_path = get_out()
+
 		bands = get_bands()
 
 		try:
-			f = open(path, 'w')
+			f = open(s_path, 'w')
+			m = open(m_path, 'w')
 		except IOError, e:
 			print e
 
 		labels = set_labels(bands)
+		m_labels = update_labels(labels)
+
 		d = '{:>12}'*2 + '{:>12.8}'*(len(labels)-2) + '\n'
 		# d = '{:>12}'*len(labels) + '\n'
 		f.write(d.format(*labels))
+
+		d = '{:>12}'*2 + '{:>12.8}'*(len(m_labels)-2) + '\n'
+		m.write(d.format(*m_labels))
 		f.close()
+		m.close()
 
 		for i in range(0, len(list1)):
 			file1 = indir1 + '/' + list1[i]
@@ -363,8 +378,11 @@ if __name__ == "__main__":
 
 			station1, station2 = main(file1, file2)
 			if station1 and station2: 
-				matrix = scores_matrix(station1, station2, bands)
-				print_scores(file1, file2, coord, path, matrix)
+				parameter, matrix = scores_matrix(station1, station2, bands)
+				parameter = parameter_to_list(parameter)
+
+				print_scores([file1,file2], coord, s_path, [], matrix) # print scores without values used to calculate
+				print_scores([file1,file2], coord, m_path, parameter, matrix) # print scores with values used to calculate
 			else: 
 				pass 
 

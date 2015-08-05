@@ -44,7 +44,8 @@ def load_smc_v1(filename):
         # check this is the uncorrected acceleration data
         ctype = channels[i][0][0:24].lower()
         if ctype != "uncorrected accelerogram":
-            return channels, 0
+            print "[ERROR]: processing uncorrected accelerogram ONLY."
+            return False
         else:
             dtype = 'a'
 
@@ -145,7 +146,8 @@ def load_smc_v2(filename):
         # check this is the uncorrected acceleration data
         ctype = (tmp[0] + " " + tmp[1]).lower()
         if ctype != "corrected accelerogram":
-            return channels, 0
+            print "[ERROR]: processing corrected accelerogram ONLY."
+            return False
 
         # get network code and station id 
         network = filename.split('/')[-1].split('.')[0][0:2].upper()

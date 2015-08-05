@@ -62,7 +62,7 @@ def read_list(file_list):
 				station = load_smc_v1(f)
 
 				# if encounters errors with records in station 
-				if not station.list: 
+				if (not station) or (not station.list): 
 					station = False 
 				else: 
 					processed = station.process_v1()

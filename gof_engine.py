@@ -52,7 +52,7 @@ def cal_peak(data1, data2):
 	p1 = np.amax(np.absolute(data1))
 	p2 = np.amax(np.absolute(data2))
 	score = S(p1, p2)
-	return score 
+	return p1, p2, score 
 
 def I(data, dt):
 	# I(t) = max|integral(data^2)dt|
@@ -67,7 +67,7 @@ def cal_SI(data1, data2, dt):
 	I1 = I(data1, dt)
 	I2 = I(data2, dt)
 	SI = S(I1, I2)
-	return SI 
+	return I1, I2, SI 
 
 
 def N(data, dt):
@@ -167,7 +167,7 @@ def cal_D(signal1, signal2):
 
 	D1 = duration(signal1)
 	D2 = duration(signal2)
-	return S(D1, D2)
+	return D1, D2, S(D1, D2)
 
 
 
@@ -182,6 +182,7 @@ def scores_matrix(station1, station2, bands):
 	c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c9 = c10 = c11 = avg = 0.0
 
 	matrix = np.empty((4, len(bands)+1, 13))
+	parameter = np.empty((3, 12))
 
 	for i in range(1, len(station1)+1):
 		for j in range(0, len(bands)-1): 
@@ -210,19 +211,22 @@ def scores_matrix(station1, station2, bands):
 			c1 = cal_SD(signal1.accel, signal2.accel, dt)
 			c2 = cal_SD(signal1.velo, signal2.velo, dt)
 
-			c3 = cal_SI(signal1.accel, signal2.accel, dt)
-			c4 = cal_SI(signal1.velo, signal2.velo, dt)
+			# parameter1, parameter2, score for intensity
+			a1, a2, c3 = cal_SI(signal1.accel, signal2.accel, dt)
+			e1, e2, c4 = cal_SI(signal1.velo, signal2.velo, dt)
 
 
-			c5 = cal_peak(signal1.accel, signal2.accel)
-			c6 = cal_peak(signal1.velo, signal2.velo)
-			c7 = cal_peak(signal1.displ, signal2.displ)
+			# parameter1, parameter2, score for peak data 
+			pga1, pga2, c5 = cal_peak(signal1.accel, signal2.accel)
+			pgv1, pgv2, c6 = cal_peak(signal1.velo, signal2.velo)
+			pgd1, pgd2, c7 = cal_peak(signal1.displ, signal2.displ)
 
 			c8 = cal_Ssa(signal1, signal2, fmin, fmax)
 			c9 = cal_Sfs(signal1, signal2, fmin, fmax)
 			c10 = cal_C(signal1.accel, signal2.accel, signal1.dt)
 
-			c11 = cal_D(signal1, signal2)
+			# duration1, duration2, score
+			d1, d2, c11 = cal_D(signal1, signal2)
 
 			scores = np.array([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11], float)
 			T = ((c1+c2)/2 + (c3+c4)/2 + c5 + c6 + c7 + c8 + c9 + c10 + c11)/9 
@@ -232,6 +236,11 @@ def scores_matrix(station1, station2, bands):
 			scores = np.around(scores, decimals=2)
 
 			matrix[i][j] = scores 
+
+			# getting parameters used to calculate peak, AI, EI, and duration 
+			# for broad band only 
+			if j == 1: 
+				parameter[i-1] = np.array([pgd1, pgd2, pgv1, pgv2, pga1, pga2, a1, a2, e1, e2, d1, d2], float)
 
 		SA = np.array([],float)
 		CA = np.array([],float)
@@ -258,7 +267,7 @@ def scores_matrix(station1, station2, bands):
 			average = (matrix[1][i][j] + matrix[2][i][j] + matrix[3][i][j])/3
 			matrix[0][i][j] = round(average, 2)
 	
-	return matrix
+	return parameter, matrix
 
 def summary(matrix):
 	""" generate a summary matrix contain average scores 
@@ -276,6 +285,23 @@ def summary(matrix):
 		s[i] = avg 
 	return s 
 # end of summary
+
+def parameter_to_list(parameter):
+	"""convert the parameter matrix to list"""
+	p = []
+	for i in range(0, 12):
+		para = parameter[:,i]
+		# get the maximum of peak values 
+		if 0 <= i < 6:
+			p.append(max(para[0], para[1], para[2]))
+
+		for j in range(0, 3):
+			p.append(para[j])
+	
+	# p = [PGD1, PGDNS1, PGDEW1, PGDUD1, PGD2, PGDNS2, PGDEW2, PGDUD2, PGV1, PGVNS1, PGVEW1....]
+	return p 
+# end of parameter_to_list
+
 # =================================================================== PRINTING ===================================================================
 def print_matrix(path, matrix):
 	""" generate the file containing the score matrix of two files. """
@@ -331,7 +357,7 @@ def print_matrix(path, matrix):
 	pass 
 # end of print_matrix
 
-def print_scores(file1, file2, coord, path, matrix):
+def print_scores(filenames, coord, path, parameter, matrix):
 	""" generate the file containing all the scores of a list of files. """
 
 	try:
@@ -339,8 +365,8 @@ def print_scores(file1, file2, coord, path, matrix):
 	except IOError, e:
 		print e
 
-	file1 = file1.split('/')[-1]
-	file2 = file2.split('/')[-1]
+	file1 = filenames[0].split('/')[-1]
+	file2 = filenames[1].split('/')[-1]
 
 	scores = [file1, file2]
 	for i in range(0, len(matrix)):
@@ -357,6 +383,10 @@ def print_scores(file1, file2, coord, path, matrix):
 	scores.insert(2, coord[0])
 	scores.insert(3, coord[1])
 	scores.insert(4, coord[2])
+
+	# if require to print the parameters used to get scores
+	if parameter:
+		scores = scores[:5] + parameter + scores[5:]
 
 	d = '{:>12}'*2 + '{:>12.2f}'*(len(scores)-2) + '\n'
 	f.write(d.format(*scores))
@@ -375,11 +405,29 @@ def set_labels(bands):
 	b_label = b_label.split(',')
 	b += b_label
 
-	labels = ['# SIGNAL1', 'SIGNAL2', 'X_COOR', 'Y_COOR', 'EPI_DIS']
+	labels = ['#SIGNAL1', 'SIGNAL2', 'X_COOR', 'Y_COOR', 'EPI_DIS']
 	for i in range(0, len(o)):
 		for j in range(0, len(b)):
 			for k in range(0, len(s)):
 				labels.append(o[i]+'_'+b[j]+'_'+s[k])
 	return labels
+# end of set_labels
 
+def update_labels(labels):
+	# add labels for the parameters used to calculate scores
+	o = ['_', '_NS_', '_EW_', '_UD_']
+	p = ['PGD', 'PGV', 'PGA', 'A', 'E', 'DUR']
+	d = ['D', 'S']
+	p_labels = []
+
+	for i in range(0, len(p)):
+		for j in range(0, len(d)):
+			for k in range(0, len(o)):
+				if i >= 3 and k == 0:
+					pass 
+				else: 
+					p_labels.append(p[i] + o[k] + d[j])
+	labels = labels[:5] + p_labels + labels[5:]
+	return labels
+# end of update_labels
 

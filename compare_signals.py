@@ -196,28 +196,6 @@ def plot_signals(parameter, filenames, signal1, signal2):
 	"""
 	This function is to plot Signals with Fourier Amplitude Spectura. 
 	"""
-	# xtmin, xtmax = set_axis('time')
-	# # t_flag = cut()
-
-	# xfmin, xfmax = set_axis('freq')
-	# f_flag = set_flag('filter')
-
-	# # fmin, fmax = set_bound('fas')
-	# # if user chooses to filter; ask for fmin and fmax 
-	# if f_flag: 
-	# 	fmin, fmax = set_bound('fas')
-	# else: 
-	# 	# else setting plot limits as fmin and fmax 
-	# 	fmin = xfmin
-	# 	fmax = xfmax
-
-	# tmin, tmax = set_bound('resp')
-	# if tmin == 0: 
-	# 	tmin = 0.1
-
-	
-	# c_flag = set_flag('cut')
-
 	plt.close('all')
 
 	file1 = filenames[0]
@@ -242,8 +220,6 @@ def plot_signals(parameter, filenames, signal1, signal2):
 	data2 = signal2.data 
 	dt1 = signal1.dt 
 	dt2 = signal2.dt 
-	# t1 = np.arange(0, samples1*dt1, dt1)
-	# t2 = np.arange(0, samples2*dt2, dt2)
 
 	# filtering data
 	if f_flag:
@@ -265,31 +241,29 @@ def plot_signals(parameter, filenames, signal1, signal2):
 	points = get_points(samples1, samples2)
 
 	# setting period for Response
-	a = np.log10(tmin)
-	b = np.log10(tmax) 
-
-	period = np.linspace(a, b, 20)
-	period = np.power(10, period)
-	rsp1 = []
-	rsp2 = []
+	period = get_period(tmin, tmax)
+	# rsp1 = []
+	# rsp2 = []
 
 	if not c_flag:
 		# if user chooses not to cut; use origina/filted data for FAS and Response 
 		freq1, fas1 = FAS(data1, dt1, points, xfmin, xfmax, 3)
 		freq2, fas2 = FAS(data2, dt2, points, xfmin, xfmax, 3)
+		rsp1, rsp2 = cal_acc_response(period, data1, data2, dt1, dt2)
 
-		for p in period:
-			rsp1.append(max_osc_response(data1, dt1, 0.05, p, 0, 0)[-1])
-			rsp2.append(max_osc_response(data2, dt2, 0.05, p, 0, 0)[-1])
+		# for p in period:
+		# 	rsp1.append(max_osc_response(data1, dt1, 0.05, p, 0, 0)[-1])
+		# 	rsp2.append(max_osc_response(data2, dt2, 0.05, p, 0, 0)[-1])
 
 	else: 
 		# else uses cutted data for FAS and Response 
 		freq1, fas1 = FAS(c_data1, dt1, points, xfmin, xfmax, 3)
 		freq2, fas2 = FAS(c_data2, dt2, points, xfmin, xfmax, 3)
+		rsp1, rsp2 = cal_acc_response(period, c_data1, c_data2, dt1, dt2)
 
-		for p in period:
-			rsp1.append(max_osc_response(c_data1, dt1, 0.05, p, 0, 0)[-1])
-			rsp2.append(max_osc_response(c_data2, dt2, 0.05, p, 0, 0)[-1])
+		# for p in period:
+		# 	rsp1.append(max_osc_response(c_data1, dt1, 0.05, p, 0, 0)[-1])
+		# 	rsp2.append(max_osc_response(c_data2, dt2, 0.05, p, 0, 0)[-1])
 
 	# i1 = np.where(freq1>=[xfmin])[0][0]
 	# i2 = np.where(freq2>=[xfmax])[0][0]
@@ -361,12 +335,7 @@ def plot_stations(parameter, filenames, station1, station2):
 	# calculating Response Spectra
 	rsp1 = []
 	rsp2 = []
-
-	a = np.log10(tmin)
-	b = np.log10(tmax)
-
-	period = np.linspace(a, b, 20)
-	period = np.power(10, period)
+	period = get_period(tmin, tmax)
 
 	for i in range(0, 3):
 		signal1 = station1[i]
@@ -506,13 +475,12 @@ def simple_plot(parameter, filenames, station1, station2):
 	min_i2 = int(xtmin/dt2) 
 	max_i2 = int(xtmax/dt2)
 
-	# calculating Response Spectra
-
 	period = get_period(tmin, tmax)
 
 	f, axarr = plt.subplots(nrows = 3, ncols = 3, figsize = (12, 9))
 	for i in range(0, 3):
-		title = file1 + ' ' + file2
+		# title = file1 + ' ' + file2
+		title = orientation[i]
 
 		signal1 = station1[i]
 		signal2 = station2[i]
@@ -520,33 +488,46 @@ def simple_plot(parameter, filenames, station1, station2):
 		samples1 = signal1.samples
 		samples2 =  signal2.samples 
 
-		vel1 = signal1.velo[min_i1:max_i1]
-		vel2 = signal2.velo[min_i1:max_i1]
+		vel1 = signal1.velo
+		vel2 = signal2.velo
 
 		acc1 = signal1.accel
 		acc2 = signal2.accel
+
+		# filtering data
+		if f_flag:
+			vel1 = s_filter(vel1, dt1, type = 'bandpass', family = 'ellip', fmin = fmin, fmax = fmax, N = 3, rp = 0.1, rs = 100) 
+			vel2 = s_filter(vel2, dt2, type = 'bandpass', family = 'ellip', fmin = fmin, fmax = fmax, N = 3, rp = 0.1, rs = 100) 
+			acc1 = s_filter(acc1, dt1, type = 'bandpass', family = 'ellip', fmin = fmin, fmax = fmax, N = 3, rp = 0.1, rs = 100) 
+			acc2 = s_filter(acc2, dt2, type = 'bandpass', family = 'ellip', fmin = fmin, fmax = fmax, N = 3, rp = 0.1, rs = 100) 
+
+		# cutting signal by bounds
+		c_vel1 = vel1[min_i1:max_i1]
+		c_vel2 = vel2[min_i2:max_i2]
+
+		c_acc1 = acc1[min_i1:max_i1]
+		c_acc2 = acc2[min_i2:max_i2]
 
 		t1 = np.arange(xtmin, xtmax, dt1)
 		t2 = np.arange(xtmin, xtmax, dt2)
 
 		points = get_points(samples1, samples2)
 
-		freq1, fas1 =  FAS(vel1, dt1, points, xfmin, xfmax, 3)
-		freq2, fas2 =  FAS(vel2, dt2, points, xfmin, xfmax, 3)
+		if c_flag: 
+			freq1, fas1 =  FAS(c_vel1, dt1, points, xfmin, xfmax, 3)
+			freq2, fas2 =  FAS(c_vel2, dt2, points, xfmin, xfmax, 3)
 
-		rsp1 = []
-		rsp2 = []
-		for p in period: 
-			rsp = max_osc_response(acc1, dt1, 0.05, p, 0, 0)
-			rsp1.append(rsp[2])
+			rsp1, rsp2 = cal_acc_response(period, c_acc1, c_acc2, dt1, dt2)
+		else: 
+			freq1, fas1 =  FAS(vel1, dt1, points, xfmin, xfmax, 3)
+			freq2, fas2 =  FAS(vel2, dt2, points, xfmin, xfmax, 3)
 
-			rsp = max_osc_response(acc2, dt1, 0.05, p, 0, 0)
-			rsp2.append(rsp[2])
+			rsp1, rsp2 = cal_acc_response(period, acc1, acc2, dt1, dt2)
 
 
 		axarr[i][0] = plt.subplot2grid((3, 4), (i, 0), colspan=2, rowspan=1)
 		axarr[i][0].set_title(title)
-		axarr[i][0].plot(t1,vel1,'r',t2,vel2,'b')
+		axarr[i][0].plot(t1,c_vel1,'r',t2,c_vel2,'b')
 
 		if i == 0: 
 			plt.legend([file1, file2])
@@ -571,9 +552,7 @@ def simple_plot(parameter, filenames, station1, station2):
 		plt.xlim(tmin, tmax)
 	f.tight_layout()
 	plt.show()
-
-	pass 
-
+# end of simple_plot
 
 
 # def test(psignal):

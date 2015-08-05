@@ -173,6 +173,16 @@ def max_osc_response(acc, dt, csi, period, ini_disp, ini_vel):
 
     return maxdisp, maxvel, maxacc
 
+def cal_acc_response(period, data1, data2, dt1, dt2):
+    # return the response for acceleration only 
+    rsp1 = []
+    rsp2 = []
+    for p in period:
+        rsp1.append(max_osc_response(data1, dt1, 0.05, p, 0, 0)[-1])
+        rsp2.append(max_osc_response(data2, dt2, 0.05, p, 0, 0)[-1])
+    return rsp1, rsp2
+# end of cal_acc_response
+
 def taper(flag, m, samples):
     # m = samples for taper 
     # samples = total samples

@@ -1,17 +1,12 @@
 #!/usr/bin/env python
-def update_labels(labels):
-	# add labels for the parameters used to calculate scores
-	o = ['_', '_NS_', '_EW_', '_UD_']
-	p = ['PGD', 'PGV', 'PGA', 'A', 'E', 'DUR']
-	d = ['D', 'S']
-	p_labels = []
+import os
+def search_file(dirname, info):
+	file_dir = {'HN':'', 'V1':'', 'BH':'', 'V2':''}
+	for fp in os.listdir(dirname):
+		if (info in fp) and ('HN' in fp): 
+			file_dir['HN'] = fp 
+			print fp 
+			print file_dir.values()
 
-	for i in range(0, len(p)):
-		for j in range(0, len(d)):
-			for k in range(0, len(o)):
-				p_labels.append(p[i] + o[k] + d[j])
-	print p_labels
 
-	pass 
-
-update_labels([])
+search_file('1', 'CI')

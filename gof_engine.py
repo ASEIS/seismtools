@@ -368,27 +368,32 @@ def print_scores(filenames, coord, path, parameter, matrix):
 	file1 = filenames[0].split('/')[-1]
 	file2 = filenames[1].split('/')[-1]
 
-	scores = [file1, file2]
-	for i in range(0, len(matrix)):
-		for j in range(0, 13):
-			# reading matrix slide by column 
-			col = matrix[i][:,j]
-			scores.append(col[-1]) #CA
-			scores.append(col[-2]) #SA
-			for k in range(0, len(matrix[i])-2):
-				# append BB...Bn
-				scores.append(col[k])
+	# insert filenames, coordinates of station and epi_distance
+	scores = [file1, file2, coord[0], coord[1], coord[2]]
+
+	# print the score matrix
+	if matrix.size != 0: 
+		for i in range(0, len(matrix)):
+			for j in range(0, 13):
+				# reading matrix slide by column 
+				col = matrix[i][:,j]
+				scores.append(col[-1]) #CA
+				scores.append(col[-2]) #SA
+				for k in range(0, len(matrix[i])-2):
+					# append BB...Bn
+					scores.append(col[k])
+		d = '{:>12}'*2 + '{:>12.2f}'*(len(scores)-2) + '\n'
+
+	# print the parameters used to get scores
+	elif parameter: 
+		scores = scores[:5] + parameter
+		d = '{:>12}'*2 + '{:>12.4f}'*(len(scores)-2) + '\n'
 	
-	# insert coordinates of station and epi_distance
-	scores.insert(2, coord[0])
-	scores.insert(3, coord[1])
-	scores.insert(4, coord[2])
 
 	# if require to print the parameters used to get scores
-	if parameter:
-		scores = scores[:5] + parameter + scores[5:]
+	# if parameter:
+	# 	scores = scores[:5] + parameter + scores[5:]
 
-	d = '{:>12}'*2 + '{:>12.2f}'*(len(scores)-2) + '\n'
 	f.write(d.format(*scores))
 	f.close()
 # end of print_scores
@@ -413,12 +418,12 @@ def set_labels(bands):
 	return labels
 # end of set_labels
 
-def update_labels(labels):
-	# add labels for the parameters used to calculate scores
+def set_mlabels():
+	# set labels for the parameters used to calculate scores
 	o = ['_', '_NS_', '_EW_', '_UD_']
 	p = ['PGD', 'PGV', 'PGA', 'A', 'E', 'DUR']
 	d = ['D', 'S']
-	p_labels = []
+	m_labels = ['#SIGNAL1', 'SIGNAL2', 'X_COOR', 'Y_COOR', 'EPI_DIS']
 
 	for i in range(0, len(p)):
 		for j in range(0, len(d)):
@@ -426,8 +431,7 @@ def update_labels(labels):
 				if i >= 3 and k == 0:
 					pass 
 				else: 
-					p_labels.append(p[i] + o[k] + d[j])
-	labels = labels[:5] + p_labels + labels[5:]
-	return labels
-# end of update_labels
+					m_labels.append(p[i] + o[k] + d[j])
+	return m_labels
+# end of set_plabels
 

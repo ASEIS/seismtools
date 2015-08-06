@@ -115,9 +115,7 @@ def get_files():
 			return False
 
 		for line in f: 
-			if '#' in line: 
-				pass 
-			else: 
+			if not ('#' in line): 
 				line = line.split()
 				# not containing coordinate 
 				if len(line) == 2: 
@@ -144,6 +142,25 @@ def get_files():
 	print "[ERROR]: Invalid inputs."
 	return False
 # end of get_files
+
+def search_file(dirname, info):
+	"""search for files contains given network code and station name"""
+	file_dir = {'HN':'', 'V1':'', 'BH':'', 'V2':''}
+	for fp in os.listdir(dirname):
+		if (info in fp) and ('HN' in fp): 
+			# file_dir['HN'] = dirname + '/' + fp 
+			file_dir['HN'] = fp
+		elif (info in fp) and ('V1' in fp): 
+			# file_dir['V1'] = dirname + '/' + fp 
+			file_dir['V1'] = fp
+		elif (info in fp) and ('BH' in fp): 
+			# file_dir['BH'] = dirname + '/' + fp 
+			file_dir['BH'] = fp 
+		elif (info in fp) and ('V2' in fp): 
+			# file_dir['V2'] = dirname + '/' + fp 
+			file_dir['V2'] = fp
+	return file_dir
+# end of search_file
 
 def get_bands():
 	"""
@@ -354,37 +371,53 @@ if __name__ == "__main__":
 			print e
 
 		labels = set_labels(bands)
-		m_labels = update_labels(labels)
+		m_labels = set_mlabels()
 
 		d = '{:>12}'*2 + '{:>12.8}'*(len(labels)-2) + '\n'
 		# d = '{:>12}'*len(labels) + '\n'
 		f.write(d.format(*labels))
 
-		d = '{:>12}'*2 + '{:>12.8}'*(len(m_labels)-2) + '\n'
+		d = '{:>12}'*2 + '{:>12.6}'*(len(m_labels)-2) + '\n'
 		m.write(d.format(*m_labels))
 		f.close()
 		m.close()
 
-		for i in range(0, len(list1)):
+		i = 0 
+		# for i in range(0, len(list1)):
+		while i < len(list1): 
 			file1 = indir1 + '/' + list1[i]
-			file2 = indir1 + '/' + list2[i]
-			print "[...processing " + file1 + ' and ' + file2 + '...]'
+			file2 = indir2 + '/' + list2[i]
 
-			x = coorX[i]
-			y = coorY[i]
+			# if file1 does not exist, search for files 
+			if not os.path.isfile(file1):
+				file_dir = search_file(indir1, list1[i])
+				for fp in file_dir.values():
+					# if found matched file; update the lists 
+					if fp: 
+						list1.insert(i+1, fp)
+						list2.insert(i+1, list2[i])
+						coorX.insert(i+1, coorX[i])
+						coorY.insert(i+1, coorY[i])
 
-			epdist = math.sqrt((x-Ex)**2+(y-Ey)**2)
-			coord = [x, y, epdist]
-
-			station1, station2 = main(file1, file2)
-			if station1 and station2: 
-				parameter, matrix = scores_matrix(station1, station2, bands)
-				parameter = parameter_to_list(parameter)
-
-				print_scores([file1,file2], coord, s_path, [], matrix) # print scores without values used to calculate
-				print_scores([file1,file2], coord, m_path, parameter, matrix) # print scores with values used to calculate
 			else: 
-				pass 
+				print "[...processing " + file1 + ' and ' + file2 + '...]'
+
+				x = coorX[i]
+				y = coorY[i]
+
+				epdist = math.sqrt((x-Ex)**2+(y-Ey)**2)
+				coord = [x, y, epdist]
+
+				station1, station2 = main(file1, file2)
+				if station1 and station2: 
+					parameter, matrix = scores_matrix(station1, station2, bands)
+					parameter = parameter_to_list(parameter)
+
+					print_scores([file1,file2], coord, s_path, [], matrix) # print scores 
+					print_scores([file1,file2], coord, m_path, parameter, np.array([])) # print values used to calculate scores
+				else: 
+					pass 
+			i += 1 
 
 	print "[DONE]"
 	

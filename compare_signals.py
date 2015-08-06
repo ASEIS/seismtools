@@ -55,9 +55,6 @@ def set_parameter(para):
 	if tmin == 0: 
 		tmin = 0.1
 
-	print tmin 
-	return []
-
 	c_flag = set_flag('cut')
 
 	para = [xtmin, xtmax, xfmin, xfmax, fmin, fmax, tmin, tmax, f_flag, c_flag]

@@ -113,6 +113,8 @@ def process(signal):
 		print "[ERROR]: instance error; process signal objects only. "
 		return 
 
+	correct_baseline(signal)
+
 	acc = np.array([],float)
 	vel = np.array([],float)
 	dis = np.array([],float)
@@ -121,8 +123,8 @@ def process(signal):
 	if signal.type == 'a':
 		
 		acc = signal.data 
-		window = taper('all', 20, signal.samples)
-		acc = acc*window
+		# window = taper('all', 20, signal.samples)
+		# acc = acc*window
 
 		vel = integrate(acc, dt)
 		vel = s_filter(vel, signal.dt, type = 'highpass', family = 'ellip')
@@ -132,8 +134,8 @@ def process(signal):
 
 	elif signal.type == 'v':
 		vel = signal.data 
-		window = taper('all', 20, signal.samples)
-		vel = vel*window
+		# window = taper('all', 20, signal.samples)
+		# vel = vel*window
 
 
 		acc = derivative(vel, dt)
@@ -145,8 +147,8 @@ def process(signal):
 
 	elif signal.type == 'd':
 		dis = signal.data 
-		window = taper('all', 20, signal.samples)
-		dis = dis*window
+		# window = taper('all', 20, signal.samples)
+		# dis = dis*window
 
 		vel = derivative(dis, dt)
 		vel = s_filter(vel, signal.dt, type = 'highpass', family = 'ellip')
@@ -174,6 +176,7 @@ def print_her(file_dict):
 
     # compose filename
     filename = file_dict['N'].split('/')[-1]
+    filename = filename.replace((filename.split('.')[0]+'.'), '') #remove event ID 
     filename = filename.replace('N.ascii', '.her')
 
     try:
@@ -210,15 +213,27 @@ def print_her(file_dict):
             vel_up = file_dict[key].velo.tolist()
             acc_up = file_dict[key].accel.tolist()
 
+    # print len(dis_ns)
+    # print len(vel_ns)
+    # print len(acc_ns)
+    # print len(dis_ew)
+    # print len(vel_ew)
+    # print len(acc_ew)
+    # print len(dis_up)
+    # print len(vel_up)
+    # print len(acc_up)
+    
+
     signal = file_dict[key]
     # get a list of time incremented by dt 
     time = [0.000]
     samples = file_dict['N'].samples 
     dt = file_dict['N'].dt
+    tmp = samples
     
-    while samples > 1:
+    while tmp > 1:
         time.append(time[len(time)-1] + dt)
-        samples -= 1 
+        tmp -= 1 
     
     network = filename.split('.')[1]
     station = filename.split('.')[2]

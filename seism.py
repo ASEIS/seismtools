@@ -315,10 +315,10 @@ class seism_record(seism_signal):
                 return False 
     # end of process_ori
 
-    def convert(self):
-        # make average on first 10% of samples; minus average and multiply by 981 
-        self.data = 981*(self.data - np.average(self.data[0:int(self.samples*0.1)]))
-        pass 
+    # def convert(self):
+    #     # make average on first 10% of samples; minus average and multiply by 981 
+    #     self.data = 981*(self.data - np.average(self.data[0:int(self.samples*0.1)]))
+    #     pass 
 
     # def process_smc_v1(self):
     #     """
@@ -677,7 +677,10 @@ class seism_station(object):
             #     print "[ERROR]: invalid orientation."
             #     return False 
 
-            record.convert() # convert the unit of data 
+            # record.convert() # convert the unit of data 
+            correct_baseline(record)
+            scale_signal(record, 981)
+
 
             # reverse the data by orientation 
             if record.process_ori() == True: # if encounter special orientations. 
@@ -688,8 +691,8 @@ class seism_station(object):
 
             if record.type == 'a': 
                 # get velocity and displacement
-                window = taper('all', 20, record.samples)
-                record.data =  record.data*window 
+                # window = taper('all', 20, record.samples)
+                # record.data =  record.data*window 
                 record.data = s_filter(record.data, record.dt, type = 'highpass', family = 'ellip')
 
                 velocity = integrate(record.data, record.dt)

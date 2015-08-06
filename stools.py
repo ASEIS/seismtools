@@ -300,3 +300,25 @@ def seism_cutting(flag, t_diff, m, signal):
     return signal
 # end of seism_cutting
 
+def scale_signal(signal, factor):
+    """scale the data of given signal"""
+    if not isinstance(signal.data, np.ndarray):
+        print "[ERROR]: error in scale_signal; data is not an numpy array."
+        return signal
+    signal.data = factor*signal.data 
+    return signal
+# end of scale_signal
+
+def correct_baseline(signal):
+    if not isinstance(signal.data, np.ndarray):
+        print "[ERROR]: error in correct_baseline; data is not an numpy array."
+        return signal
+
+    # make average on first 10% of samples; minus average  
+    signal.data = signal.data - np.average(signal.data[0:int(signal.samples*0.1)])
+    return signal
+# end of correct_baseline
+
+
+
+

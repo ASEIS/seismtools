@@ -213,15 +213,15 @@ def print_her(file_dict):
             vel_up = file_dict[key].velo.tolist()
             acc_up = file_dict[key].accel.tolist()
 
-    # print len(dis_ns)
-    # print len(vel_ns)
-    # print len(acc_ns)
-    # print len(dis_ew)
-    # print len(vel_ew)
-    # print len(acc_ew)
-    # print len(dis_up)
-    # print len(vel_up)
-    # print len(acc_up)
+    print len(dis_ns)
+    print len(vel_ns)
+    print len(acc_ns)
+    print len(dis_ew)
+    print len(vel_ew)
+    print len(acc_ew)
+    print len(dis_up)
+    print len(vel_up)
+    print len(acc_up)
     
 
     signal = file_dict[key]

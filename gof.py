@@ -148,16 +148,12 @@ def search_file(dirname, info):
 	file_dir = {'HN':'', 'V1':'', 'BH':'', 'V2':''}
 	for fp in os.listdir(dirname):
 		if (info in fp) and ('HN' in fp): 
-			# file_dir['HN'] = dirname + '/' + fp 
 			file_dir['HN'] = fp
 		elif (info in fp) and ('V1' in fp): 
-			# file_dir['V1'] = dirname + '/' + fp 
 			file_dir['V1'] = fp
 		elif (info in fp) and ('BH' in fp): 
-			# file_dir['BH'] = dirname + '/' + fp 
 			file_dir['BH'] = fp 
 		elif (info in fp) and ('V2' in fp): 
-			# file_dir['V2'] = dirname + '/' + fp 
 			file_dir['V2'] = fp
 	return file_dir
 # end of search_file

@@ -14,28 +14,36 @@ from stools import *
 def set_parameter(para):
 	"""to set all the paramters for plotting and calculating
 	including fmin, fmax, tmin, tmax etc."""
-
 	# if given by user in command line 
 	if para: 
-		f_flag = set_flag('filter')
-		c_flag = set_flag('cut')
-		if f_flag and (len(para) >= 8):
-			para = para[:8]
-			para.append(f_flag)
-			para.append(c_flag)
+		para = adjust_para(para)
+		if not para:
+			return []
+		# f_flag = set_flag('filter')
+		# c_flag = set_flag('cut')
+		# if f_flag and (len(para) >= 8):
+		if len(para) == 10:
+			# para = para[:8]
+			# para.append(f_flag)
+			# para.append(c_flag)
+
+			# set filter and cut flags 
 
 			# make sure tmin != 0
-			if para[-4] == 0: 
-				para[-4] = 0.1 
+			# para = adjust_para(para)
+			# print para
 			return para 
-		elif len(para) == 6: 
-			# if not filtering; set fmin/fmax to xfmin/xfmax
-			para.insert(4, para[2])
-			para.insert(5, para[3])
-			para.append(f_flag)
-			para.append(c_flag)
-			if para[-4] == 0: 
-				para[-4] = 0.1 
+		elif len(para) == 8: 
+			# para = adjust_para(para)
+			# if para: 
+				# if not filtering; set fmin/fmax to xfmin/xfmax
+			para.insert(5, para[2])
+			para.insert(6, para[3])
+				# para.append(f_flag)
+				# para.append(c_flag)
+			# if para[-4] == 0: 
+			# 	para[-4] = 0.1 
+				# print para
 			return para 
 		else: 
 			return []
@@ -57,9 +65,45 @@ def set_parameter(para):
 
 	c_flag = set_flag('cut')
 
-	para = [xtmin, xtmax, xfmin, xfmax, fmin, fmax, tmin, tmax, f_flag, c_flag]
+	para = [xtmin, xtmax, xfmin, xfmax, f_flag, fmin, fmax, tmin, tmax, c_flag]
 	return para 
 # end of set_parameter
+
+def adjust_para(para):
+	"""convert number in parameter list to floats
+	set flags in parameter list to boolean
+	make sure tmin != 0 """
+	# convert to floats
+	for i in range(0, len(para)):
+		if i!=4 and i!=(len(para)-1): 
+			try:
+				para[i] = float(para[i])
+			except ValueError:
+				print "[ERROR]: invalid parameter."
+				return []
+
+	# set filter flag 
+	if (para[4] in ['y', 'Y']) and len(para)==10:
+		para[4] = True 
+	elif (para[4] in ['n', 'N']) and len(para)==8:
+		para[4] = False 
+	else: 
+		return []
+
+	# set cut flag
+	if para[-1] in ['y', 'Y']:
+		para[-1] = True 
+	elif para[-1] in ['n', 'N']:
+		para[-1] = False 
+	else:
+		return []
+
+	# correct tmin 
+	if para[-3] == 0: 
+		para[-3] = 0.1 
+	return para 
+# end of adjust_para
+
 
 def set_axis(xtype):
 	"""setting bounds for ploting"""
@@ -202,11 +246,12 @@ def plot_signals(parameter, filenames, signal1, signal2):
 	xtmax = parameter[1]
 	xfmin = parameter[2]
 	xfmax = parameter[3]
-	fmin = parameter[4]
-	fmax = parameter[5]
-	tmin = parameter[6]
-	tmax = parameter[7]
-	f_flag = parameter[8]
+	f_flag = parameter[4]
+	fmin = parameter[5]
+	fmax = parameter[6]
+	tmin = parameter[7]
+	tmax = parameter[8]
+
 	c_flag = parameter[9]
 
 	title = 'Acceleration ONLY: '
@@ -279,11 +324,13 @@ def plot_signals(parameter, filenames, signal1, signal2):
 	axarr[1].set_title('Fourier Amplitude Spectra') 
 	# axarr[1].plot(freq1[i1:i2],fas1[i1:i2],'r',freq2[i1:i2],fas2[i1:i2],'b')
 	axarr[1].plot(freq1,fas1,'r',freq2,fas2,'b')
-
-	if xfmin < 0.5:
-		xfmin = 0 
 		
-	plt.xlim(xfmin, xfmax)
+	tmp_xfmin = 0 
+	if xfmin < 0.5:
+		tmp_xfmin = 0
+	else:
+		tmp_xfmin = xfmin 
+	plt.xlim(tmp_xfmin, xfmax)
 
 	axarr[2] = plt.subplot2grid((1, 4), (0, 3))
 	axarr[2].set_title("Response Spectra")
@@ -316,11 +363,11 @@ def plot_stations(parameter, filenames, station1, station2):
 	xtmax = parameter[1]
 	xfmin = parameter[2]
 	xfmax = parameter[3]
-	fmin = parameter[4]
-	fmax = parameter[5]
-	tmin = parameter[6]
-	tmax = parameter[7]
-	f_flag = parameter[8]
+	f_flag = parameter[4]
+	fmin = parameter[5]
+	fmax = parameter[6]
+	tmin = parameter[7]
+	tmax = parameter[8]
 	c_flag = parameter[9]
 
 	min_i1 = int(xtmin/dt1) 
@@ -428,7 +475,7 @@ def plot_stations(parameter, filenames, station1, station2):
 			if xfmin < 0.5:
 				tmp_xfmin = 0
 			else:
-				tmp_xmin = xfmin 
+				tmp_xfmin = xfmin 
 			plt.xlim(tmp_xfmin, xfmax)
 
 			axarr[j][2] = plt.subplot2grid((3, 4), (j, 3), rowspan=1, colspan=1)
@@ -459,11 +506,11 @@ def simple_plot(parameter, filenames, station1, station2):
 	xtmax = parameter[1]
 	xfmin = parameter[2]
 	xfmax = parameter[3]
-	fmin = parameter[4]
-	fmax = parameter[5]
-	tmin = parameter[6]
-	tmax = parameter[7]
-	f_flag = parameter[8]
+	f_flag = parameter[4]
+	fmin = parameter[5]
+	fmax = parameter[6]
+	tmin = parameter[7]
+	tmax = parameter[8]
 	c_flag = parameter[9]
 
 	min_i1 = int(xtmin/dt1) 
@@ -534,11 +581,11 @@ def simple_plot(parameter, filenames, station1, station2):
 		axarr[i][1].set_title('Fourier Amplitude Spectra') 
 		axarr[i][1].plot(freq1,fas1,'r',freq2,fas2,'b')
 
-		tmp_xfmin = 0 
+		tmp_xfmin = 0
 		if xfmin < 0.5:
 			tmp_xfmin = 0
 		else:
-			tmp_xmin = xfmin 
+			tmp_xfmin = xfmin 
 		plt.xlim(tmp_xfmin, xfmax)
 
 		axarr[i][2] = plt.subplot2grid((3, 4), (i, 3), rowspan=1, colspan=1)

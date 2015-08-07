@@ -41,13 +41,6 @@ def get_filename():
 
 	if len(sys.argv) > 3: 
 		para = sys.argv[3:]
-		for i in range(0, len(para)):
-			try:
-				para[i] = float(para[i])
-			except ValueError:
-				print "[ERROR]: invalid parameter."
-				para = []
-				break
 	parameter = set_parameter(para)
 
 

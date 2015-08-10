@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 # ==========================================================================
-# The program is to load files downloaded with STP client, then create 
+# The program is to load files downloaded with STP client, then create
 # signal objects, and generate .her files.
 # ==========================================================================
 import numpy as np
 from seism import *
 from stools import *
 
-destination = '' 
+destination = ''
 header = ''
 def get_destination(d):
     """The function is to get the user input from process.py."""
     global destination
-    destination = d 
+    destination = d
 # end of get_destination
 
 
@@ -20,14 +20,14 @@ def load_event(eventfile):
 	"""The function is to read the event file and get information about the event."""
 	if not eventfile.lower().endswith('evnt'):
 		print "[ERROR]: load event file only. "
-		return 
+		return
 	try:
 		fp = open(eventfile)
 	except IOError, e:
 		print e
-		pass 
+		pass
 	header = fp.read().split()
-	print header 
+	print header
 	event_id = header[0]
 	tmp = header[2].split(',')
 	date = tmp[0]
@@ -41,17 +41,17 @@ def load_event(eventfile):
 
 
 
-def load_file(filename): 
+def load_file(filename):
 	"""
-	The function is to read general 1-column text files. Return a signal object. 
+	The function is to read general 1-column text files. Return a signal object.
 	"""
 	if not filename.lower().endswith("ascii"):
 		print "[ERROR]: process Waveform files in ascii format only. "
-		return 
+		return
 
-	global header 
+	global header
 	data_type = {'H': 'v', 'L': 'v', 'N': 'a'}
-	# v for velocity; a for acceleration, d for displacement 
+	# v for velocity; a for acceleration, d for displacement
 
 	network = ''
 	station = ''
@@ -68,13 +68,13 @@ def load_file(filename):
 		f = open(filename, 'r')
 	except IOError, e:
 		print e
-		return 
+		return
 
 	data = np.loadtxt(filename, comments = '#', unpack = True)
 	samples = data.size
 
 	for line in f:
-		# get header 
+		# get header
 		if '#' in line:
 			tmp = line.split()
 			network = tmp[1]
@@ -86,12 +86,13 @@ def load_file(filename):
 			orientation = info[2]
 
 			date = tmp[4]
-			try: 
+			time = date.split(',')[-1]
+			try:
 				dt = float(tmp[6])
 			except ValueError:
-				pass 
-	
-			break 
+				pass
+
+			break
 
 
 	if instr_type in data_type:
@@ -100,29 +101,29 @@ def load_file(filename):
 	signal = seism_signal(samples, dt, data, dtype)
 	header = "# " + network + " " + station + " " + "ASCII" + " " + date + " " + str(samples) + " " + str(dt) + "\n"
 
-	return signal
+	return signal, time
 # end of load_file
 
 
 def process(signal):
 	"""
-	The function takes a signal, use its's current data to get acceleration, velocity, and displacement. 
-	Then return a psignal. 
+	The function takes a signal, use its's current data to get acceleration, velocity, and displacement.
+	Then return a psignal.
 	"""
 	if not isinstance(signal, seism_signal):
 		print "[ERROR]: instance error; process signal objects only. "
-		return 
+		return
 
 	correct_baseline(signal)
 
 	acc = np.array([],float)
 	vel = np.array([],float)
 	dis = np.array([],float)
-	dt = signal.dt 
+	dt = signal.dt
 
 	if signal.type == 'a':
-		
-		acc = signal.data 
+
+		acc = signal.data
 		# window = taper('all', 20, signal.samples)
 		# acc = acc*window
 
@@ -133,7 +134,7 @@ def process(signal):
 		dis = s_filter(dis, signal.dt, type = 'highpass', family = 'ellip')
 
 	elif signal.type == 'v':
-		vel = signal.data 
+		vel = signal.data
 		# window = taper('all', 20, signal.samples)
 		# vel = vel*window
 
@@ -146,7 +147,7 @@ def process(signal):
 
 
 	elif signal.type == 'd':
-		dis = signal.data 
+		dis = signal.data
 		# window = taper('all', 20, signal.samples)
 		# dis = dis*window
 
@@ -157,26 +158,73 @@ def process(signal):
 		acc = s_filter(acc, signal.dt, type = 'highpass', family = 'ellip')
 
 	else:
-		pass 
+		pass
 
 	psignal = seism_psignal(signal.samples, signal.dt, np.c_[dis, vel, acc], 'c', acc, vel, dis)
 	return psignal
 # end of process
 
+def synchronize(stamps, signals):
+	"""synchronize signals with given time stamps"""
+	end_time = []
+	start_time = []
+	# convert time stamps to time in seconds
+	for i in range(0, len(stamps)):
+		time = stamps[i]
+		signal = signals[i]
+
+		start = time.split(':')
+		start = float(start[0])*3600 + float(start[1])*60 + float(start[2])
+		end = start + signal.samples*signal.dt
+
+		start_time.append(start) # update time lists
+		end_time.append(end)
+
+	start_last = max(start_time)
+	end_first = min(end_time)
+	index = start_time.index(start_last)
+	new_stamp = stamps[index]
+
+	# cutting signals
+	for i in range(0, len(signals)):
+		start = start_time[i]
+		end = end_time[i]
+		if start != start_last:
+			t_diff = start_last - start
+			signals[i] = seism_cutting('front', t_diff, 20, signals[i], True)
+
+		if end != end_first:
+			t_diff = end - end_first
+			signals[i] = seism_cutting('end', t_diff, 20, signals[i], True)
+
+	if (signals[0].samples == signals[1].samples == signals[2].samples):
+		return new_stamp, signals
+
+	# scale the data if they have one sample in difference after cutting
+	for i in range(1, len(signals)):
+		if signals[i].samples == signals[i-1].samples - 1:
+			signals[i-1].data = signals[i-1].data[1:]
+			signals[i-1].samples -= 1
+		elif signals[i].samples == signals[i-1].samples + 1:
+			signals[i].data = signals[i].data[1:]
+			signals[i].samples -= 1
+	return new_stamp, signals
+# end of synchronize
 
 def print_her(file_dict):
     """
     The function generates .her files for each station (with all three channels included)
     """
     global destination
-     # if there are more than three channels, save for later 
+    global header
+     # if there are more than three channels, save for later
     if len(file_dict) > 3:
         print "==[The function is processing files with 3 channels only.]=="
-        return False 
+        return False
 
     # compose filename
     filename = file_dict['N'].split('/')[-1]
-    filename = filename.replace((filename.split('.')[0]+'.'), '') #remove event ID 
+    filename = filename.replace((filename.split('.')[0]+'.'), '') #remove event ID
     filename = filename.replace('N.ascii', '.her')
 
     try:
@@ -184,72 +232,76 @@ def print_her(file_dict):
     except IOError, e:
         print e
 
-    # load files in dictionary; generate siganls and processes them
-    file_dict['N'] = process(load_file(file_dict['N']))
-    file_dict['E'] = process(load_file(file_dict['E']))
-    file_dict['Z'] = process(load_file(file_dict['Z']))
+    # load files in dictionary; generate siganls
+    signal_ns, time_ns = load_file(file_dict['N'])
+    signal_ew, time_ew = load_file(file_dict['E'])
+    signal_up, time_up = load_file(file_dict['Z'])
 
-    dis_ns = []
-    vel_ns = []
-    acc_ns = []
-    dis_ew = []
-    vel_ew = []
-    acc_ew = []
-    dis_up = []
-    vel_up = []
-    acc_up = []
+    # synchronize signals
+    if not (signal_ns.samples == signal_ew.samples == signal_up.samples):
+    	signals = [signal_ns, signal_ew, signal_up]
+    	stamps = [time_ns, time_ew, time_ew]
+    	new_stamp, [signal_ns, signal_ew, signal_up] = synchronize(stamps, signals)
 
-    for key in file_dict:
-        if key == 'N':
-            dis_ns = file_dict[key].displ.tolist()
-            vel_ns = file_dict[key].velo.tolist()
-            acc_ns = file_dict[key].accel.tolist()
-        elif key == 'E':
-            dis_ew = file_dict[key].displ.tolist()
-            vel_ew = file_dict[key].velo.tolist()
-            acc_ew = file_dict[key].accel.tolist()
-        elif key == 'Z':
-            dis_up = file_dict[key].displ.tolist()
-            vel_up = file_dict[key].velo.tolist()
-            acc_up = file_dict[key].accel.tolist()
+    	# update header
+    	tmp = header.split(' ')
+    	tmp[-2] = str(signal_ns.samples)
+    	tmp[-3] = tmp[-3].split(',')[0]+','+new_stamp
+    	# tmp[-3].split(',')[-1] = new_stamp
+    	header = ''
+    	for i in range(0, len(tmp)):
+    		header += tmp[i] + ' '
+    	# header += '\n'
 
-    print len(dis_ns)
-    print len(vel_ns)
-    print len(acc_ns)
-    print len(dis_ew)
-    print len(vel_ew)
-    print len(acc_ew)
-    print len(dis_up)
-    print len(vel_up)
-    print len(acc_up)
-    
+    # process signals
+    signal_ns = process(signal_ns)
+    signal_ew = process(signal_ew)
+    signal_up = process(signal_up)
 
-    signal = file_dict[key]
-    # get a list of time incremented by dt 
+
+    dis_ns = signal_ns.displ.tolist()
+    vel_ns = signal_ns.velo.tolist()
+    acc_ns = signal_ns.accel.tolist()
+    dis_ew = signal_ew.displ.tolist()
+    vel_ew = signal_ew.velo.tolist()
+    acc_ew = signal_ew.accel.tolist()
+    dis_up = signal_up.displ.tolist()
+    vel_up = signal_up.velo.tolist()
+    acc_up = signal_up.accel.tolist()
+
+    # print len(dis_ns)
+    # print len(vel_ns)
+    # print len(acc_ns)
+    # print len(dis_ew)
+    # print len(vel_ew)
+    # print len(acc_ew)
+    # print len(dis_up)
+    # print len(vel_up)
+    # print len(acc_up)
+
+
+    # get a list of time incremented by dt
     time = [0.000]
-    samples = file_dict['N'].samples 
-    dt = file_dict['N'].dt
+    samples = signal_ns.samples
+    dt = signal_ns.dt
     tmp = samples
-    
+
     while tmp > 1:
         time.append(time[len(time)-1] + dt)
-        tmp -= 1 
-    
+        tmp -= 1
+
     network = filename.split('.')[1]
     station = filename.split('.')[2]
     info = filename.split('.')[3]
 
-
-    # TODO: get time and date from read_event()
-    # header = "# " + network + " " + station + " " + "ASCII" + " " + "date" + "," + "time" + " " + str(signal.samples) + " " + str(signal.dt) + "\n"
     f.write(header)
 
     descriptor = '{:>12}' + '  {:>12}'*9 + '\n'
-    f.write(descriptor.format("# time", "dis_ns", "dis_ew", "dis_up", "vel_ns", "vel_ew", "vel_up", "acc_ns", "acc_ew", "acc_up")) # header 
+    f.write(descriptor.format("# time", "dis_ns", "dis_ew", "dis_up", "vel_ns", "vel_ew", "vel_up", "acc_ns", "acc_ew", "acc_up")) # header
 
     descriptor = '{:>12.3f}' + '  {:>12.7f}'*9 + '\n'
     for c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 in zip(time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up):
         f.write(descriptor.format(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 ))
     f.close()
     print "*Generated .her file at: " + destination + "/" + filename
-#end of print_her 
+#end of print_her

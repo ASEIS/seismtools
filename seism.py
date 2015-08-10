@@ -35,7 +35,7 @@ class seism_signal(object):
 
     def set_data(self, data):
         # check if the data passed is a numpy array
-        if not isinstance(data, np.ndarray): 
+        if not isinstance(data, np.ndarray):
             print "\nError with signal data: not a numpy array.\n"
         self.data = data
     #end set_data
@@ -112,10 +112,10 @@ class seism_record(seism_signal):
     This class extends the signal class to have addtitional
     attributes regarding time stamp and orientation
     """
-    
+
     def __init__(self, *args, **kwargs):
         """
-        Correct order for unlabeled arguments is: samples, dt, data, signal type, station name, 
+        Correct order for unlabeled arguments is: samples, dt, data, signal type, station name,
         location_lati, location_longi, depth, date, time, orientation
         """
         super(seism_record, self).__init__(*args, **kwargs)
@@ -127,7 +127,7 @@ class seism_record(seism_signal):
         self.depth = 0.0
         self.date = ""
         self.time = ""
-        self.hour = 0.0 
+        self.hour = 0.0
         self.minute = 0.0
         self.seconds = 0.0
         self.fraction = 0.0
@@ -136,14 +136,14 @@ class seism_record(seism_signal):
 
         if len(args) > 0:
             args_range = range(len(args))
-            # setting location 
-            if 4 in args_range: 
+            # setting location
+            if 4 in args_range:
                 self.set_station(args[4])
-            if 5 in args_range: 
+            if 5 in args_range:
                 self.set_latitude(args[5])
-            if 6 in args_range: 
+            if 6 in args_range:
                 self.set_longitude(args[6])
-            if 7 in args_range: 
+            if 7 in args_range:
                 self.set_depth(args[7])
             if 8 in args_range:
                 self.set_date(args[8])
@@ -152,7 +152,7 @@ class seism_record(seism_signal):
                 self.set_tstamp(self.time)
             if 10 in args_range:
                 self.set_orientation(args[10])
-                # return 
+                # return
                 # all arguments were given in unlabled format
 
         if len(kwargs) > 0:
@@ -172,36 +172,36 @@ class seism_record(seism_signal):
             if 'orientation' in kwargs:
                 self.set_orientation(kwargs['orientation'])
 
-        return 
+        return
     #end __init__
-    
+
     def set_station(self, station_name):
-        if not isinstance(station_name, str): 
+        if not isinstance(station_name, str):
             print "\n**Error with station name.**\n"
-        self.station_name = station_name 
+        self.station_name = station_name
     #end set_station
 
     def set_latitude(self, location_lati):
         # checking latitude format being float+S/N
-        if not isinstance(location_lati, str): 
+        if not isinstance(location_lati, str):
             print "\n**Error with location latitude (Invalid instance type).**\n"
-        elif location_lati[-1] not in ["N", "S"]: 
+        elif location_lati[-1] not in ["N", "S"]:
             print "\nError with location latitude (Invalid format).\n"
-        else: 
+        else:
             try:
                 float(location_lati[0:-2])
             except ValueError:
                 print "\nError with location latitude (Invalid format).\n"
-        self.location_lati = location_lati 
+        self.location_lati = location_lati
     #end set_latitude
 
     def set_longitude(self, location_longi):
         # checking longitude format being float+E/W
-        if not isinstance(location_longi, str): 
+        if not isinstance(location_longi, str):
             print "\n**Error with location longitude (Invalid instance type).**\n"
-        elif location_longi[-1] not in ["E", "W"]: 
+        elif location_longi[-1] not in ["E", "W"]:
             print "\n**Error with location longitude (Invalid format).**\n"
-        else: 
+        else:
             try:
                 float(location_longi[0:-2])
             except ValueError:
@@ -211,20 +211,20 @@ class seism_record(seism_signal):
     #end set_longitude
 
     def set_depth(self, depth):
-        # checking depth 
-        if not isinstance(depth, float): 
+        # checking depth
+        if not isinstance(depth, float):
             print "\n**Error with depth.**\n"
-        self.depth = depth 
+        self.depth = depth
     #end set_depth
 
     def set_orientation(self, orientation):
-        # if the orientation is string, it should be either Up or Down 
-        # if the orientation is int, it should between 0 and 360 
-        if isinstance(orientation, str) and orientation.upper() in ["UP", "DOWN"]: 
+        # if the orientation is string, it should be either Up or Down
+        # if the orientation is int, it should between 0 and 360
+        if isinstance(orientation, str) and orientation.upper() in ["UP", "DOWN"]:
             self.orientation = orientation
         elif isinstance(orientation, int) and orientation <= 360 and orientation >= 0:
             self.orientation = orientation
-        else: 
+        else:
             print "[ERROR]: Invalid orientation."
     #end set_orientation
 
@@ -232,19 +232,19 @@ class seism_record(seism_signal):
         # check the format of date string being #/#/#
         if not isinstance(date, str):
             print "[ERROR]: invalid date."
-        else: 
+        else:
             for x in date.split('/'):
                 if x.isdigit() == False:
                     print "[ERROR]: invalid date."
-                    break 
-        self.date = date 
+                    break
+        self.date = date
 
     def set_time(self, time):
         if not isinstance(time, str):
             print "[ERROR]: invalid date."
-        self.time = time 
+        self.time = time
 
-    # the function is to split time string into hour, minute, seconds, fraction, and tzone 
+    # the function is to split time string into hour, minute, seconds, fraction, and tzone
     def set_tstamp(self, time):
         hour = self.time.split(':')[0]
         minute = self.time.split(':')[1]
@@ -259,76 +259,76 @@ class seism_record(seism_signal):
             fraction = float(fraction)
         except ValueError:
             print "[ERROR]: invalid start time."
-            
-        self.hour = hour 
-        self.minute = minute 
-        self.seconds = seconds 
-        self.fraction = fraction 
-        self.tzone = tzone 
+
+        self.hour = hour
+        self.minute = minute
+        self.seconds = seconds
+        self.fraction = fraction
+        self.tzone = tzone
 
     # to test with record object
     def print_attr(self):
         print "==================================================================="
         print "samples: " + str(self.samples)
         print "dt: " + str(self.dt)
-        print "data type: " + self.type 
+        print "data type: " + self.type
         print self.data
         print "station name: " + self.station_name
         print "station latitude: " + self.location_lati
         print "station longitude: " + self.location_longi
-        print "depth: ??" 
+        print "depth: ??"
         print "date: " + self.date
         print "time: " + self.time
-        print "hour: " + str(self.hour) 
-        print "minute: " + str(self.minute) 
-        print "seconds: " + str(self.seconds) 
+        print "hour: " + str(self.hour)
+        print "minute: " + str(self.minute)
+        print "seconds: " + str(self.seconds)
         print "fraction: " + str(self.fraction)
         print "tzone: " + self.tzone
         print "orientation: " + str(self.orientation)
-    #end print_attr 
+    #end print_attr
 
     def process_ori(self):
         # process data by orientation
-        if isinstance(self.orientation, int): 
+        if isinstance(self.orientation, int):
             if self.orientation in [0, 360, 90, -270]:
-                pass 
+                pass
             elif self.orientation in [180, -180, -90, 270]:
-                # if negative/down orientation, multiply by -1 
-                self.data = self.data*-1 
+                # if negative/down orientation, multiply by -1
+                self.data = self.data*-1
                 self.orientation += 180
 
                 if self.orientation > 360:
                     self.orientation -= 360
 
-            else: 
-                # encounter special orientation; pass to rotate 
-                return True 
+            else:
+                # encounter special orientation; pass to rotate
+                return True
 
         elif isinstance(self.orientation, str):
-            if self.orientation == 'Up': 
-                pass 
-            elif self.orientation == 'Down': 
-                self.data = self.data*-1 
+            if self.orientation == 'Up':
+                pass
+            elif self.orientation == 'Down':
+                self.data = self.data*-1
                 self.orientation = 'Up'
-            else: 
+            else:
                 # encounter invalid orientation
-                return False 
+                return False
     # end of process_ori
 
     # def convert(self):
-    #     # make average on first 10% of samples; minus average and multiply by 981 
+    #     # make average on first 10% of samples; minus average and multiply by 981
     #     self.data = 981*(self.data - np.average(self.data[0:int(self.samples*0.1)]))
-    #     pass 
+    #     pass
 
     # def process_smc_v1(self):
     #     """
-    #     The function process record by converting orientation and multiplying data 
+    #     The function process record by converting orientation and multiplying data
     #     """
-    #     # If the orientation was not set properly, it would be empty string by default 
+    #     # If the orientation was not set properly, it would be empty string by default
     #     # if not self.orientation:
-    #     #     pass 
+    #     #     pass
     #         # print "[ERROR]: invalid orientation"
-    #         # return False 
+    #         # return False
     #         # orientation = " "
     #     if self.orientation in [0, 360]:
     #         orientation = 'N'
@@ -345,18 +345,18 @@ class seism_record(seism_signal):
     #     elif self.orientation == "Down":
     #         orientation = 'Z'
     #         self.data = self.data*-1
-    #     elif isinstance(self.orientation, int): 
-    #         # orientation needed to be roated 
-    #          return True 
-    #     else: 
+    #     elif isinstance(self.orientation, int):
+    #         # orientation needed to be roated
+    #          return True
+    #     else:
     #         # invalid orientation
-    #         return False  
+    #         return False
 
-        # make average on first 10% of samples; minus average and multiply by 981 
+        # make average on first 10% of samples; minus average and multiply by 981
         # self.data = 981*(self.data - np.average(self.data))
         # self.data = 981*(self.data - np.average(self.data[0:int(self.samples*0.1)]))
-        # return 
-    #end process_smc_V1 
+        # return
+    #end process_smc_V1
 
 # end record class
 
@@ -366,12 +366,12 @@ class seism_record(seism_signal):
 class seism_psignal(seism_signal):
     """
     This class extends the seism_signal class to have addtitional
-    attributes for acceleration, velocity, and displacement data 
+    attributes for acceleration, velocity, and displacement data
     """
-    
+
     def __init__(self, *args, **kwargs):
         """
-        Correct order for unlabeled arguments is: samples, dt, data, signal type (eliminate), acceleration, velocity, displacement 
+        Correct order for unlabeled arguments is: samples, dt, data, signal type (eliminate), acceleration, velocity, displacement
         """
         super(seism_psignal, self).__init__(*args, **kwargs)
 
@@ -383,13 +383,13 @@ class seism_psignal(seism_signal):
 
         if len(args) > 0:
             args_range = range(len(args))
-            if 4 in args_range: 
+            if 4 in args_range:
                 self.set_accel(args[4])
-            if 5 in args_range: 
+            if 5 in args_range:
                 self.set_velo(args[5])
-            if 6 in args_range: 
+            if 6 in args_range:
                 self.set_displ(args[6])
-                return 
+                return
 
         if len(kwargs) > 0:
             if 'accel' in kwargs:
@@ -398,24 +398,24 @@ class seism_psignal(seism_signal):
                 self.set_velo(kwargs['velo'])
             if 'displ' in kwargs:
                 self.set_displ(kwargs['displ'])
-        return 
+        return
     #end __init__
 
     def set_accel(self, accel):
         # check if the data passed is a numpy array
-        if not isinstance(accel, np.ndarray): 
+        if not isinstance(accel, np.ndarray):
             print "[ERROR]: signal acceleration data - not a numpy array."
         self.accel = accel
     #end set_accel
 
     def set_velo(self, velo):
-        if not isinstance(velo, np.ndarray): 
+        if not isinstance(velo, np.ndarray):
             print "[ERROR]: signal velocity data - not a numpy array."
         self.velo = velo
     #end set_velo
 
     def set_displ(self, displ):
-        if not isinstance(displ, np.ndarray): 
+        if not isinstance(displ, np.ndarray):
             print "[ERROR]: signal displacement data - not a numpy array."
         self.displ = displ
     #end set_displ
@@ -424,25 +424,25 @@ class seism_psignal(seism_signal):
         print "===========================psignal========================================"
         print "samples: " + str(self.samples)
         print "dt: " + str(self.dt)
-        print "data type: " + self.type 
+        print "data type: " + self.type
         print self.data
         print self.accel
         print self.velo
         print self.displ
 
-#end seism_psignal class 
+#end seism_psignal class
 
 
 
 class seism_precord(seism_record):
     """
     This class extends the seism_record class to have addtitional
-    attributes for acceleration, velocity, and displacement data 
+    attributes for acceleration, velocity, and displacement data
     """
-    
+
     def __init__(self, *args, **kwargs):
         """
-        Correct order for unlabeled arguments is: samples, dt, data, signal type (eliminate), station, 
+        Correct order for unlabeled arguments is: samples, dt, data, signal type (eliminate), station,
         location_lati, location_longi, depth, date, time, orientation, acceleration, velocity, displacement
         """
         super(seism_precord, self).__init__(*args, **kwargs)
@@ -454,13 +454,13 @@ class seism_precord(seism_record):
 
         if len(args) > 0:
             args_range = range(len(args))
-            if 11 in args_range: 
+            if 11 in args_range:
                 self.set_accel(args[11])
-            if 12 in args_range: 
+            if 12 in args_range:
                 self.set_velo(args[12])
-            if 13 in args_range: 
+            if 13 in args_range:
                 self.set_displ(args[13])
-                return 
+                return
 
         if len(kwargs) > 0:
             if 'accel' in kwargs:
@@ -469,24 +469,24 @@ class seism_precord(seism_record):
                 self.set_velo(kwargs['velo'])
             if 'displ' in kwargs:
                 self.set_displ(kwargs['displ'])
-        return 
+        return
     #end __init__
-    
+
     def set_accel(self, accel):
         # check if the data passed is a numpy array
-        if not isinstance(accel, np.ndarray): 
+        if not isinstance(accel, np.ndarray):
             print "\n[ERROR]: signal acceleration data - not an numpy array.\n"
         self.accel = accel
     #end set_accel
 
     def set_velo(self, velo):
-        if not isinstance(velo, np.ndarray): 
+        if not isinstance(velo, np.ndarray):
             print "\n[ERROR]: signal velocity data - not an numpy array.\n"
         self.velo = velo
     #end set_velo
 
     def set_displ(self, displ):
-        if not isinstance(displ, np.ndarray): 
+        if not isinstance(displ, np.ndarray):
             print "\n[ERROR]: signal displacement data - not an numpy array.\n"
         self.displ = displ
     #end set_displ
@@ -495,16 +495,16 @@ class seism_precord(seism_record):
         print "=============================precord======================================"
         print "samples: " + str(self.samples)
         print "dt: " + str(self.dt)
-        print "data type: " + self.type 
+        print "data type: " + self.type
         print "station name: " + self.station_name
         print "station latitude: " + self.location_lati
         print "station longitude: " + self.location_longi
-        print "depth: ??" 
+        print "depth: ??"
         print "date: " + self.date
         print "time: " + self.time
-        print "hour: " + str(self.hour) 
-        print "minute: " + str(self.minute) 
-        print "seconds: " + str(self.seconds) 
+        print "hour: " + str(self.hour)
+        print "minute: " + str(self.minute)
+        print "seconds: " + str(self.seconds)
         print "fraction: " + str(self.fraction)
         print "tzone: " + self.tzone
         print "orientation: " + str(self.orientation)
@@ -516,7 +516,7 @@ class seism_precord(seism_record):
 # =================================================Class for Station===============================================================
 class seism_station(object):
     """
-    The station object contains a list of signals/psignals; with network number and station ID 
+    The station object contains a list of signals/psignals; with network number and station ID
     """
     def __init__(self, *args, **kwargs):
         # Initialize to default values
@@ -533,7 +533,7 @@ class seism_station(object):
             args_range = range(len(args))
             if 0 in args_range:
                 if self.set_list(args[0]) == False:
-                    return 
+                    return
             if 1 in args_range:
                 self.set_network(args[1])
             if 2 in args_range:
@@ -546,7 +546,7 @@ class seism_station(object):
         if len(kwargs) > 0:
             if 'list' in kwargs:
                 if self.set_list(kwargs['list']) == False:
-                    return 
+                    return
             if 'network' in kwargs:
                 self.set_network(kwargs['network'])
             if 'staion' in kwargs:
@@ -563,19 +563,19 @@ class seism_station(object):
     def set_list(self, record_list):
         if len(record_list) != 3:
             print "[ERROR]: The program handles stations with three channels ONLY. "
-            return False 
+            return False
 
         if not all(isinstance(record, seism_signal) for record in record_list):
             print "[ERROR]: list in station does not contain seism signals."
-            return False 
+            return False
 
         if all(isinstance(record, seism_record) for record in record_list):
             if not (record_list[0].orientation != record_list[1].orientation != record_list[2].orientation):
                 print "[ERROR]: conflict orientations."
-                return False 
+                return False
 
         self.list = record_list
-    # end of set_list 
+    # end of set_list
 
     def set_network(self, network):
         self.network = network
@@ -585,7 +585,7 @@ class seism_station(object):
 
     def set_type(self, filetype):
         filetype = filetype.upper()
-        if filetype in ['V1', 'V2']: 
+        if filetype in ['V1', 'V2']:
             self.type = filetype
 
     def set_name(self):
@@ -594,8 +594,8 @@ class seism_station(object):
                 self.name = self.list[0].station_name
             else:
                 print "[ERROR]: channels have different station names."
-                return 
-        return 
+                return
+        return
     # end of set_name
 
     def set_location(self):
@@ -608,33 +608,33 @@ class seism_station(object):
 
             else:
                 print "[ERROR]: channels have different location (latitude/longitude)."
-                return 
-        return 
+                return
+        return
     # end of set_location
 
 
     def rotate(self, record_list, flag):
         """
-        The function is to transfrom data for channels with special orientations. 
+        The function is to transfrom data for channels with special orientations.
         """
         tmp = []
         for record in record_list:
             if record.orientation != 'Up':
                 tmp.append(record)
                 record_list.remove(record)
-        if len(tmp) != 2: 
-            return False 
+        if len(tmp) != 2:
+            return False
         x = tmp[0].orientation
         y = tmp[1].orientation
-        if x > y: 
+        if x > y:
             list(reversed(tmp))
 
-        if flag == 'v1': 
-            # rotate 
+        if flag == 'v1':
+            # rotate
             matrix = np.array([(math.cos(math.radians(x)), -math.sin(math.radians(x))), (math.sin(math.radians(x)), math.cos(math.radians(x)))])
             data = matrix.dot([tmp[0].data, tmp[1].data])
 
-            # transform the first record with North orientation 
+            # transform the first record with North orientation
             tmp[0].data = data[0]
             tmp[0].orientation = 0
 
@@ -645,7 +645,7 @@ class seism_station(object):
             record_list += tmp
             return record_list
 
-        if flag == 'v2': 
+        if flag == 'v2':
             matrix = np.array([(math.cos(math.radians(x)), -math.sin(math.radians(x))), (math.sin(math.radians(x)), math.cos(math.radians(x)))])
             [tmp[0].accel, tmp[1].accel] = matrix.dot([tmp[0].accel, tmp[1].accel])
             [tmp[0].velo, tmp[1].velo] = matrix.dot([tmp[0].velo, tmp[1].velo])
@@ -663,36 +663,36 @@ class seism_station(object):
     # end of rotate
 
     def process_v1(self):
-        """The function is take a list of records get from V1 files; 
+        """The function is take a list of records get from V1 files;
         then use their data to all three types of data (acc, vel, dis),
-        then return a list of precords. 
+        then return a list of precords.
         """
-        rotate_flag = False 
+        rotate_flag = False
         precord_list = []
 
         for record in self.list:
-            # process data of record 
-            # if not record.orientation: 
+            # process data of record
+            # if not record.orientation:
             #     print record.orientation
             #     print "[ERROR]: invalid orientation."
-            #     return False 
+            #     return False
 
-            # record.convert() # convert the unit of data 
+            # record.convert() # convert the unit of data
             correct_baseline(record)
             scale_signal(record, 981)
 
 
-            # reverse the data by orientation 
-            if record.process_ori() == True: # if encounter special orientations. 
-                rotate_flag = True 
-                break 
-            elif record.process_ori() == False: # if encouter invalid orientations. 
-                return False 
+            # reverse the data by orientation
+            if record.process_ori() == True: # if encounter special orientations.
+                rotate_flag = True
+                break
+            elif record.process_ori() == False: # if encouter invalid orientations.
+                return False
 
-            if record.type == 'a': 
+            if record.type == 'a':
                 # get velocity and displacement
                 # window = taper('all', 20, record.samples)
-                # record.data =  record.data*window 
+                # record.data =  record.data*window
                 record.data = s_filter(record.data, record.dt, type = 'highpass', family = 'ellip')
 
                 velocity = integrate(record.data, record.dt)
@@ -700,42 +700,42 @@ class seism_station(object):
 
                 displacement = integrate(velocity, record.dt)
                 displacement = s_filter(displacement, record.dt, type = 'highpass', family = 'ellip')
-                
+
 
                 data = np.c_[displacement, velocity, record.data]
 
-                precord = seism_precord(record.samples, record.dt, data, 'c', record.station_name, accel = record.data, displ = displacement, velo = velocity, 
+                precord = seism_precord(record.samples, record.dt, data, 'c', record.station_name, accel = record.data, displ = displacement, velo = velocity,
                     orientation = record.orientation, date = record.date, time = record.time, depth = record.depth, latitude = record.location_lati, longitude = record.location_longi)
                 precord_list.append(precord)
 
-        # rotation 
+        # rotation
         if rotate_flag:
             record_list = self.rotate(self.list, 'v1')
-            if not record_list: 
-                return False 
-            else: 
+            if not record_list:
+                return False
+            else:
                 self.list = record_list
             return self.process_v1() # recursively calling the function to continue processing
-        
+
         self.list = precord_list
-        return True 
-    # end of process_v1 
+        return True
+    # end of process_v1
 
     def process_v2(self):
         """checks records from V2 files; rotate if necessary"""
-        rotate_flag = False 
-        for record in self.list: 
-            if (isinstance(record.orientation, int)) and (record.orientation not in [0, 360, 180, -180, 90, 270, -90, -270]): 
-                rotate_flag = True 
-                break 
+        rotate_flag = False
+        for record in self.list:
+            if (isinstance(record.orientation, int)) and (record.orientation not in [0, 360, 180, -180, 90, 270, -90, -270]):
+                rotate_flag = True
+                break
 
-        if rotate_flag: 
+        if rotate_flag:
             record_list = self.rotate(self.list, 'v2')
-            if not record_list: 
-                return False 
-            else: 
+            if not record_list:
+                return False
+            else:
                 self.list = record_list
-                return True 
+                return True
     # end of process_v2
 
 #end station class

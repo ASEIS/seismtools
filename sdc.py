@@ -15,32 +15,6 @@ def get_destination(d):
     destination = d
 # end of get_destination
 
-
-def load_event(eventfile):
-	"""The function is to read the event file and get information about the event."""
-	if not eventfile.lower().endswith('evnt'):
-		print "[ERROR]: load event file only. "
-		return
-	try:
-		fp = open(eventfile)
-	except IOError, e:
-		print e
-		pass
-	header = fp.read().split()
-	print header
-	event_id = header[0]
-	tmp = header[2].split(',')
-	date = tmp[0]
-	time = tmp[1]
-
-	latitude = header[3]
-	longitude = header[4]
-# end of load_event
-
-
-
-
-
 def load_file(filename):
 	"""
 	The function is to read general 1-column text files. Return a signal object.

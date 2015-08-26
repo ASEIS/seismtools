@@ -10,9 +10,9 @@ from stools import *
 destination = ''
 header = ''
 def get_destination(d):
-    """The function is to get the user input from process.py."""
-    global destination
-    destination = d
+	"""The function is to get the user input from process.py."""
+	global destination
+	destination = d
 # end of get_destination
 
 def load_file(filename):
@@ -186,96 +186,96 @@ def synchronize(stamps, signals):
 # end of synchronize
 
 def print_her(file_dict):
-    """
-    The function generates .her files for each station (with all three channels included)
-    """
-    global destination
-    global header
-     # if there are more than three channels, save for later
-    if len(file_dict) > 3:
-        print "==[The function is processing files with 3 channels only.]=="
-        return False
+	"""
+	The function generates .her files for each station (with all three channels included)
+	"""
+	global destination
+	global header
+	 # if there are more than three channels, save for later
+	if len(file_dict) > 3:
+		print "==[The function is processing files with 3 channels only.]=="
+		return False
 
-    # compose filename
-    filename = file_dict['N'].split('/')[-1]
-    filename = filename.replace((filename.split('.')[0]+'.'), '') #remove event ID
-    filename = filename.replace('N.ascii', '.her')
+	# compose filename
+	filename = file_dict['N'].split('/')[-1]
+	filename = filename.replace((filename.split('.')[0]+'.'), '') #remove event ID
+	filename = filename.replace('N.ascii', '.her')
 
-    try:
-        f = open(destination + '/' + filename, 'w')
-    except IOError, e:
-        print e
+	try:
+		f = open(destination + '/' + filename, 'w')
+	except IOError, e:
+		print e
 
-    # load files in dictionary; generate siganls
-    signal_ns, time_ns = load_file(file_dict['N'])
-    signal_ew, time_ew = load_file(file_dict['E'])
-    signal_up, time_up = load_file(file_dict['Z'])
+	# load files in dictionary; generate siganls
+	signal_ns, time_ns = load_file(file_dict['N'])
+	signal_ew, time_ew = load_file(file_dict['E'])
+	signal_up, time_up = load_file(file_dict['Z'])
 
-    # synchronize signals
-    if not (signal_ns.samples == signal_ew.samples == signal_up.samples):
-    	signals = [signal_ns, signal_ew, signal_up]
-    	stamps = [time_ns, time_ew, time_ew]
-    	new_stamp, [signal_ns, signal_ew, signal_up] = synchronize(stamps, signals)
+	# synchronize signals
+	if not (signal_ns.samples == signal_ew.samples == signal_up.samples):
+		signals = [signal_ns, signal_ew, signal_up]
+		stamps = [time_ns, time_ew, time_ew]
+		new_stamp, [signal_ns, signal_ew, signal_up] = synchronize(stamps, signals)
 
-    	# update header
-    	tmp = header.split(' ')
-    	tmp[-2] = str(signal_ns.samples)
-    	tmp[-3] = tmp[-3].split(',')[0]+','+new_stamp
-    	# tmp[-3].split(',')[-1] = new_stamp
-    	header = ''
-    	for i in range(0, len(tmp)):
-    		header += tmp[i] + ' '
-    	# header += '\n'
+		# update header
+		tmp = header.split(' ')
+		tmp[-2] = str(signal_ns.samples)
+		tmp[-3] = tmp[-3].split(',')[0]+','+new_stamp
+		# tmp[-3].split(',')[-1] = new_stamp
+		header = ''
+		for i in range(0, len(tmp)):
+			header += tmp[i] + ' '
+		# header += '\n'
 
-    # process signals
-    signal_ns = process(signal_ns)
-    signal_ew = process(signal_ew)
-    signal_up = process(signal_up)
-
-
-    dis_ns = signal_ns.displ.tolist()
-    vel_ns = signal_ns.velo.tolist()
-    acc_ns = signal_ns.accel.tolist()
-    dis_ew = signal_ew.displ.tolist()
-    vel_ew = signal_ew.velo.tolist()
-    acc_ew = signal_ew.accel.tolist()
-    dis_up = signal_up.displ.tolist()
-    vel_up = signal_up.velo.tolist()
-    acc_up = signal_up.accel.tolist()
-
-    # print len(dis_ns)
-    # print len(vel_ns)
-    # print len(acc_ns)
-    # print len(dis_ew)
-    # print len(vel_ew)
-    # print len(acc_ew)
-    # print len(dis_up)
-    # print len(vel_up)
-    # print len(acc_up)
+	# process signals
+	signal_ns = process(signal_ns)
+	signal_ew = process(signal_ew)
+	signal_up = process(signal_up)
 
 
-    # get a list of time incremented by dt
-    time = [0.000]
-    samples = signal_ns.samples
-    dt = signal_ns.dt
-    tmp = samples
+	dis_ns = signal_ns.displ.tolist()
+	vel_ns = signal_ns.velo.tolist()
+	acc_ns = signal_ns.accel.tolist()
+	dis_ew = signal_ew.displ.tolist()
+	vel_ew = signal_ew.velo.tolist()
+	acc_ew = signal_ew.accel.tolist()
+	dis_up = signal_up.displ.tolist()
+	vel_up = signal_up.velo.tolist()
+	acc_up = signal_up.accel.tolist()
 
-    while tmp > 1:
-        time.append(time[len(time)-1] + dt)
-        tmp -= 1
+	# print len(dis_ns)
+	# print len(vel_ns)
+	# print len(acc_ns)
+	# print len(dis_ew)
+	# print len(vel_ew)
+	# print len(acc_ew)
+	# print len(dis_up)
+	# print len(vel_up)
+	# print len(acc_up)
 
-    network = filename.split('.')[1]
-    station = filename.split('.')[2]
-    info = filename.split('.')[3]
 
-    f.write(header)
+	# get a list of time incremented by dt
+	time = [0.000]
+	samples = signal_ns.samples
+	dt = signal_ns.dt
+	tmp = samples
 
-    descriptor = '{:>12}' + '  {:>12}'*9 + '\n'
-    f.write(descriptor.format("# time", "dis_ns", "dis_ew", "dis_up", "vel_ns", "vel_ew", "vel_up", "acc_ns", "acc_ew", "acc_up")) # header
+	while tmp > 1:
+		time.append(time[len(time)-1] + dt)
+		tmp -= 1
 
-    descriptor = '{:>12.3f}' + '  {:>12.7f}'*9 + '\n'
-    for c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 in zip(time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up):
-        f.write(descriptor.format(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 ))
-    f.close()
-    print "*Generated .her file at: " + destination + "/" + filename
+	network = filename.split('.')[1]
+	station = filename.split('.')[2]
+	info = filename.split('.')[3]
+
+	f.write(header)
+
+	descriptor = '{:>12}' + '  {:>12}'*9 + '\n'
+	f.write(descriptor.format("# time", "dis_ns", "dis_ew", "dis_up", "vel_ns", "vel_ew", "vel_up", "acc_ns", "acc_ew", "acc_up")) # header
+
+	descriptor = '{:>12.3f}' + '  {:>12.7f}'*9 + '\n'
+	for c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 in zip(time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up):
+		f.write(descriptor.format(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 ))
+	f.close()
+	print "*Generated .her file at: " + destination + "/" + filename
 #end of print_her

@@ -265,7 +265,7 @@ def seism_cutting(flag, t_diff, m, signal, signal_flag):
 
 	num = int(t_diff/signal.dt)
 
-	if flag == 'front':
+	if flag == 'front' and num != 0:
 		# cutting signal
 		if signal_flag == True:
 			signal.data = signal.data[num:]
@@ -288,7 +288,7 @@ def seism_cutting(flag, t_diff, m, signal, signal_flag):
 		signal.displ = signal.displ*window
 
 
-	elif flag == 'end':
+	elif flag == 'end' and num != 0:
 		num *= -1
 		 # cutting signal
 		if signal_flag == True:

@@ -626,6 +626,10 @@ class seism_station(object):
             return False
         x = tmp[0].orientation
         y = tmp[1].orientation
+
+        if abs(x-y) != 90:
+            return False
+
         if x > y:
             list(reversed(tmp))
 

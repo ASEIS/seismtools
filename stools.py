@@ -67,16 +67,18 @@ def s_filter(*args, **kwargs):
 			fmax = kwargs['fmax']
 			w_max = fmax/((1.0/dt)/2.0)
 
-		if fmin and fmax:
+		if fmin and fmax and btype == 'bandpass':
 			Wn = [w_min, w_max]
-		elif fmax:
+		elif fmax and btype == 'lowpass':
 			Wn = w_max
+		elif fmin and btype == 'highpass':
+			Wn = w_min
 
 		# calling filter
 		if kwargs['family'] == 'ellip':
-			b, a = fami[kwargs['family']](N = N, rp = rp, rs = rs, Wn = Wn, btype = btype, analog=False)
+			b, a = ellip(N = N, rp = rp, rs = rs, Wn = Wn, btype = btype, analog=False)
 		elif kwargs['family'] == 'butter':
-			b, a = fami[kwargs['family']](N = N, Wn = Wn, btype = btype, analog=False)
+			b, a = butter(N = N, Wn = Wn, btype = btype, analog=False)
 
 		data = filtfilt(b, a, data)
 		return data
@@ -281,7 +283,7 @@ def seism_cutting(flag, t_diff, m, signal, signal_flag):
 		signal.displ = signal.displ[num:]
 		signal.samples -= num
 
-		# applying taper in the front
+		# applying taper at the front
 		window = taper('front', m, signal.samples)
 		signal.accel = signal.accel*window
 		signal.velo = signal.velo*window
@@ -304,7 +306,7 @@ def seism_cutting(flag, t_diff, m, signal, signal_flag):
 		signal.displ = signal.displ[:num]
 		signal.samples += num
 
-		# applying taper in the front
+		# applying taper at the end
 		window = taper('end', m, signal.samples)
 		signal.accel = signal.accel*window
 		signal.velo = signal.velo*window

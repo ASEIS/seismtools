@@ -88,7 +88,8 @@ def process(signal):
 		print "[ERROR]: instance error; process signal objects only. "
 		return
 
-	correct_baseline(signal)
+	# Correction of base lines was commented out here to avoid problems with synchronization
+	# correct_baseline(signal)
 
 	acc = np.array([],float)
 	vel = np.array([],float)
@@ -98,38 +99,31 @@ def process(signal):
 	if signal.type == 'a':
 
 		acc = signal.data
-		# window = taper('all', 20, signal.samples)
-		# acc = acc*window
+		acc = s_filter(acc, signal.dt, type = 'highpass', family = 'butter', fmin = 0.05, N = 5)
 
 		vel = integrate(acc, dt)
-		vel = s_filter(vel, signal.dt, type = 'highpass', family = 'ellip')
+		vel = s_filter(vel, signal.dt, type = 'highpass', family = 'butter', fmin = 0.05, N = 5)
 
 		dis = integrate(vel, dt)
-		dis = s_filter(dis, signal.dt, type = 'highpass', family = 'ellip')
+		dis = s_filter(dis, signal.dt, type = 'highpass', family = 'butter', fmin = 0.05, N = 5)
 
 	elif signal.type == 'v':
-		vel = signal.data
-		# window = taper('all', 20, signal.samples)
-		# vel = vel*window
 
+		vel = signal.data
+		vel = s_filter(vel, signal.dt, type = 'highpass', family = 'butter', fmin = 0.05, N = 5)
 
 		acc = derivative(vel, dt)
-		acc = s_filter(acc, signal.dt, type = 'highpass', family = 'ellip')
 
 		dis = integrate(vel, dt)
-		dis = s_filter(dis, signal.dt, type = 'highpass', family = 'ellip')
-
+		dis = s_filter(dis, signal.dt, type = 'highpass', family = 'butter', fmin = 0.05, N = 5)
 
 	elif signal.type == 'd':
+
 		dis = signal.data
-		# window = taper('all', 20, signal.samples)
-		# dis = dis*window
+		dis = s_filter(dis, signal.dt, type = 'highpass', family = 'butter', fmin = 0.05, N = 5)
 
 		vel = derivative(dis, dt)
-		vel = s_filter(vel, signal.dt, type = 'highpass', family = 'ellip')
-
 		acc = derivative(vel, dt)
-		acc = s_filter(acc, signal.dt, type = 'highpass', family = 'ellip')
 
 	else:
 		pass
@@ -210,6 +204,11 @@ def print_her(file_dict):
 	signal_ns, time_ns = load_file(file_dict['N'])
 	signal_ew, time_ew = load_file(file_dict['E'])
 	signal_up, time_up = load_file(file_dict['Z'])
+
+	# correct baselines before synchronizing times to avoid issues with tappers (if any)
+	correct_baseline(signal_ns)
+	correct_baseline(signal_ew)
+	correct_baseline(signal_up)
 
 	# synchronize signals
 	if not (signal_ns.samples == signal_ew.samples == signal_up.samples):

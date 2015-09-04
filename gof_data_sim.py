@@ -84,44 +84,47 @@ def get_fmax():
 	return fmax
 # end of get_fmax
 
-def interp(data, t, samples, dt):
+def interp(data, samples, old_dt, new_dt):
 	""" call interpolate on given data """
-	# print t.size
-	# print data.size
-	# print samples
-	f = interpolate.interp1d(t, data, 'linear', bounds_error = False)
-	new_t = np.arange(0, samples*dt, dt)
-	if new_t.size != samples:
-		new_t = new_t[:-1]
+	old_t = np.arange(0, samples*old_dt, old_dt)
+	if old_t.size == samples+1:
+		old_t = old_t[:-1]
+
+	f = interpolate.interp1d(old_t, data, 'linear', bounds_error = False)
+
+	new_t = np.arange(0, samples*old_dt, new_dt)
 	new_data = f(new_t)
 
+	# eliminate NaN values
+	for i in range(1, new_data.size-1):
+		if np.isnan(new_data[i]):
+			if not np.isnan(new_data[i+1]):
+				new_data[i] = (new_data[i-1] + new_data[i+1])/2
+			else:
+				new_data[i] = new_data[i-1]
+
+	if np.isnan(new_data[-1]):
+		new_data[-1] = new_data[-2]
 	# using plot to test
 	# plt.plot(t,data,'r',new_t,new_data,'b')
 	# plt.show()
 
-	# print data.size
-	# print new_data.size
-	# print samples
 	return new_data
 # end of interpolate
 
 def process(signal, dt, fmax):
 	""" processes signal with common dt and fmax."""
 	# call low_pass filter at fmax
-	signal.accel = s_filter(signal.accel, dt, type = 'lowpass', family = 'ellip', max = fmax, N = 3, rp = 0.1, rs = 100)
-	signal.velo = s_filter(signal.velo, dt, type = 'lowpass', family = 'ellip', fmax = fmax, N = 3, rp = 0.1, rs = 100)
-	signal.displ = s_filter(signal.displ, dt, type = 'lowpass', family = 'ellip', fmax = fmax, N = 3, rp = 0.1, rs = 100)
+	signal.accel = s_filter(signal.accel, signal.dt, type = 'lowpass', family = 'butter', fmax = fmax, N = 4, rp = 0.1, rs = 100)
+	signal.velo  = s_filter(signal.velo,  signal.dt, type = 'lowpass', family = 'butter', fmax = fmax, N = 4, rp = 0.1, rs = 100)
+	signal.displ = s_filter(signal.displ, signal.dt, type = 'lowpass', family = 'butter', fmax = fmax, N = 4, rp = 0.1, rs = 100)
 
 	# interpolate
-	t = np.arange(0, signal.samples*signal.dt, signal.dt)
-	if t.size > signal.samples:
-		t = t[:-1]
-	# print t.size
-	# t = t[1:]
-	signal.accel = interp(signal.accel, t, signal.samples, dt)
-	signal.velo = interp(signal.velo, t, signal.samples, dt)
-	signal.displ = interp(signal.displ, t, signal.samples, dt)
+	signal.accel = interp(signal.accel, signal.samples, signal.dt, dt)
+	signal.velo  = interp(signal.velo,  signal.samples, signal.dt, dt)
+	signal.displ = interp(signal.displ, signal.samples, signal.dt, dt)
 
+	signal.samples = signal.accel.size
 	signal.dt = dt
 
 	return signal
@@ -143,9 +146,9 @@ def process_dt(station1, station2):
 # ===============================================================================================================
 def get_earthq():
 	"""get the earthquake start time"""
-	time =  raw_input("== Enter the earthquake start time (#:#:#.#): ").replace('.', ':')
+	time =  raw_input("== Enter the earthquake start time (#:#:#.#): ")
 	time = time.split(':')
-	if len(time) < 4:
+	if len(time) < 3:
 		print "[ERROR]: invalid time format."
 		return get_earthq()
 	else:
@@ -173,49 +176,27 @@ def get_leading():
 	# return lt
 # end of get_leading
 
-# def cut_signal(t_diff, signal):
-# 	if not isinstance(signal, seism_psignal):
-# 		return signal
-# 	num = int(t_diff/signal.dt)
-# 	signal.samples -= num
-# 	signal.accel = signal.accel[num:]
-# 	signal.velo = signal.velo[num:]
-# 	signal.displ = signal.displ[num:]
-# 	return signal
-
-# def add_signal(t_diff, signal):
-# 	if not isinstance(signal, seism_psignal):
-# 		return signal
-# 	num = int(t_diff/signal.dt)
-# 	zeros = np.zeros(num)
-# 	signal.samples += num
-
-# 	signal.accel = np.append(zeros, signal.accel)
-# 	signal.velo = np.append(zeros, signal.velo)
-# 	signal.displ = np.append(zeros, signal.displ)
-
-# 	return signal
-
 
 def synchronize(station1, station2, stamp):
 	"""synchronize the stating time and ending time of data arrays in two signals
 	signal1 = data signal; signal2 = simulation signal """
 	if not stamp:
 		return station1, station2
-		# stamp = [0, 0, 0, 0]
 	print stamp
 
 	eq = get_earthq()
 	lt = get_leading()
 
 	# time in sec = hr*3600 + min*60 + sec + frac*0.1
-	start = stamp[0]*3600 + stamp[1]*60 + stamp[2] + stamp[3]*0.1
-	eq_time = eq[0]*3600 + eq[1]*60 + eq[2] + eq[3]*0.1
+	start = stamp[0]*3600 + stamp[1]*60 + stamp[2]
+	eq_time = eq[0]*3600 + eq[1]*60 + eq[2]
 	sim_start = eq_time - lt
 
 	for i in range(0, 3):
 		signal1 = station1[i]
 		signal2 = station2[i]
+		samples1 = signal1.samples
+		samples2 = signal2.samples
 
 		dt = signal1.dt # same dt of two signals
 		samples = signal1.samples # original samples
@@ -223,50 +204,40 @@ def synchronize(station1, station2, stamp):
 		# synchronize the start time
 		if start < sim_start:
 			# data time < sim time < earthquake time; cutting data array
-			# signal1 = cut_signal((sim_start - start), signal1)
 			signal1 = seism_cutting('front', (sim_start - start), 20, signal1, False)
 
 		elif start > eq_time:
 			# sim time < earthquake time < data time; adding zeros in front
 			signal1 = seism_appendzeros('front', (start - eq_time), 20, signal1)
 			signal2 = seism_cutting('front', (eq_time - sim_start), 20, signal2, False)
-			# signal1 = add_signal((start - eq_time), signal1)
-			# signal2 = cut_signal((eq_time - sim_start), signal2)
 
 		else:
 			# sim time < data time < earthquake time; adding zeros
-			# signal1 = add_signal((start - sim_start), signal1)
 			signal1 = seism_appendzeros('front', (start - sim_start), 20, signal1)
 
 
 		# synchronize the ending time
-		data_time = dt * samples # total time of data signal
+		data_time = dt * samples1 # total time of data signal
 		end = start + data_time
-		sim_time = dt * samples # total simulation time
+		sim_time = dt * samples2 # total simulation time
 		sim_end = sim_start + sim_time
 
 		if sim_end < end:
 			# adding zeros in simulation signal
-			signal2 = seism_appendzeros('end', (end - sim_end), 20, signal2)
-			# num = int((end - sim_end)/dt)
-			# zeros = np.zeros(num)
-			# signal2.samples += num
-
-			# signal2.accel = np.append(signal2.accel, zeros)
-			# signal2.velo = np.append(signal2.velo, zeros)
-			# signal2.displ = np.append(signal2.displ, zeros)
+			# signal2 = seism_appendzeros('end', (end - sim_end), 20, signal2)
+			signal1 = seism_cutting('end', (end - sim_end), 20, signal1, False)
 
 		elif end < sim_end:
 			# cutting from simulation signal
 			signal2 = seism_cutting('end', (sim_end - end), 20, signal2, False)
-			# num = int((sim_end - end)/dt)
-			# signal2.samples -= num
-			# num *= -1
-			# signal2.accel = signal2.accel[:num]
-			# signal2.velo = signal2.velo[:num]
-			# signal2.displ = signal2.displ[:num]
 		else:
 			pass
+
+		# scale the data if they have one sample in difference after synchronizing
+		if signal1.samples == signal2.samples+1:
+			seism_appendzeros('end', signal2.dt, 20, signal2)
+		elif signal2.samples == signal1.samples+1:
+			seism_appendzeros('end', signal1.dt, 20, signal1)
 
 
 		station1[i] = signal1

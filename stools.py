@@ -266,6 +266,9 @@ def seism_cutting(flag, t_diff, m, signal, signal_flag):
 	#     return signal
 
 	num = int(t_diff/signal.dt)
+	if num >= signal.samples:
+		print "[ERROR]: fail to cut signal."
+		return signal
 
 	if flag == 'front' and num != 0:
 		# cutting signal

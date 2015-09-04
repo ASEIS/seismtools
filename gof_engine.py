@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # ===================================================================================
-# The program receives two stations, each contains three signals,  
-# then calculates signals' scores with different sample rates; 
-# and generate 3D matrix for scores. 
+# The program receives two stations, each contains three signals,
+# then calculates signals' scores with different sample rates;
+# and generate 3D matrix for scores.
 # ===================================================================================
 from __future__ import division
 import sys
 import os
 import numpy as np
-import math 
+import math
 from seism import *
 from stools import *
 
@@ -24,13 +24,12 @@ def update():
 def filter_data(psignal, fmin, fmax):
 	if not isinstance(psignal, seism_psignal):
 		print "[ERROR]: encounter error filting psignal."
-		return False 
-	dt = psignal.dt 
+		return False
+	dt = psignal.dt
+	psignal.accel = s_filter(psignal.accel, dt, type = 'bandpass', family = 'butter', fmin = fmin, fmax = fmax, N = 4, rp = 0.1, rs = 100)
+	psignal.velo  = s_filter(psignal.velo,  dt, type = 'bandpass', family = 'butter', fmin = fmin, fmax = fmax, N = 4, rp = 0.1, rs = 100)
+	psignal.displ = s_filter(psignal.displ, dt, type = 'bandpass', family = 'butter', fmin = fmin, fmax = fmax, N = 4, rp = 0.1, rs = 100)
 
-	psignal.accel = s_filter(psignal.accel, dt, type = 'bandpass', family = 'ellip', fmin = fmin, fmax = fmax, N = 3, rp = 0.1, rs = 100) 
-	psignal.velo = s_filter(psignal.velo, dt, type = 'bandpass', family = 'ellip', fmin = fmin, fmax = fmax, N = 3, rp = 0.1, rs = 100) 
-	psignal.displ = s_filter(psignal.displ, dt, type = 'bandpass', family = 'ellip', fmin = fmin, fmax = fmax, N = 3, rp = 0.1, rs = 100) 
-	
 	psignal.data = np.c_[psignal.displ, psignal.velo, psignal.accel]
 
 	return psignal
@@ -38,21 +37,21 @@ def filter_data(psignal, fmin, fmax):
 def S(p1, p2):
 	# S(p1, p2) = 10*exp{-[(p1-p2)/min(p1, p2)]^2}
 	if min(p1, p2) == 0:
-		return 10 
+		return 10
 	s = 10*np.exp(-((p1-p2)/min(p1, p2))**2)
-	return s 
+	return s
 
 
 def cal_peak(data1, data2):
 	"""
 	calculate the socres for peak acc/vel/dis.
-	score = S(max|data1|, max|data2|) 
+	score = S(max|data1|, max|data2|)
 	"""
 	update()
 	p1 = np.amax(np.absolute(data1))
 	p2 = np.amax(np.absolute(data2))
 	score = S(p1, p2)
-	return p1, p2, score 
+	return p1, p2, score
 
 def I(data, dt):
 	# I(t) = max|integral(data^2)dt|
@@ -60,14 +59,14 @@ def I(data, dt):
 
 def cal_SI(data1, data2, dt):
 	"""
-	score = S(IA1, IA2) for Arias intensity 
-	score = S(IE1, IE2) for Energy integral 
+	score = S(IA1, IA2) for Arias intensity
+	score = S(IE1, IE2) for Energy integral
 	"""
 	update()
 	I1 = I(data1, dt)
 	I2 = I(data2, dt)
 	SI = S(I1, I2)
-	return I1, I2, SI 
+	return I1, I2, SI
 
 
 def N(data, dt):
@@ -85,7 +84,7 @@ def cal_SD(data1, data2, dt):
 	N2 = N(data2, dt)
 	SD = 10*(1-np.amax(F(N1, N2)))
 
-	return SD 
+	return SD
 
 
 def cal_Sfs(signal1, signal2, fmin, fmax):
@@ -102,13 +101,13 @@ def cal_Sfs(signal1, signal2, fmin, fmax):
 	for i in range(0, fs1.size):
 		s = np.append(s, S(fs1[i], fs2[i]))
 
-	# print s.size 
+	# print s.size
 	Sfs = np.mean(s)
 	return Sfs
 
 def cal_C(a1, a2, dt):
 	"""
-	calculate the score for Cross Correlation 
+	calculate the score for Cross Correlation
 	C* = 10*max(C(a1, a2), 0)
 	C = integral(a1, a2)dt/((integral(a1^2)dt^1/2)*(integral(a2^2)dt^1/2))
 	"""
@@ -119,7 +118,7 @@ def cal_C(a1, a2, dt):
 	c = x/(np.power(y, 0.5)*np.power(z, 0.5))
 	cc = 10*np.amax(c, 0)
 	cc = abs(cc)
-	return cc 
+	return cc
 
 
 def cal_Ssa(signal1, signal2, fmin, fmax):
@@ -147,16 +146,16 @@ def duration(signal):
 	E = I(data, dt)
 	E5 = 0.05*E
 	E95 = 0.95*E
-	T5 = 0 
-	T95 = 0 
+	T5 = 0
+	T95 = 0
 
 	energy = np.cumsum(data*data)*dt
 	for i in range(1, energy.size):
 		if energy[i-1] <= E5 <= energy[i]:
-			T5 = i 
+			T5 = i
 		if energy[i-1] <= E95 <= energy[i]:
-			T95 = i 
-			break 
+			T95 = i
+			break
 
 	D = (T95-T5)*dt
 	return D
@@ -175,7 +174,7 @@ def cal_D(signal1, signal2):
 
 def scores_matrix(station1, station2, bands):
 	"""
-	Generate the 3D matrix of scores 
+	Generate the 3D matrix of scores
 	"""
 	print "...Generating main matrix..."
 	bands.insert(0, bands[len(bands)-1])
@@ -185,28 +184,34 @@ def scores_matrix(station1, station2, bands):
 	parameter = np.empty((3, 12))
 
 	for i in range(1, len(station1)+1):
-		for j in range(0, len(bands)-1): 
+		signal1 = station1[i-1]
+		signal2 = station2[i-1]
+		for j in range(0, len(bands)-1):
 
 			if j == 0:
 				# BB-Bn
 				fmin = bands[j+1]
 				fmax = bands[j]
-			else: 
+			else:
 				# Bn-Bn+1
 				fmin = bands[j]
 				fmax = bands[j+1]
-			# print fmin, fmax 
+			# print fmin, fmax
 
-
-			signal1 = station1[i-1]
-			signal2 = station2[i-1]
+			t = np.arange(0, signal1.samples*signal1.dt, signal1.dt)
+			plt.plot(t,signal1.accel,'r',t,signal2.accel,'b')
+			plt.show()
 
 			# filtering data
 			signal1 = filter_data(signal1, fmin, fmax)
 			signal2 = filter_data(signal2, fmin, fmax)
 
+			t = np.arange(0, signal1.samples*signal1.dt, signal1.dt)
+			plt.plot(t,signal1.accel,'r',t,signal2.accel,'b')
+			plt.show()
 
-			dt = signal1.dt 
+
+			dt = signal1.dt
 
 			c1 = cal_SD(signal1.accel, signal2.accel, dt)
 			c2 = cal_SD(signal1.velo, signal2.velo, dt)
@@ -216,7 +221,7 @@ def scores_matrix(station1, station2, bands):
 			e1, e2, c4 = cal_SI(signal1.velo, signal2.velo, dt)
 
 
-			# parameter1, parameter2, score for peak data 
+			# parameter1, parameter2, score for peak data
 			pga1, pga2, c5 = cal_peak(signal1.accel, signal2.accel)
 			pgv1, pgv2, c6 = cal_peak(signal1.velo, signal2.velo)
 			pgd1, pgd2, c7 = cal_peak(signal1.displ, signal2.displ)
@@ -229,23 +234,23 @@ def scores_matrix(station1, station2, bands):
 			d1, d2, c11 = cal_D(signal1, signal2)
 
 			scores = np.array([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11], float)
-			T = ((c1+c2)/2 + (c3+c4)/2 + c5 + c6 + c7 + c8 + c9 + c10 + c11)/9 
-			A = (c1+c2+c3+c4+c5+c6+c7+c8+c9+c10)/10 
+			T = ((c1+c2)/2 + (c3+c4)/2 + c5 + c6 + c7 + c8 + c9 + c10 + c11)/9
+			A = (c1+c2+c3+c4+c5+c6+c7+c8+c9+c10)/10
 			scores = np.insert(scores, 0, T)
 			scores = np.insert(scores, 1, A)
 			scores = np.around(scores, decimals=2)
 
-			matrix[i][j] = scores 
+			matrix[i][j] = scores
 
-			# getting parameters used to calculate peak, AI, EI, and duration 
-			# for broad band only 
-			if j == 1: 
+			# getting parameters used to calculate peak, AI, EI, and duration
+			# for broad band only
+			if j == 1:
 				parameter[i-1] = np.array([pgd1, pgd2, pgv1, pgv2, pga1, pga2, a1, a2, e1, e2, d1, d2], float)
 
 		SA = np.array([],float)
 		CA = np.array([],float)
 
-		# calculate the average score of all bands 
+		# calculate the average score of all bands
 		for j in range(0, 13):
 			# SA = avg(B1...Bn)
 			avg2 = np.average(matrix[i][:,j][1:len(bands)-1])
@@ -261,17 +266,17 @@ def scores_matrix(station1, station2, bands):
 		matrix[i][-2] = SA
 
 
-	# insert the slide contain all AVERAGE values in front 
+	# insert the slide contain all AVERAGE values in front
 	for i in range(0, len(bands)+1):
 		for j in range(0, 13):
 			average = (matrix[1][i][j] + matrix[2][i][j] + matrix[3][i][j])/3
 			matrix[0][i][j] = round(average, 2)
-	
+
 	return parameter, matrix
 
 def summary(matrix):
-	""" generate a summary matrix contain average scores 
-		calculated with different methods. 
+	""" generate a summary matrix contain average scores
+		calculated with different methods.
 		including SA_A; CA_A; SA_T; CA_T """
 	s = np.empty((4, 4))
 	SA_A = CA_A = SA_T = CA_T = 0.0
@@ -282,8 +287,8 @@ def summary(matrix):
 		CA_T = matrix[i][-1][0]
 
 		avg = np.array([SA_A, CA_A, SA_T, CA_T], float)
-		s[i] = avg 
-	return s 
+		s[i] = avg
+	return s
 # end of summary
 
 def parameter_to_list(parameter):
@@ -291,24 +296,24 @@ def parameter_to_list(parameter):
 	p = []
 	for i in range(0, 12):
 		para = parameter[:,i]
-		# get the maximum of peak values 
+		# get the maximum of peak values
 		if 0 <= i < 6:
 			p.append(max(para[0], para[1], para[2]))
 
 		for j in range(0, 3):
 			p.append(para[j])
-	
+
 	# p = [PGD1, PGDNS1, PGDEW1, PGDUD1, PGD2, PGDNS2, PGDEW2, PGDUD2, PGV1, PGVNS1, PGVEW1....]
-	return p 
+	return p
 # end of parameter_to_list
 
-# =================================================================== PRINTING ===================================================================
+# =========================================================== PRINTING ============================================================
 def print_matrix(path, matrix):
 	""" generate the file containing the score matrix of two files. """
-	# header = "# GOF " + file1 + ' ' + file2 
+	# header = "# GOF " + file1 + ' ' + file2
 	s = summary(matrix)
 	label = ['AVG', 'N', 'E', 'UP']
-	# reading data of summary matrix by column 
+	# reading data of summary matrix by column
 	SA_A = s[:,0]
 	CA_A = s[:,1]
 	SA_T = s[:,2]
@@ -317,11 +322,11 @@ def print_matrix(path, matrix):
 		f = open(path, 'w')
 	except IOError, e:
 		print e
-		# return 
-	
-	# printing summary matrix 
+		# return
+
+	# printing summary matrix
 	descriptor = '{:>12}' + '  {:>12}'*4 + '\n'
-	f.write(descriptor.format("# Total Average", "SA_A", "CA_A", "SA_T", "CA_T")) 
+	f.write(descriptor.format("# Total Average", "SA_A", "CA_A", "SA_T", "CA_T"))
 
 	descriptor = '{:>12}' + '  {:>12.2f}'*4 + '\n'
 	for l, s1, c1, s2, c2 in zip(label, SA_A, CA_A, SA_T, CA_T):
@@ -329,9 +334,9 @@ def print_matrix(path, matrix):
 
 	f.write('# ----------------------------------------------------------------------------------------------\n')
 
-	# generte row and column labels 
-	num_b = len(matrix[0])-2 
-	c_label = "BB" 
+	# generte row and column labels
+	num_b = len(matrix[0])-2
+	c_label = "BB"
 	for i in range(1, num_b):
 		c_label += ',B'+str(i)
 	c_label += ",SA,CA"
@@ -344,17 +349,17 @@ def print_matrix(path, matrix):
 	d1 = '{:>12}' + '  {:>12}'*(num_b+2) + '\n'
 	d2 = '{:>12}' + '  {:>12.2f}'*(num_b+2)+'\n'
 
-	# printing matrix 
+	# printing matrix
 	for i in range(0, len(matrix)):
 		c_label[0] = '# '+label1[i]
-		f.write(d1.format(*c_label)) 
+		f.write(d1.format(*c_label))
 
 		for s in zip(r_label, *matrix[i]):
 			f.write(d2.format(*s))
 		f.write('# ----------------------------------------------------------------------------------------------\n')
 	f.close()
 
-	pass 
+	pass
 # end of print_matrix
 
 def print_scores(filenames, coord, path, parameter, matrix):
@@ -372,10 +377,10 @@ def print_scores(filenames, coord, path, parameter, matrix):
 	scores = [file1, file2, coord[0], coord[1], coord[2]]
 
 	# print the score matrix
-	if matrix.size != 0: 
+	if matrix.size != 0:
 		for i in range(0, len(matrix)):
 			for j in range(0, 13):
-				# reading matrix slide by column 
+				# reading matrix slide by column
 				col = matrix[i][:,j]
 				scores.append(col[-1]) #CA
 				scores.append(col[-2]) #SA
@@ -385,10 +390,10 @@ def print_scores(filenames, coord, path, parameter, matrix):
 		d = '{:>12}'*2 + '{:>12.2f}'*(len(scores)-2) + '\n'
 
 	# print the parameters used to get scores
-	elif parameter: 
+	elif parameter:
 		scores = scores[:5] + parameter
 		d = '{:>12}'*2 + '{:>12.4f}'*(len(scores)-2) + '\n'
-	
+
 
 	# if require to print the parameters used to get scores
 	# if parameter:
@@ -399,11 +404,11 @@ def print_scores(filenames, coord, path, parameter, matrix):
 # end of print_scores
 
 def set_labels(bands):
-	# generate labels for scores file 
+	# generate labels for scores file
 	o = ['A', 'N', 'E', 'U']
-	b = ['CA', 'SA'] 
+	b = ['CA', 'SA']
 	s = ['T', 'A', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'C11']
-	b_label = "BB" 
+	b_label = "BB"
 
 	for i in range(1, len(bands)):
 		b_label += ',B'+str(i)
@@ -429,8 +434,8 @@ def set_mlabels():
 		for j in range(0, len(d)):
 			for k in range(0, len(o)):
 				if i >= 3 and k == 0:
-					pass 
-				else: 
+					pass
+				else:
 					m_labels.append(p[i] + o[k] + d[j])
 	return m_labels
 # end of set_plabels

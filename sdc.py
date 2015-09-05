@@ -59,8 +59,8 @@ def load_file(filename):
 			instr_type = info[1].upper()
 			orientation = info[2]
 
-			date = tmp[4]
-			time = date.split(',')[-1]
+			date = tmp[4].split(',')[0]
+			time = tmp[4].split(',')[-1]
 			try:
 				dt = float(tmp[6])
 			except ValueError:
@@ -74,8 +74,13 @@ def load_file(filename):
 
 	signal = seism_signal(samples, dt, data, dtype)
 	header = "# " + network + " " + station + " " + "ASCII" + " " + date + " " + str(samples) + " " + str(dt) + "\n"
+	stamp = date.split('/')+time.split(':')
+	try:
+		stamp = [int(s) for s in stamp[:-1]]+[float(stamp[-1])]
+	except ValueError:
+		print "[ERROR]: error with time stamp."
 
-	return signal, time
+	return signal, stamp
 # end of load_file
 
 
@@ -141,8 +146,14 @@ def synchronize(stamps, signals):
 		time = stamps[i]
 		signal = signals[i]
 
-		start = time.split(':')
-		start = float(start[0])*3600 + float(start[1])*60 + float(start[2])
+		try:
+			# start = int(time[2])*24*3600 + float(time[-3])*3600 + float(time[-2])*60 + float(time[-1])
+			start = ((time[2])*24+time[3])*3600 + time[4]*60 + time[5]
+			# print start
+		except IndexError:
+			print "[ERROR]: error with data's time stamp."
+			return stamps, signals
+
 		end = start + signal.samples*signal.dt
 
 		start_time.append(start) # update time lists
@@ -152,6 +163,7 @@ def synchronize(stamps, signals):
 	end_first = min(end_time)
 	index = start_time.index(start_last)
 	new_stamp = stamps[index]
+
 
 	# cutting signals
 	for i in range(0, len(signals)):
@@ -164,6 +176,9 @@ def synchronize(stamps, signals):
 		if end != end_first:
 			t_diff = end - end_first
 			signals[i] = seism_cutting('end', t_diff, 20, signals[i], True)
+
+	# convert floats to strings
+	new_stamp = [str(s) for s in new_stamp]
 
 	if (signals[0].samples == signals[1].samples == signals[2].samples):
 		return new_stamp, signals
@@ -213,14 +228,15 @@ def print_her(file_dict):
 	# synchronize signals
 	if not (signal_ns.samples == signal_ew.samples == signal_up.samples):
 		signals = [signal_ns, signal_ew, signal_up]
-		stamps = [time_ns, time_ew, time_ew]
+		stamps = [time_ns, time_ew, time_up]
 		new_stamp, [signal_ns, signal_ew, signal_up] = synchronize(stamps, signals)
 
 		# update header
 		tmp = header.split(' ')
 		tmp[-2] = str(signal_ns.samples)
-		tmp[-3] = tmp[-3].split(',')[0]+','+new_stamp
-		# tmp[-3].split(',')[-1] = new_stamp
+		# tmp[-3] = tmp[-3].split(',')[0]+','+new_stamp
+		tmp[-3] = '/'.join(new_stamp[0:3]) + ',' + ':'.join(new_stamp[3:])
+
 		header = ''
 		for i in range(0, len(tmp)):
 			header += tmp[i] + ' '

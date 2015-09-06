@@ -292,6 +292,7 @@ def main(file1, file2):
 	if (not station1) or (not station2):
 		return False, False
 
+	# scales synthetics from meters to centimeters, and flips Z to UP.
 	station2[0].accel = station2[0].accel*100
 	station2[1].accel = station2[1].accel*100
 	station2[2].accel = station2[2].accel*(-100)
@@ -304,7 +305,8 @@ def main(file1, file2):
 	station2[1].displ = station2[1].displ*100
 	station2[2].displ = station2[2].displ*(-100)
 
-	station2 = rotate(station2) # rotate simulation
+	# rotates simulation synthetics
+	station2 = rotate(station2)
 
 	# signal1 = station1[0]
 	# signal2 = station2[0]
@@ -316,12 +318,13 @@ def main(file1, file2):
 	# process signals to have the same dt
 	station1, station2 = process_dt(station1, station2)
 
-	signal1 = station1[0]
-	signal2 = station2[0]
-	t1 = np.arange(0, signal1.samples*signal1.dt, signal1.dt)
-	t2 = np.arange(0, signal2.samples*signal2.dt, signal2.dt)
-	plt.plot(t1,signal1.accel,'r',t2,signal2.accel,'b')
-	plt.show()
+	# Optional plotting for checking
+	# signal1 = station1[0]
+	# signal2 = station2[0]
+	# t1 = np.arange(0, signal1.samples*signal1.dt, signal1.dt)
+	# t2 = np.arange(0, signal2.samples*signal2.dt, signal2.dt)
+	# plt.plot(t1,signal1.accel,'r',t2,signal2.accel,'b')
+	# plt.show()
 
 	# print station1[0].samples
 	# print station1[0].accel.size
@@ -332,8 +335,7 @@ def main(file1, file2):
 	stamp = read_stamp(file1) # get time stamp from data file
 	station1, station2 = synchronize(station1, station2, stamp)
 
-	# ricardo check
-	# -------------
+	# Optional plotting for checking
 	# signal1 = station1[0]
 	# signal2 = station2[0]
 	# t = np.arange(0, signal1.samples*signal1.dt, signal1.dt)

@@ -7,6 +7,7 @@
 from __future__ import division
 import sys
 import os
+import copy
 import numpy as np
 import math
 from seism import *
@@ -184,9 +185,20 @@ def scores_matrix(station1, station2, bands):
 	parameter = np.empty((3, 12))
 
 	for i in range(1, len(station1)+1):
-		signal1 = station1[i-1]
-		signal2 = station2[i-1]
+
+		# Note: This does not work because...
+		# a) internal data array is mutable
+		# b) even if the object were copied, the coy would be mutable
+		# signal1 = station1[i-1]
+		# signal2 = station2[i-1]
+
 		for j in range(0, len(bands)-1):
+
+			# This is correct because...
+			# a) makes a copy of the object, thus avoid mutation of the data array
+			# b) because since the copy is done every time before filtering, then it always new
+			signal1 = copy.copy(station1[i-1])
+			signal2 = copy.copy(station2[i-1])
 
 			if j == 0:
 				# BB-Bn
@@ -198,6 +210,7 @@ def scores_matrix(station1, station2, bands):
 				fmax = bands[j+1]
 			# print fmin, fmax
 
+			print "\nThis is the signal supposedly before filtering\n\n"
 			t = np.arange(0, signal1.samples*signal1.dt, signal1.dt)
 			plt.plot(t,signal1.accel,'r',t,signal2.accel,'b')
 			plt.show()
@@ -206,6 +219,7 @@ def scores_matrix(station1, station2, bands):
 			signal1 = filter_data(signal1, fmin, fmax)
 			signal2 = filter_data(signal2, fmin, fmax)
 
+			print "\nThis is the signal after filtering\n\n"
 			t = np.arange(0, signal1.samples*signal1.dt, signal1.dt)
 			plt.plot(t,signal1.accel,'r',t,signal2.accel,'b')
 			plt.show()

@@ -39,7 +39,7 @@ def S(p1, p2):
 	# S(p1, p2) = 10*exp{-[(p1-p2)/min(p1, p2)]^2}
 	if min(p1, p2) == 0:
 		return 10
-	s = 10*np.exp(-((p1-p2)/min(p1, p2))**2)
+	s = 10*math.exp(-((p1-p2)/min(p1, p2))**2)
 	return s
 
 
@@ -56,7 +56,7 @@ def cal_peak(data1, data2):
 
 def I(data, dt):
 	# I(t) = max|integral(data^2)dt|
-	return np.amax(np.cumsum(data*data)*dt)
+	return np.amax(np.cumsum(np.square(data))*dt)
 
 def cal_SI(data1, data2, dt):
 	"""
@@ -72,7 +72,10 @@ def cal_SI(data1, data2, dt):
 
 def N(data, dt):
 	"""N = Ie(t)/IE = Ia(t)/IA"""
-	return np.cumsum(data*data)*dt/I(data, dt)
+	integral = np.cumsum(np.square(data))*dt
+	maxIntegral = np.amax(integral)
+	return integral/maxIntegral
+	# return np.cumsum(np.square(data))*dt/I(data, dt)
 
 def F(N1, N2):
 	return np.absolute(N1-N2)
@@ -114,8 +117,8 @@ def cal_C(a1, a2, dt):
 	"""
 	update()
 	x = np.cumsum(a1*a2)*dt
-	y = np.cumsum(a1*a1)*dt
-	z = np.cumsum(a2*a2)*dt
+	y = np.cumsum(np.square(a1))*dt
+	z = np.cumsum(np.square(a2))*dt
 	c = x/(np.power(y, 0.5)*np.power(z, 0.5))
 	cc = 10*np.amax(c, 0)
 	cc = abs(cc)

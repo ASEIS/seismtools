@@ -295,15 +295,15 @@ def main(file1, file2):
 	# scales synthetics from meters to centimeters, and flips Z to UP.
 	station2[0].accel = station2[0].accel*100
 	station2[1].accel = station2[1].accel*100
-	station2[2].accel = station2[2].accel*(-100)
+	station2[2].accel = station2[2].accel*(100)
 
 	station2[0].velo = station2[0].velo*100
 	station2[1].velo = station2[1].velo*100
-	station2[2].velo = station2[2].velo*(-100)
+	station2[2].velo = station2[2].velo*(100)
 
 	station2[0].displ = station2[0].displ*100
 	station2[1].displ = station2[1].displ*100
-	station2[2].displ = station2[2].displ*(-100)
+	station2[2].displ = station2[2].displ*(100)
 
 	# rotates simulation synthetics
 	station2 = rotate(station2)

@@ -8,17 +8,24 @@ import numpy as np
 import math
 from scipy.signal import filtfilt, ellip, butter, kaiser
 from scipy.fftpack import fft, fftshift
+from scipy.integrate import cumtrapz
 
 def integrate(data, dt):
-	data = np.cumsum(data*dt)
-	return data
-
+	"""
+	compute derivative of a numpy array 
+	initial condition assumed 0
+	result has same size as input
+	"""
+	newdata = cumtrapz(data, dx = dt, initial=0) + data[0]*dt/2.0
+	return newdata
+	# data = np.cumsum(data*dt)
+	# return data
 
 def derivative(data, dt):
 	"""compute derivative of an numpy."""
-	data = np.insert(data, 0, data[0])
-	data = np.diff(data/dt)
-	return data
+	newdata = np.insert(data, 0, 0)
+	newdata = np.diff(newdata)/dt
+	return newdata
 
 def s_filter(*args, **kwargs):
 	"""

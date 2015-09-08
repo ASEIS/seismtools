@@ -38,7 +38,8 @@ def filter_data(psignal, fmin, fmax):
 def S(p1, p2):
 	# S(p1, p2) = 10*exp{-[(p1-p2)/min(p1, p2)]^2}
 	if min(p1, p2) == 0:
-		return 10
+		print "\n\nThere is a division by zero\n\n"
+		# return 10
 	s = 10*np.exp(-((p1-p2)/min(p1, p2))**2)
 	return s
 
@@ -48,7 +49,7 @@ def cal_peak(data1, data2):
 	calculate the socres for peak acc/vel/dis.
 	score = S(max|data1|, max|data2|)
 	"""
-	update()
+	update() 
 	p1 = np.amax(np.absolute(data1))
 	p2 = np.amax(np.absolute(data2))
 	score = S(p1, p2)
@@ -56,7 +57,10 @@ def cal_peak(data1, data2):
 
 def I(data, dt):
 	# I(t) = max|integral(data^2)dt|
-	return np.amax(np.cumsum(data*data)*dt)
+	aa = data**2
+	iaa = integrate(aa, dt)[-1]
+	return iaa
+	# return np.amax(np.cumsum(data*data)*dt)
 
 def cal_SI(data1, data2, dt):
 	"""
@@ -67,12 +71,18 @@ def cal_SI(data1, data2, dt):
 	I1 = I(data1, dt)
 	I2 = I(data2, dt)
 	SI = S(I1, I2)
+	# print  I1, I2, SI
 	return I1, I2, SI
 
 
 def N(data, dt):
 	"""N = Ie(t)/IE = Ia(t)/IA"""
-	return np.cumsum(data*data)*dt/I(data, dt)
+	aa = data**2
+	iaa = integrate(aa, dt)
+	norm_iaa = iaa/iaa[-1]
+	# print data.size, norm_iaa.size
+	return norm_iaa
+	# return np.cumsum(data*data)*dt/I(data, dt)
 
 def F(N1, N2):
 	return np.absolute(N1-N2)
@@ -84,7 +94,7 @@ def cal_SD(data1, data2, dt):
 	N1 = N(data1, dt)
 	N2 = N(data2, dt)
 	SD = 10*(1-np.amax(F(N1, N2)))
-
+	# print np.amax(F(N1, N2)), SD
 	return SD
 
 
@@ -103,6 +113,7 @@ def cal_Sfs(signal1, signal2, fmin, fmax):
 		s = np.append(s, S(fs1[i], fs2[i]))
 
 	# print s.size
+	# print np.mean(s)
 	Sfs = np.mean(s)
 	return Sfs
 
@@ -113,10 +124,17 @@ def cal_C(a1, a2, dt):
 	C = integral(a1, a2)dt/((integral(a1^2)dt^1/2)*(integral(a2^2)dt^1/2))
 	"""
 	update()
-	x = np.cumsum(a1*a2)*dt
-	y = np.cumsum(a1*a1)*dt
-	z = np.cumsum(a2*a2)*dt
-	c = x/(np.power(y, 0.5)*np.power(z, 0.5))
+
+	# old way of computing cross correlation (incorrect)
+	# x = np.cumsum(a1*a2)*dt
+	# y = np.cumsum(a1*a1)*dt
+	# z = np.cumsum(a2*a2)*dt
+	# c = x/(np.power(y, 0.5)*np.power(z, 0.5))
+
+	# This new form of computing the cross correlation coefficient fixes normalization problem
+	c = np.correlate(a1,a2,'full')/np.sqrt(np.sum(a1**2)*np.sum(a2**2))
+	c = np.max(c)
+
 	cc = 10*np.amax(c, 0)
 	cc = abs(cc)
 	return cc
@@ -136,6 +154,7 @@ def cal_Ssa(signal1, signal2, fmin, fmax):
 	for i in range(0, len(SA1)):
 		ss.append(S(SA1[i], SA2[i]))
 
+	# print np.mean(ss)
 	return np.mean(ss)
 
 def duration(signal):
@@ -144,22 +163,50 @@ def duration(signal):
 	dt = signal.dt
 
 	# E = max|integral(v^2)dt|
-	E = I(data, dt)
-	E5 = 0.05*E
-	E95 = 0.95*E
+	# E = I(data, dt)
+	# E5 = 0.05*E
+	# E95 = 0.95*E
+	# T5 = 0
+	# T95 = 0
+
+	E = N(data, dt)
+
+	# print E[-1],
+
 	T5 = 0
 	T95 = 0
 
-	energy = np.cumsum(data*data)*dt
-	for i in range(1, energy.size):
-		if energy[i-1] <= E5 <= energy[i]:
-			T5 = i
-		if energy[i-1] <= E95 <= energy[i]:
-			T95 = i
+	# energy = np.cumsum(data*data)*dt
+	# for i in range(1, energy.size):
+	# 	if energy[i-1] <= E5 <= energy[i]:
+	# 		T5 = i
+	# 	if energy[i-1] <= E95 <= energy[i]:
+	# 		T95 = i
+	# 		break
+
+	for i in range(1, E.size):
+		if ( E[i-1] < 0.05 ) and ( E[i] >= 0.05 ):
+			T5 = i*dt
+		if ( E[i-1] < 0.95 ) and ( E[i] >= 0.95 ):
+			T95 = i*dt
 			break
 
-	D = (T95-T5)*dt
+	# print T5, T95,
+	D = T95 - T5
+	# print D,
+
+	# t = np.arange(0, signal.samples*signal.dt, signal.dt)
+	# plt.subplot(2, 1, 1)
+	# plt.plot(t,signal.velo,'b')
+	# plt.subplot(2, 1, 2)
+	# plt.plot(t,E,'b')
+	# plt.plot([T5, T5], [0, 1],'r')
+	# plt.plot([T95, T95], [0, 1],'r')
+	# plt.show()
+
 	return D
+# end duration
+
 
 def cal_D(signal1, signal2):
 	""" calculate the score for duration """
@@ -167,6 +214,7 @@ def cal_D(signal1, signal2):
 
 	D1 = duration(signal1)
 	D2 = duration(signal2)
+	# print S(D1, D2)
 	return D1, D2, S(D1, D2)
 
 
@@ -210,19 +258,23 @@ def scores_matrix(station1, station2, bands):
 				fmax = bands[j+1]
 			# print fmin, fmax
 
-			print "\nThis is the signal supposedly before filtering\n\n"
-			t = np.arange(0, signal1.samples*signal1.dt, signal1.dt)
-			plt.plot(t,signal1.accel,'r',t,signal2.accel,'b')
-			plt.show()
+			# print "\nThis is the signal supposedly before filtering\n\n"
+			# t = np.arange(0, signal1.samples*signal1.dt, signal1.dt)
+			# plt.plot(t,signal1.accel,'r',t,signal2.accel,'b')
+			# plt.show()
 
 			# filtering data
 			signal1 = filter_data(signal1, fmin, fmax)
 			signal2 = filter_data(signal2, fmin, fmax)
 
-			print "\nThis is the signal after filtering\n\n"
-			t = np.arange(0, signal1.samples*signal1.dt, signal1.dt)
-			plt.plot(t,signal1.accel,'r',t,signal2.accel,'b')
-			plt.show()
+			# print "\nThis is the signal after filtering\n\n"
+			# t = np.arange(0, signal1.samples*signal1.dt, signal1.dt)
+			# plt.plot(t,signal1.accel,'r',t,signal2.accel,'b')
+			# plt.show()
+			# plt.plot(t,signal1.velo,'r',t,signal2.velo,'b')
+			# plt.show()
+			# plt.plot(t,signal1.displ,'r',t,signal2.displ,'b')
+			# plt.show()
 
 
 			dt = signal1.dt
@@ -237,7 +289,7 @@ def scores_matrix(station1, station2, bands):
 
 			# parameter1, parameter2, score for peak data
 			pga1, pga2, c5 = cal_peak(signal1.accel, signal2.accel)
-			pgv1, pgv2, c6 = cal_peak(signal1.velo, signal2.velo)
+			pgv1, pgv2, c6 = cal_peak(signal1.velo,  signal2.velo )
 			pgd1, pgd2, c7 = cal_peak(signal1.displ, signal2.displ)
 
 			c8 = cal_Ssa(signal1, signal2, fmin, fmax)

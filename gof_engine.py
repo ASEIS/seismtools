@@ -61,6 +61,7 @@ def I(data, dt):
 	iaa = integrate(aa, dt)[-1]
 	return iaa
 	# return np.amax(np.cumsum(data*data)*dt)
+	# return np.amax(np.cumsum(np.square(data))*dt)
 
 def cal_SI(data1, data2, dt):
 	"""
@@ -83,6 +84,10 @@ def N(data, dt):
 	# print data.size, norm_iaa.size
 	return norm_iaa
 	# return np.cumsum(data*data)*dt/I(data, dt)
+	# integral = np.cumsum(np.square(data))*dt
+	# maxIntegral = np.amax(integral)
+	# return integral/maxIntegral
+	# return np.cumsum(np.square(data))*dt/I(data, dt)
 
 def F(N1, N2):
 	return np.absolute(N1-N2)
@@ -135,8 +140,14 @@ def cal_C(a1, a2, dt):
 	c = np.correlate(a1,a2,'full')/np.sqrt(np.sum(a1**2)*np.sum(a2**2))
 	c = np.max(c)
 
+	# x = np.cumsum(a1*a2)*dt
+	# y = np.cumsum(np.square(a1))*dt
+	# z = np.cumsum(np.square(a2))*dt
+	# c = x/(np.power(y, 0.5)*np.power(z, 0.5))
+
 	cc = 10*np.amax(c, 0)
-	cc = abs(cc)
+
+	# cc = abs(cc)
 	return cc
 
 

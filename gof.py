@@ -326,10 +326,6 @@ def main(file1, file2):
 	# plt.plot(t1,signal1.accel,'r',t2,signal2.accel,'b')
 	# plt.show()
 
-	# print station1[0].samples
-	# print station1[0].accel.size
-	# station1[0].print_attr()
-	# station2[0].print_attr()
 
 	# synchronize starting and ending time of data arrays
 	stamp = read_stamp(file1) # get time stamp from data file

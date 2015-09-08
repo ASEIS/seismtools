@@ -10,6 +10,28 @@ from seism import *
 from stools import *
 # import matplotlib.pyplot as plt
 
+def scale_data(station):
+	# scales synthetics from meters to centimeters
+	for i in range(0, len(station)):
+		station[i].accel *= 100
+		station[i].velo *= 100
+		station[i].displ *= 100
+
+	# station[0].accel = station[0].accel*100
+	# station[1].accel = station[1].accel*100
+	# station[2].accel = station[2].accel*(100)
+
+	# station[0].velo = station[0].velo*100
+	# station[1].velo = station[1].velo*100
+	# station[2].velo = station[2].velo*(100)
+
+	# station[0].displ = station[0].displ*100
+	# station[1].displ = station[1].displ*100
+	# station[2].displ = station[2].displ*(100)
+
+	return station
+# end of scale_data
+
 def get_azimuth():
 	""" get the azimuth for rotation from user. """
 	azimuth = ''
@@ -27,7 +49,7 @@ def get_azimuth():
 	return azimuth
 
 
-def rotate(station):
+def rotate(station, azimuth):
 	""" station = [psignal_ns, psignal_ew, psignal_up] """
 	# checking instance
 	if len(station) != 3:
@@ -45,8 +67,6 @@ def rotate(station):
 	psignal_up.velo *= -1
 	psignal_up.displ *= -1
 
-
-	azimuth = get_azimuth()
 	if not azimuth:
 		return station
 
@@ -112,7 +132,7 @@ def interp(data, samples, old_dt, new_dt):
 	return new_data
 # end of interpolate
 
-def process(signal, dt, fmax):
+def process_dt(signal, dt, fmax):
 	""" processes signal with common dt and fmax."""
 	# call low_pass filter at fmax
 	signal.accel = s_filter(signal.accel, signal.dt, type = 'lowpass', family = 'butter', fmax = fmax, N = 4, rp = 0.1, rs = 100)
@@ -129,19 +149,6 @@ def process(signal, dt, fmax):
 
 	return signal
 # end of process
-
-def process_dt(station1, station2):
-	""" process all signals in two stations to have common dt """
-	dt = get_dt()
-	fmax = get_fmax()
-
-	# process signals in stations
-	for i in range(0, 3):
-		station1[i] = process(station1[i], dt, fmax)
-		station2[i] = process(station2[i], dt, fmax)
-
-	return station1, station2
-# end of process_dt
 
 # ===============================================================================================================
 def get_earthq():
@@ -177,20 +184,16 @@ def get_leading():
 # end of get_leading
 
 
-def synchronize(station1, station2, stamp):
+def synchronize(station1, station2, stamp, eq_time, leading):
 	"""synchronize the stating time and ending time of data arrays in two signals
-	signal1 = data signal; signal2 = simulation signal """
+	signal1 --> data signal; signal2 --> simulation signal """
 	if not stamp:
 		return station1, station2
-	print stamp
 
-	eq = get_earthq()
-	lt = get_leading()
-
-	# time in sec = hr*3600 + min*60 + sec + frac*0.1
+	# time in sec = hr*3600 + min*60 + sec
 	start = stamp[0]*3600 + stamp[1]*60 + stamp[2]
-	eq_time = eq[0]*3600 + eq[1]*60 + eq[2]
-	sim_start = eq_time - lt
+	eq_time = eq_time[0]*3600 + eq_time[1]*60 + eq_time[2]
+	sim_start = eq_time - leading
 
 	for i in range(0, 3):
 		signal1 = station1[i]

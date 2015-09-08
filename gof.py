@@ -145,18 +145,23 @@ def get_files():
 
 def search_file(dirname, info):
 	"""search for files contains given network code and station name"""
-	file_dir = {'HN':'', 'V1':'', 'BH':'', 'V2':''}
+	# file_dir = {'HN':'', 'V1':'', 'BH':'', 'V2':''}
 	for fp in os.listdir(dirname):
 		tmp = fp.replace('.', '')
 		if (info in tmp) and ('HN' in tmp):
-			file_dir['HN'] = fp
+			return fp
+			# file_dir['HN'] = fp
 		elif (info in tmp) and ('V1' in tmp):
-			file_dir['V1'] = fp
+			# file_dir['V1'] = fp
+			return fp
 		elif (info in tmp) and ('BH' in tmp):
-			file_dir['BH'] = fp
+			# file_dir['BH'] = fp
+			return fp
 		elif (info in tmp) and ('V2' in tmp):
-			file_dir['V2'] = fp
-	return file_dir
+			# file_dir['V2'] = fp
+			return fp
+	return info
+	# return file_dir
 # end of search_file
 
 def get_bands():
@@ -322,31 +327,13 @@ def check_data(station):
 	return station
 # end of check_data
 
-def main(file1, file2):
-	"""reads two files and gets two stations; then processes signals in each stations
+def process(station1, station2, azimuth, dt, fmax, eq, ls):
+	"""processes signals in each stations by rotating, processing dt, and synchronization
 	station1 --> data; station2 --> simulation """
-
-	station1 = read_file(file1)
-	station2 = read_file(file2)
-	if (not station1) or (not station2):
-		return False, False
-
-	# scales synthetics from meters to centimeters, and flips Z to UP.
-	station2[0].accel = station2[0].accel*100
-	station2[1].accel = station2[1].accel*100
-	station2[2].accel = station2[2].accel*(100)
-
-	station2[0].velo = station2[0].velo*100
-	station2[1].velo = station2[1].velo*100
-	station2[2].velo = station2[2].velo*(100)
-
-	station2[0].displ = station2[0].displ*100
-	station2[1].displ = station2[1].displ*100
-	station2[2].displ = station2[2].displ*(100)
-
+	station2 = scale_data(station2)
 
 	# rotates simulation synthetics
-	station2 = rotate(station2)
+	station2 = rotate(station2, azimuth)
 
 	# signal1 = station1[0]
 	# signal2 = station2[0]
@@ -356,7 +343,10 @@ def main(file1, file2):
 	# plt.show()
 
 	# process signals to have the same dt
-	station1, station2 = process_dt(station1, station2)
+	for i in range(0, len(station1)):
+		station1[i] = process_dt(station1[i], dt, fmax)
+		station2[i] = process_dt(station2[i], dt, fmax)
+
 
 	# Optional plotting for checking
 	# signal1 = station1[0]
@@ -369,7 +359,7 @@ def main(file1, file2):
 
 	# synchronize starting and ending time of data arrays
 	stamp = read_stamp(file1) # get time stamp from data file
-	station1, station2 = synchronize(station1, station2, stamp)
+	station1, station2 = synchronize(station1, station2, stamp, eq_time, leading)
 
 	# Optional plotting for checking
 	# signal1 = station1[0]
@@ -399,8 +389,25 @@ if __name__ == "__main__":
 
 		s_path, m_path = get_out()
 		bands = get_bands()
+		azimuth = get_azimuth()
+		dt = get_dt()
+		fmax = get_fmax()
+		eq_time = get_earthq()
+		leading = get_leading()
 
-		station1, station2 = main(file1, file2)
+		station1 = read_file(file1)
+		station2 = read_file(file2)
+
+		# processing signals
+		if station1 and station2:
+			azimuth = get_azimuth()
+			dt = get_dt()
+			fmax = get_fmax()
+			eq_time = get_earthq()
+			leading = get_leading()
+			station1, station2 = process(station1, station2, azimuth, dt, fmax, eq_time, leading)
+
+
 		if station1 and station2:
 			parameter, matrix = scores_matrix(station1, station2, bands)
 			print_matrix(s_path, matrix)
@@ -418,8 +425,12 @@ if __name__ == "__main__":
 			Ex = Ey = 0.0
 
 		s_path, m_path = get_out()
-
 		bands = get_bands()
+		azimuth = get_azimuth()
+		dt = get_dt()
+		fmax = get_fmax()
+		eq_time = get_earthq()
+		leading = get_leading()
 
 		try:
 			f = open(s_path, 'w')
@@ -431,7 +442,6 @@ if __name__ == "__main__":
 		m_labels = set_mlabels()
 
 		d = '{:>12}'*2 + '{:>12.8}'*(len(labels)-2) + '\n'
-		# d = '{:>12}'*len(labels) + '\n'
 		f.write(d.format(*labels))
 
 		d = '{:>12}'*2 + '{:>12.6}'*(len(m_labels)-2) + '\n'
@@ -440,42 +450,43 @@ if __name__ == "__main__":
 		m.close()
 
 		i = 0
-		# for i in range(0, len(list1)):
-		while i < len(list1):
+		for i in range(0, len(list1)):
+		# while i < len(list1):
 			file1 = indir1 + '/' + list1[i]
 			file2 = indir2 + '/' + list2[i]
 
 			# if file1 does not exist, search for files
 			if not os.path.isfile(file1):
-				file_dir = search_file(indir1, list1[i])
-				for fp in file_dir.values():
-					# if found matched file; update the lists
-					if fp:
-						list1.insert(i+1, fp)
-						list2.insert(i+1, list2[i])
-						coorX.insert(i+1, coorX[i])
-						coorY.insert(i+1, coorY[i])
+				fp = search_file(indir1, list1[i])
+				file1 = indir1 + '/' + fp
+
+			print "[...processing " + file1 + ' and ' + file2 + '...]'
+
+			x = coorX[i]
+			y = coorY[i]
+
+			epdist = math.sqrt((x-Ex)**2+(y-Ey)**2)
+			coord = [x, y, epdist]
+
+
+			station1 = read_file(file1)
+			station2 = read_file(file2)
+
+			# processing signals
+			if station1 and station2:
+				station1, station2 = process(station1, station2, azimuth, dt, fmax, eq_time, leading)
+
+			if station1 and station2:
+				# print_her(file1, station1)
+				# print_her(file2, station2)
+				parameter, matrix = scores_matrix(station1, station2, bands)
+				parameter = parameter_to_list(parameter)
+
+				print_scores([file1,file2], coord, s_path, [], matrix) # print scores
+				print_scores([file1,file2], coord, m_path, parameter, np.array([])) # print values used to calculate scores
 			else:
-				print "[...processing " + file1 + ' and ' + file2 + '...]'
-
-				x = coorX[i]
-				y = coorY[i]
-
-				epdist = math.sqrt((x-Ex)**2+(y-Ey)**2)
-				coord = [x, y, epdist]
-
-				station1, station2 = main(file1, file2)
-				if station1 and station2:
-					# print_her(file1, station1)
-					# print_her(file2, station2)
-					parameter, matrix = scores_matrix(station1, station2, bands)
-					parameter = parameter_to_list(parameter)
-
-					print_scores([file1,file2], coord, s_path, [], matrix) # print scores
-					print_scores([file1,file2], coord, m_path, parameter, np.array([])) # print values used to calculate scores
-				else:
-					pass
-			i += 1
+				pass
+			# i += 1
 
 	print "[DONE]"
 

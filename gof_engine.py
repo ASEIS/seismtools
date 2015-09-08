@@ -49,7 +49,7 @@ def cal_peak(data1, data2):
 	calculate the socres for peak acc/vel/dis.
 	score = S(max|data1|, max|data2|)
 	"""
-	update() 
+	update()
 	p1 = np.amax(np.absolute(data1))
 	p2 = np.amax(np.absolute(data2))
 	score = S(p1, p2)
@@ -230,7 +230,7 @@ def cal_D(signal1, signal2):
 
 
 
-#  ========================================================= GENERATING =======================================================
+#  =================================================== GENERATING =====================================================
 
 def scores_matrix(station1, station2, bands):
 	"""
@@ -384,7 +384,7 @@ def parameter_to_list(parameter):
 	return p
 # end of parameter_to_list
 
-# =========================================================== PRINTING ============================================================
+# ======================================================= PRINTING ===========================================================
 def print_matrix(path, matrix):
 	""" generate the file containing the score matrix of two files. """
 	# header = "# GOF " + file1 + ' ' + file2
@@ -409,7 +409,7 @@ def print_matrix(path, matrix):
 	for l, s1, c1, s2, c2 in zip(label, SA_A, CA_A, SA_T, CA_T):
 		f.write(descriptor.format(l, s1, c1, s2, c2))
 
-	f.write('# ----------------------------------------------------------------------------------------------\n')
+	f.write('#' + '-'*100 + '\n')
 
 	# generte row and column labels
 	num_b = len(matrix[0])-2
@@ -433,7 +433,7 @@ def print_matrix(path, matrix):
 
 		for s in zip(r_label, *matrix[i]):
 			f.write(d2.format(*s))
-		f.write('# ----------------------------------------------------------------------------------------------\n')
+		f.write('#' + '-'*100 + '\n')
 	f.close()
 
 	pass

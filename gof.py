@@ -327,7 +327,7 @@ def check_data(station):
 	return station
 # end of check_data
 
-def process(station1, station2, azimuth, dt, fmax, eq, ls):
+def process(station1, station2, azimuth, dt, fmax, eq_time, leading):
 	"""processes signals in each stations by rotating, processing dt, and synchronization
 	station1 --> data; station2 --> simulation """
 	station2 = scale_data(station2)

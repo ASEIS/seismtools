@@ -1,9 +1,7 @@
-# Must containing at least two pairs 
-# CI.CH.BH.her 14383980.CI.CH.BH.her
-# 14383980.CI.CH.HH.her 14383980.CI.CH.HH.her
-# 14383980.CI.DLA.BH.her 14383980.CI.DLA.BH.her
-# 14383980.CI.FMP.HN.her 14383980.CI.FMP.HN.her
-
+# Must containing at least two pairs
+test 2-CICHN.dat
+2-CICHN.dat test 25769.0 335549
+test test
 2-CICHN.dat 2-CICHN.sim 25769.0 335549
 2-CICHN.dat 2-CICHN.sim 25769.0 335549
-
+test test 25769.0 335549

@@ -202,7 +202,7 @@ def get_bands():
 	return bands
 # enf of get_bands
 
-# ================================================================== READING ================================================================
+# =========================================================== READING ===========================================================
 def read_stamp(filename):
 	"""get the time stamp from file's header"""
 	try:
@@ -254,7 +254,45 @@ def read_file(filename):
 	return station
 # end of read_file
 
-# =========================================================== MAIN =================================================================
+def print_her(filename, station):
+	filename = 'processed-' + filename.split('/')[-1]
+	try:
+		f = open(filename, 'w')
+	except IOError, e:
+		print e
+	dis_ns = station[0].displ.tolist()
+	vel_ns = station[0].velo.tolist()
+	acc_ns = station[0].accel.tolist()
+	dis_ew = station[1].displ.tolist()
+	vel_ew = station[1].velo.tolist()
+	acc_ew = station[1].accel.tolist()
+	dis_up = station[2].displ.tolist()
+	vel_up = station[2].velo.tolist()
+	acc_up = station[2].accel.tolist()
+
+
+	# get a list of time incremented by dt
+	time = [0.000]
+	samples = station[0].samples
+	dt = station[0].dt
+	tmp = samples
+
+	while tmp > 1:
+		time.append(time[len(time)-1] + dt)
+		tmp -= 1
+
+	f.write('# missing header \n')
+
+	descriptor = '{:>12}' + '  {:>12}'*9 + '\n'
+	f.write(descriptor.format("# time", "dis_ns", "dis_ew", "dis_up", "vel_ns", "vel_ew", "vel_up", "acc_ns", "acc_ew", "acc_up")) # header
+
+	descriptor = '{:>12.3f}' + '  {:>12.7f}'*9 + '\n'
+	for c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 in zip(time, dis_ns, dis_ew, dis_up, vel_ns, vel_ew, vel_up, acc_ns, acc_ew, acc_up):
+		f.write(descriptor.format(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9 ))
+	f.close()
+# end of print_her
+
+# ========================================================= MAIN ===============================================================
 def check_data(station):
 	"""checks the data after rotation, process_dt, and synchronization
 	to avoid encountering errors in gof_engine """
@@ -304,6 +342,7 @@ def main(file1, file2):
 	station2[0].displ = station2[0].displ*100
 	station2[1].displ = station2[1].displ*100
 	station2[2].displ = station2[2].displ*(100)
+
 
 	# rotates simulation synthetics
 	station2 = rotate(station2)
@@ -415,7 +454,6 @@ if __name__ == "__main__":
 						list2.insert(i+1, list2[i])
 						coorX.insert(i+1, coorX[i])
 						coorY.insert(i+1, coorY[i])
-
 			else:
 				print "[...processing " + file1 + ' and ' + file2 + '...]'
 
@@ -427,6 +465,8 @@ if __name__ == "__main__":
 
 				station1, station2 = main(file1, file2)
 				if station1 and station2:
+					# print_her(file1, station1)
+					# print_her(file2, station2)
 					parameter, matrix = scores_matrix(station1, station2, bands)
 					parameter = parameter_to_list(parameter)
 

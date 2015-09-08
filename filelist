@@ -1,7 +1,0 @@
-# Must containing at least two pairs
-test 2-CICHN.dat
-2-CICHN.dat test 25769.0 335549
-test test
-2-CICHN.dat 2-CICHN.sim 25769.0 335549
-2-CICHN.dat 2-CICHN.sim 25769.0 335549
-test test 25769.0 335549

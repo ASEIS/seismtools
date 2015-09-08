@@ -147,13 +147,14 @@ def search_file(dirname, info):
 	"""search for files contains given network code and station name"""
 	file_dir = {'HN':'', 'V1':'', 'BH':'', 'V2':''}
 	for fp in os.listdir(dirname):
-		if (info in fp) and ('HN' in fp):
+		tmp = fp.replace('.', '')
+		if (info in tmp) and ('HN' in tmp):
 			file_dir['HN'] = fp
-		elif (info in fp) and ('V1' in fp):
+		elif (info in tmp) and ('V1' in tmp):
 			file_dir['V1'] = fp
-		elif (info in fp) and ('BH' in fp):
+		elif (info in tmp) and ('BH' in tmp):
 			file_dir['BH'] = fp
-		elif (info in fp) and ('V2' in fp):
+		elif (info in tmp) and ('V2' in tmp):
 			file_dir['V2'] = fp
 	return file_dir
 # end of search_file

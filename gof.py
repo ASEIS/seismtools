@@ -443,20 +443,18 @@ if __name__ == "__main__":
 		list1, list2, coorX, coorY = files
 		indir1, indir2 = get_in()
 
-		# if coordinates are given; ask for epicenter
+		# captures input data
+		s_path, m_path = get_out()
+		bands    = get_bands()
+		decifmax = get_fmax()
+		commondt = get_dt()
+		azimuth  = get_azimuth()
+		eq_time  = get_earthq()
+		leading  = get_leading()
 		if coorX[0] and coorY[0]:
 			Ex, Ey = get_epicenter()
 		else:
 			Ex = Ey = 0.0
-
-		# captures input data
-		s_path, m_path = get_out()
-		bands    = get_bands()
-		azimuth  = get_azimuth()
-		commondt = get_dt()
-		decifmax = get_fmax()
-		eq_time  = get_earthq()
-		leading  = get_leading()
 
 		# open output files
 		try:
@@ -520,6 +518,14 @@ if __name__ == "__main__":
 			else:
 				print "...Ignoring pair:   " + list1[i] + " - " + list2[i]
 				continue
+
+			# Optional plotting for checking
+			# signal1 = station1[1]
+			# signal2 = station2[1]
+			# t1 = np.arange(0, signal1.samples*signal1.dt, signal1.dt)
+			# t2 = np.arange(0, signal2.samples*signal2.dt, signal2.dt)
+			# plt.plot(t1,signal1.accel,'r',t2,signal2.accel,'b')
+			# plt.show()
 
 			if station1 and station2:
 				# print_her(file1, station1)

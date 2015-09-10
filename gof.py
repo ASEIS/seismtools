@@ -400,11 +400,11 @@ if __name__ == "__main__":
 
 		# processing signals
 		if station1 and station2:
-			azimuth = get_azimuth()
-			dt = get_dt()
-			fmax = get_fmax()
-			eq_time = get_earthq()
-			leading = get_leading()
+			# azimuth = get_azimuth()
+			# dt = get_dt()
+			# fmax = get_fmax()
+			# eq_time = get_earthq()
+			# leading = get_leading()
 			station1, station2 = process(station1, station2, azimuth, dt, fmax, eq_time, leading)
 
 

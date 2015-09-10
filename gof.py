@@ -143,19 +143,45 @@ def get_files():
 	return False
 # end of get_files
 
+# def search_file(dirname, info):
+# 	"""search for files contains given network code and station name"""
+# 	file_dir = {'HN':'', 'V1':'', 'BH':'', 'V2':''}
+# 	for fp in os.listdir(dirname):
+# 		if (info in fp) and ('HN' in fp):
+# 			file_dir['HN'] = fp
+# 		elif (info in fp) and ('V1' in fp):
+# 			file_dir['V1'] = fp
+# 		elif (info in fp) and ('BH' in fp):
+# 			file_dir['BH'] = fp
+# 		elif (info in fp) and ('V2' in fp):
+# 			file_dir['V2'] = fp
+# 	return file_dir
+# # end of search_file
+
 def search_file(dirname, info):
-	"""search for files contains given network code and station name"""
-	file_dir = {'HN':'', 'V1':'', 'BH':'', 'V2':''}
+	"""
+	Search for files contains given station code and name
+	"""
+	info = info.replace('.', '')
 	for fp in os.listdir(dirname):
-		if (info in fp) and ('HN' in fp):
-			file_dir['HN'] = fp
-		elif (info in fp) and ('V1' in fp):
-			file_dir['V1'] = fp
-		elif (info in fp) and ('BH' in fp):
-			file_dir['BH'] = fp
-		elif (info in fp) and ('V2' in fp):
-			file_dir['V2'] = fp
-	return file_dir
+		tmp = fp.replace('.', '')
+		if (info in tmp) and ('HN' in tmp):
+			return fp
+			# file_dir['HN'] = fp
+		elif (info in tmp) and ('V1' in tmp):
+			# file_dir['V1'] = fp
+			return fp
+		elif (info in tmp) and ('BH' in tmp):
+			# file_dir['BH'] = fp
+			return fp
+		elif (info in tmp) and ('V2' in tmp):
+			# file_dir['V2'] = fp
+			return fp
+		# endif case
+	# end for
+
+	# was not found, return same info	
+	return info
 # end of search_file
 
 def get_bands():
@@ -321,41 +347,24 @@ def check_data(station):
 	return station
 # end of check_data
 
-def main(file1, file2):
-	"""reads two files and gets two stations; then processes signals in each stations
-	station1 --> data; station2 --> simulation """
 
-	station1 = read_file(file1)
-	station2 = read_file(file2)
-	if (not station1) or (not station2):
-		return False, False
+def process(station1, station2, azimuth, commondt, decifmax, eq_time, leading):
+	"""
+	This method processes the signals in each pair of stations.
+	Processing consists on scaling, rotation, decimation, alignment
+	and other things to make both signals compatible to apply GOF method.
+	station 1: data
+	station 2: simulaiton
+	"""
 
-	# scales synthetics from meters to centimeters, and flips Z to UP.
-	station2[0].accel = station2[0].accel*100
-	station2[1].accel = station2[1].accel*100
-	station2[2].accel = station2[2].accel*(100)
+	# scale synthetics to cm(/s/s)
+	station2 = scale_synthetics(station2)
 
-	station2[0].velo = station2[0].velo*100
-	station2[1].velo = station2[1].velo*100
-	station2[2].velo = station2[2].velo*(100)
-
-	station2[0].displ = station2[0].displ*100
-	station2[1].displ = station2[1].displ*100
-	station2[2].displ = station2[2].displ*(100)
-
-
-	# rotates simulation synthetics
-	station2 = rotate(station2)
-
-	# signal1 = station1[0]
-	# signal2 = station2[0]
-	# t1 = np.arange(0, signal1.samples*signal1.dt, signal1.dt)
-	# t2 = np.arange(0, signal2.samples*signal2.dt, signal2.dt)
-	# plt.plot(t1,signal1.accel,'r',t2,signal2.accel,'b')
-	# plt.show()
+	# rotate synthetics
+	station2 = rotate(station2, azimuth)
 
 	# process signals to have the same dt
-	station1, station2 = process_dt(station1, station2)
+	station1, station2 = process_dt(station1, station2, commondt, decifmax)
 
 	# Optional plotting for checking
 	# signal1 = station1[0]
@@ -365,10 +374,9 @@ def main(file1, file2):
 	# plt.plot(t1,signal1.accel,'r',t2,signal2.accel,'b')
 	# plt.show()
 
-
 	# synchronize starting and ending time of data arrays
 	stamp = read_stamp(file1) # get time stamp from data file
-	station1, station2 = synchronize(station1, station2, stamp)
+	station1, station2 = synchronize(station1, station2, stamp, eq_time, leading)
 
 	# Optional plotting for checking
 	# signal1 = station1[0]
@@ -376,7 +384,6 @@ def main(file1, file2):
 	# t = np.arange(0, signal1.samples*signal1.dt, signal1.dt)
 	# plt.plot(t,signal1.accel,'r',t,signal2.accel,'b')
 	# plt.show()
-
 
 	if station1[0].samples != station2[0].samples:
 		print "[ERROR]: two files do not have the same number of samples after processing."
@@ -386,27 +393,53 @@ def main(file1, file2):
 	station2 = check_data(station2)
 
 	return station1, station2
-# end of main
+
+# end of process
 
 if __name__ == "__main__":
+	
 	# getting files or lists of files from user; return tuple
 	files = get_files()
 
 	if isinstance(files[0], str):
+
+		# Start: Two-Files Option
+
 		file1, file2 = files
 		coor = []
 
+		# captures input data
 		s_path, m_path = get_out()
-		bands = get_bands()
+		bands    = get_bands()
+		azimuth  = get_azimuth()
+		commondt = get_dt()
+		decifmax = get_fmax()
+		eq_time  = get_earthq()
+		leading  = get_leading()
 
-		station1, station2 = main(file1, file2)
+		# reads signals
+		station1 = read_file(file1)
+		station2 = read_file(file2)
+
+		# processing signals
+		if station1 and station2:
+			station1, station2 = process(station1, station2, azimuth, commondt, decifmax, eq_time, leading)
+		else:
+			print "...Ignoring pair:   " + list1[i] + " - " + list2[i]
+			pass
+
 		if station1 and station2:
 			parameter, matrix = scores_matrix(station1, station2, bands)
 			print_matrix(s_path, matrix)
 		else:
 			pass
 
+		# End: Two-Files Option
+
 	elif isinstance(files[0], list):
+
+		# Start: List of Files Option
+
 		list1, list2, coorX, coorY = files
 		indir1, indir2 = get_in()
 
@@ -416,21 +449,28 @@ if __name__ == "__main__":
 		else:
 			Ex = Ey = 0.0
 
+		# captures input data
 		s_path, m_path = get_out()
+		bands    = get_bands()
+		azimuth  = get_azimuth()
+		commondt = get_dt()
+		decifmax = get_fmax()
+		eq_time  = get_earthq()
+		leading  = get_leading()
 
-		bands = get_bands()
-
+		# open output files
 		try:
 			f = open(s_path, 'w')
 			m = open(m_path, 'w')
 		except IOError, e:
 			print e
 
+		# prepares formats for output files
+
 		labels = set_labels(bands)
 		m_labels = set_mlabels()
 
 		d = '{:>12}'*2 + '{:>12.8}'*(len(labels)-2) + '\n'
-		# d = '{:>12}'*len(labels) + '\n'
 		f.write(d.format(*labels))
 
 		d = '{:>12}'*2 + '{:>12.6}'*(len(m_labels)-2) + '\n'
@@ -438,43 +478,59 @@ if __name__ == "__main__":
 		f.close()
 		m.close()
 
-		i = 0
-		# for i in range(0, len(list1)):
-		while i < len(list1):
+		# loop of the list of pairs given in the list-file
+		for i in range(0, len(list1)):
+
+			# capture full path to files
 			file1 = indir1 + '/' + list1[i]
 			file2 = indir2 + '/' + list2[i]
 
-			# if file1 does not exist, search for files
+			# if file1 not in dir1, search for a match
 			if not os.path.isfile(file1):
-				file_dir = search_file(indir1, list1[i])
-				for fp in file_dir.values():
-					# if found matched file; update the lists
-					if fp:
-						list1.insert(i+1, fp)
-						list2.insert(i+1, list2[i])
-						coorX.insert(i+1, coorX[i])
-						coorY.insert(i+1, coorY[i])
+				fp = search_file(indir1, list1[i])
+				if fp == list1[i]:
+					# if returns without change, move on
+					print "...Ignoring pair:   " + list1[i] + " - " + list2[i]
+					continue
+				file1 = indir1 + '/' + fp
+			# endif
+
+			# if file2 not in dir2, move on
+			if not os.path.isfile(file2):
+				print "...Ignoring pair:   " + list1[i] + " - " + list2[i]
+				continue
+			# endif
+
+			# Both files are available, attempts to process...
+			print "...Processing pair: " + file1 + " - " + file2
+
+			# computes epicentral distance
+			x = coorX[i]
+			y = coorY[i]
+			epdist = math.sqrt((x-Ex)**2+(y-Ey)**2)
+			coord = [x, y, epdist]
+
+			# reads signals
+			station1 = read_file(file1)
+			station2 = read_file(file2)
+
+			# processing signals
+			if station1 and station2:
+				station1, station2 = process(station1, station2, azimuth, commondt, decifmax, eq_time, leading)
 			else:
-				print "[...processing " + file1 + ' and ' + file2 + '...]'
+				print "...Ignoring pair:   " + list1[i] + " - " + list2[i]
+				continue
 
-				x = coorX[i]
-				y = coorY[i]
+			if station1 and station2:
+				# print_her(file1, station1)
+				# print_her(file2, station2)
+				parameter, matrix = scores_matrix(station1, station2, bands)
+				parameter = parameter_to_list(parameter)
 
-				epdist = math.sqrt((x-Ex)**2+(y-Ey)**2)
-				coord = [x, y, epdist]
-
-				station1, station2 = main(file1, file2)
-				if station1 and station2:
-					# print_her(file1, station1)
-					# print_her(file2, station2)
-					parameter, matrix = scores_matrix(station1, station2, bands)
-					parameter = parameter_to_list(parameter)
-
-					print_scores([file1,file2], coord, s_path, [], matrix) # print scores
-					print_scores([file1,file2], coord, m_path, parameter, np.array([])) # print values used to calculate scores
-				else:
-					pass
-			i += 1
+				print_scores([file1,file2], coord, s_path, [], matrix) # print scores
+				print_scores([file1,file2], coord, m_path, parameter, np.array([])) # print values used to calculate scores
+			else:
+				pass
 
 	print "[DONE]"
 

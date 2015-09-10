@@ -39,7 +39,7 @@ def S(p1, p2):
 	# S(p1, p2) = 10*exp{-[(p1-p2)/min(p1, p2)]^2}
 	if min(p1, p2) == 0:
 		print "\n\nThere is a division by zero\n\n"
-		# return 10
+		return 99
 	s = 10*np.exp(-((p1-p2)/min(p1, p2))**2)
 	return s
 

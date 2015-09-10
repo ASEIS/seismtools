@@ -38,8 +38,8 @@ def filter_data(psignal, fmin, fmax):
 def S(p1, p2):
 	# S(p1, p2) = 10*exp{-[(p1-p2)/min(p1, p2)]^2}
 	if min(p1, p2) == 0:
-		print "\n\nThere is a division by zero\n\n"
-		return 99
+		# print "\n\nThere is a division by zero\n\n"
+		return -1
 	s = 10*np.exp(-((p1-p2)/min(p1, p2))**2)
 	return s
 
@@ -324,6 +324,12 @@ def scores_matrix(station1, station2, thebands):
 			# duration1, duration2, score
 			d1, d2, c11 = cal_D(signal1, signal2)
 
+			# sanity check to avoid division by zero pairs
+			themin = min(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11)
+			if (themin < 0) or np.isnan(themin):
+				return parameter, matrix, False
+			# end if
+
 			scores = np.array([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11], float)
 			T = ((c1+c2)/2 + (c3+c4)/2 + c5 + c6 + c7 + c8 + c9 + c10 + c11)/9
 			A = (c1+c2+c3+c4+c5+c6+c7+c8+c9+c10)/10
@@ -363,7 +369,7 @@ def scores_matrix(station1, station2, thebands):
 			average = (matrix[1][i][j] + matrix[2][i][j] + matrix[3][i][j])/3
 			matrix[0][i][j] = round(average, 2)
 
-	return parameter, matrix
+	return parameter, matrix, True
 
 def summary(matrix):
 	""" generate a summary matrix contain average scores

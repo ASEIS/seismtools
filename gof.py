@@ -488,19 +488,19 @@ if __name__ == "__main__":
 				fp = search_file(indir1, list1[i])
 				if fp == list1[i]:
 					# if returns without change, move on
-					print "...Ignoring pair:   " + list1[i] + " - " + list2[i]
+					print "...Ignoring pair:   " + list1[i] + " - " + list2[i] + " (no data)"
 					continue
 				file1 = indir1 + '/' + fp
 			# endif
 
 			# if file2 not in dir2, move on
 			if not os.path.isfile(file2):
-				print "...Ignoring pair:   " + list1[i] + " - " + list2[i]
+				print "...Ignoring pair:   " + list1[i] + " - " + list2[i] + " (no synthetic)"
 				continue
 			# endif
 
 			# Both files are available, attempts to process...
-			print "...Processing pair: " + file1 + " - " + file2
+			print "\n...Processing pair: " + file1 + " - " + file2
 
 			# computes epicentral distance
 			x = coorX[i]
@@ -530,7 +530,15 @@ if __name__ == "__main__":
 			if station1 and station2:
 				# print_her(file1, station1)
 				# print_her(file2, station2)
-				parameter, matrix = scores_matrix(station1, station2, bands)
+				parameter, matrix, flag = scores_matrix(station1, station2, bands)
+
+				# sanity check to avoid division by zero
+				if not flag:
+					print "\n...Ignoring pair:   " + list1[i] + " - " + list2[i] + " (div by zero)"
+					continue
+				# end if: sanity check
+
+
 				parameter = parameter_to_list(parameter)
 
 				print_scores([file1,file2], coord, s_path, [], matrix) # print scores

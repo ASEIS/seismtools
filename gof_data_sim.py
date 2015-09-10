@@ -195,7 +195,7 @@ def synchronize(station1, station2, stamp, eqtimestamp, leading):
 	"""
 	if not stamp:
 		return station1, station2
-	print stamp
+	# print stamp
 
 	# eq = get_earthq()
 	# lt = get_leading()

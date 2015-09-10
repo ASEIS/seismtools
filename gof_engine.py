@@ -39,7 +39,7 @@ def S(p1, p2):
 	# S(p1, p2) = 10*exp{-[(p1-p2)/min(p1, p2)]^2}
 	if min(p1, p2) == 0:
 		print "\n\nThere is a division by zero\n\n"
-		# return 10
+		return 99
 	s = 10*np.exp(-((p1-p2)/min(p1, p2))**2)
 	return s
 
@@ -232,10 +232,14 @@ def cal_D(signal1, signal2):
 
 #  =================================================== GENERATING =====================================================
 
-def scores_matrix(station1, station2, bands):
+def scores_matrix(station1, station2, thebands):
 	"""
 	Generate the 3D matrix of scores
 	"""
+
+	# generating local copy of the bands
+	bands = copy.copy(thebands)
+	
 	print "...Generating main matrix..."
 	bands.insert(0, bands[len(bands)-1])
 	c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c9 = c10 = c11 = avg = 0.0

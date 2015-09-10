@@ -243,14 +243,14 @@ def scores_matrix(station1, station2, thebands):
 	print "...Generating main matrix..."
 	bands.insert(0, bands[len(bands)-1])
 
-	print "\n\t", bands, "\n"
-	# Optional plotting for checking
-	signal1 = station1[1]
-	signal2 = station2[1]
-	t1 = np.arange(0, signal1.samples*signal1.dt, signal1.dt)
-	t2 = np.arange(0, signal2.samples*signal2.dt, signal2.dt)
-	plt.plot(t1,signal1.accel,'r',t2,signal2.accel,'b')
-	plt.show()
+	# print "\n\t", bands, "\n"
+	# # Optional plotting for checking
+	# signal1 = station1[1]
+	# signal2 = station2[1]
+	# t1 = np.arange(0, signal1.samples*signal1.dt, signal1.dt)
+	# t2 = np.arange(0, signal2.samples*signal2.dt, signal2.dt)
+	# plt.plot(t1,signal1.accel,'r',t2,signal2.accel,'b')
+	# plt.show()
 
 	c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c9 = c10 = c11 = avg = 0.0
 

@@ -239,7 +239,7 @@ def scores_matrix(station1, station2, thebands):
 
 	# generating local copy of the bands
 	bands = copy.copy(thebands)
-	
+
 	print "...Generating main matrix..."
 	bands.insert(0, bands[len(bands)-1])
 	c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c9 = c10 = c11 = avg = 0.0
@@ -498,8 +498,8 @@ def set_labels(bands):
 
 	labels = ['#SIGNAL1', 'SIGNAL2', 'X_COOR', 'Y_COOR', 'EPI_DIS']
 	for i in range(0, len(o)):
-		for j in range(0, len(b)):
-			for k in range(0, len(s)):
+		for k in range(0, len(s)):
+			for j in range(0, len(b)):
 				labels.append(o[i]+'_'+b[j]+'_'+s[k])
 	return labels
 # end of set_labels

@@ -9,6 +9,7 @@ import sys
 import os
 import numpy as np
 import math
+import copy
 from seism import *
 from stools import *
 from gof_engine import *
@@ -281,7 +282,7 @@ def read_file(filename):
 # end of read_file
 
 def print_her(filename, station):
-	filename = 'processed-' + filename.split('/')[-1]
+	# filename = 'processed-' + filename.split('/')[-1]
 	try:
 		f = open(filename, 'w')
 	except IOError, e:
@@ -346,7 +347,6 @@ def check_data(station):
 			return False
 	return station
 # end of check_data
-
 
 def process(station1, station2, azimuth, commondt, decifmax, eq_time, leading):
 	"""
@@ -436,6 +436,24 @@ if __name__ == "__main__":
 			print_matrix(s_path, matrix)
 		else:
 			pass
+
+		# Ask if want to print files
+		pflag = raw_input('\n== Do you want to print the processed signals [y] or [n]: ')
+		pflag = str(pflag).lower()
+		if pflag == "y":
+			cstn1 = copy.copy(station1)
+			cstn2 = copy.copy(station2)
+			for i in range(3):
+				sig1 = cstn1[i]
+				sig2 = cstn2[i]
+				sig1 = filter_data(sig1, bands[0], bands[-1])
+				sig2 = filter_data(sig2, bands[0], bands[-1])
+			# end for
+			fname1 = outdir + "/p-" + file1.split('/')[-1]
+			fname2 = outdir + "/p-" + file2.split('/')[-1]
+			print_her(fname1, cstn1)
+			print_her(fname2, cstn2)
+		# end if print processed
 
 		# End: Two-Files Option
 

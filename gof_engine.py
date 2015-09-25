@@ -243,7 +243,6 @@ def scores_matrix(station1, station2, thebands):
 	print "...Generating main matrix..."
 	bands.insert(0, bands[len(bands)-1])
 
-	# print "\n\t", bands, "\n"
 	# # Optional plotting for checking
 	# signal1 = station1[1]
 	# signal2 = station2[1]

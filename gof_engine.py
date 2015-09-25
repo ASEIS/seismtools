@@ -514,8 +514,8 @@ def set_labels(bands):
 
 	labels = ['#SIGNAL1', 'SIGNAL2', 'X_COOR', 'Y_COOR', 'EPI_DIS']
 	for i in range(0, len(o)):
-		for j in range(0, len(b)):
-			for k in range(0, len(s)):
+		for k in range(0, len(s)):
+			for j in range(0, len(b)):
 				labels.append(o[i]+'_'+b[j]+'_'+s[k])
 	return labels
 # end of set_labels

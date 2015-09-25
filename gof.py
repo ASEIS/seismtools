@@ -81,7 +81,7 @@ def get_out():
 
 	path1 = outdir + '/' + outname1
 	path2 = outdir + '/' + outname2
-	return  path1, path2
+	return  outdir, path1, path2
 
 
 def get_files():
@@ -409,7 +409,7 @@ if __name__ == "__main__":
 		coor = []
 
 		# captures input data
-		s_path, m_path = get_out()
+		outdir, s_path, m_path = get_out()
 		bands    = get_bands()
 		decifmax = get_fmax()
 		commondt = get_dt()
@@ -425,7 +425,7 @@ if __name__ == "__main__":
 		if station1 and station2:
 			station1, station2 = process(station1, station2, azimuth, commondt, decifmax, eq_time, leading)
 		else:
-			print "...Ignoring pair:   " + list1[i] + " - " + list2[i]
+			print "...Ignoring pair:   " + list1[i] + " - " + list2[i] + " (process)"
 			pass
 
 		if station1 and station2:
@@ -447,7 +447,7 @@ if __name__ == "__main__":
 		indir1, indir2 = get_in()
 
 		# captures input data
-		s_path, m_path = get_out()
+		outdir, s_path, m_path = get_out()
 		bands    = get_bands()
 		decifmax = get_fmax()
 		commondt = get_dt()
@@ -463,6 +463,7 @@ if __name__ == "__main__":
 		try:
 			f = open(s_path, 'w')
 			m = open(m_path, 'w')
+			u = open(outdir + "/unprocessed.txt", 'w')
 		except IOError, e:
 			print e
 
@@ -479,6 +480,9 @@ if __name__ == "__main__":
 		f.close()
 		m.close()
 
+		# create empty list for pairs that fail to be processed
+		unprocessed = []
+
 		# loop of the list of pairs given in the list-file
 		for i in range(0, len(list1)):
 
@@ -491,14 +495,18 @@ if __name__ == "__main__":
 				fp = search_file(indir1, list1[i])
 				if fp == list1[i]:
 					# if returns without change, move on
-					print "...Ignoring pair:   " + list1[i] + " - " + list2[i] + " (no data)"
+					tmpmsg = list1[i] + " - " + list2[i] + " (no data)"
+					unprocessed.append(tmpmsg)
+					print "\n...Ignoring pair:   " + tmpmsg
 					continue
 				file1 = indir1 + '/' + fp
 			# endif
 
 			# if file2 not in dir2, move on
 			if not os.path.isfile(file2):
-				print "...Ignoring pair:   " + list1[i] + " - " + list2[i] + " (no synthetic)"
+				tmpmsg = list1[i] + " - " + list2[i] + " (no synthetic)"
+				unprocessed.append(tmpmsg)
+				print "\n...Ignoring pair:   " + tmpmsg
 				continue
 			# endif
 
@@ -519,7 +527,9 @@ if __name__ == "__main__":
 			if station1 and station2:
 				station1, station2 = process(station1, station2, azimuth, commondt, decifmax, eq_time, leading)
 			else:
-				print "...Ignoring pair:   " + list1[i] + " - " + list2[i]
+				tmpmsg = list1[i] + " - " + list2[i] + " (fail to process)"
+				unprocessed.append(tmpmsg)
+				print "\n...Ignoring pair:   " + tmpmsg
 				continue
 
 			# Optional plotting for checking
@@ -537,10 +547,11 @@ if __name__ == "__main__":
 
 				# sanity check to avoid division by zero
 				if not flag:
-					print "\n...Ignoring pair:   " + list1[i] + " - " + list2[i] + " (div by zero)"
+					tmpmsg = list1[i] + " - " + list2[i] + " (div by zero)"
+					unprocessed.append(tmpmsg)
+					print "\n...Ignoring pair:   " + tmpmsg
 					continue
 				# end if: sanity check
-
 
 				parameter = parameter_to_list(parameter)
 
@@ -548,6 +559,14 @@ if __name__ == "__main__":
 				print_scores([file1,file2], coord, m_path, parameter, np.array([])) # print values used to calculate scores
 			else:
 				pass
+			# end if station1 and station2
+		# end loop of the list of pairs
+
+		for pair in unprocessed:
+  			u.write("%s\n" % pair)
+
+	#end of if instance switch
 
 	print "[DONE]"
+# end of main program
 

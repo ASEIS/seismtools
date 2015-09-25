@@ -411,9 +411,9 @@ if __name__ == "__main__":
 		# captures input data
 		s_path, m_path = get_out()
 		bands    = get_bands()
-		azimuth  = get_azimuth()
-		commondt = get_dt()
 		decifmax = get_fmax()
+		commondt = get_dt()
+		azimuth  = get_azimuth()
 		eq_time  = get_earthq()
 		leading  = get_leading()
 
@@ -429,7 +429,10 @@ if __name__ == "__main__":
 			pass
 
 		if station1 and station2:
-			parameter, matrix = scores_matrix(station1, station2, bands)
+			parameter, matrix, flag = scores_matrix(station1, station2, bands)
+			if not flag:
+				print "\n...Pair was not processed"
+
 			print_matrix(s_path, matrix)
 		else:
 			pass

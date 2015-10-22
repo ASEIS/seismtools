@@ -10,9 +10,10 @@ from scipy.signal import filtfilt, ellip, butter, kaiser
 from scipy.fftpack import fft, fftshift
 from scipy.integrate import cumtrapz
 
+
 def integrate(data, dt):
 	"""
-	compute derivative of a numpy array 
+	compute derivative of a numpy array
 	initial condition assumed 0
 	result has same size as input
 	"""

@@ -681,10 +681,6 @@ class seism_station(object):
             #     print "[ERROR]: invalid orientation."
             #     return False
 
-            # record.convert() # convert the unit of data
-            correct_baseline(record)
-            scale_signal(record, 981)
-
 
             # reverse the data by orientation
             if record.process_ori() == True: # if encounter special orientations.
@@ -692,6 +688,11 @@ class seism_station(object):
                 break
             elif record.process_ori() == False: # if encouter invalid orientations.
                 return False
+                
+            # record.convert() # convert the unit of data
+            correct_baseline(record)
+            scale_signal(record, 981)
+
 
             if record.type == 'a':
                 # get velocity and displacement

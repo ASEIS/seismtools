@@ -340,7 +340,7 @@ def scores_matrix(station1, station2, thebands):
 
 			# getting parameters used to calculate peak, AI, EI, and duration
 			# for broad band only
-			if j == 1:
+			if j == 0:
 				parameter[i-1] = np.array([pgd1, pgd2, pgv1, pgv2, pga1, pga2, a1, a2, e1, e2, d1, d2], float)
 
 		SA = np.array([],float)

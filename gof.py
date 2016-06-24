@@ -78,7 +78,7 @@ def get_out():
 		outname1 = raw_input('== Enter name of scores file: ')
 
 	while not outname2:
-		outname2 = raw_input('== Enter name of matrics file: ')
+		outname2 = raw_input('== Enter name of metrics file: ')
 
 	path1 = outdir + '/' + outname1
 	path2 = outdir + '/' + outname2

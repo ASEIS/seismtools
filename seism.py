@@ -739,6 +739,9 @@ class seism_station(object):
             else:
                 self.list = record_list
                 return True
+        else:
+            # rotation not needed
+            return True
     # end of process_v2
 
 #end station class

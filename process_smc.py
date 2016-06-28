@@ -5,7 +5,8 @@
 # ==========================================================================
 import sys
 import os
-from smc import get_destination, load_smc_v1, load_smc_v2, print_smc, print_her
+from smc import set_destination, load_smc_v1, load_smc_v2, \
+                print_smc, print_her, print_bbp
 from seism import seism_station
 
 destination = ''
@@ -17,6 +18,7 @@ def get_filename():
     output files will be written.
     """
     file_list = []
+    output_format = ''
     global destination
 
     # ask user if filename is not provided in command-line
@@ -40,12 +42,17 @@ def get_filename():
             clear(os.path.join(destination, 'unprocessed.txt'))
         if os.path.exists(os.path.join(destination, 'warning.txt')):
             clear(os.path.join(destination, 'warning.txt'))
+    # Set destination in smc module
+    set_destination(destination)
 
-    get_destination(destination)
-    return file_list
+    # Get the output format the user wants
+    while output_format != 'bbp' and output_format != 'her':
+        output_format = raw_input('== Enter output format (bbp/her): ')
+        output_format = output_format.lower()
+    return file_list, output_format
 # end of get_filename
 
-def read_list(file_list):
+def read_list(file_list, output_format):
     """
     The function is to read a list of files/directory and check their
     types to call corresponding functions.
@@ -94,7 +101,13 @@ def read_list(file_list):
                     print_message(f, 'unprocessed')
                 else:
                     print_smc(station)
-                    print_her(station)
+                    if output_format == 'her':
+                        print_her(station)
+                    elif output_format == 'bbp':
+                        print_bbp(station)
+                    else:
+                        print("Error: Unknown output format %s!" %
+                              (output_format))
                     check_station(station)
 
             else:
@@ -159,5 +172,5 @@ def clear(filename):
 # end of clear
 
 # Main function
-FILE_LIST = get_filename()
-read_list(FILE_LIST)
+FILE_LIST, OUTPUT_FORMAT = get_filename()
+read_list(FILE_LIST, OUTPUT_FORMAT)

@@ -19,7 +19,7 @@ def get_filename():
     file_list = []
     global destination
 
-    # if filenam is not given with command
+    # ask user if filename is not provided in command-line
     if len(sys.argv) == 1:
         while not file_list:
             file_list = raw_input('== Enter the file / directory name: ')

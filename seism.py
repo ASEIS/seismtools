@@ -6,7 +6,7 @@ __author__ = 'rtaborda'
 import numpy as np
 import matplotlib.pyplot as plt
 import math
-from stools import *
+from stools import correct_baseline, scale_signal, integrate, s_filter
 
 class seism_signal(object):
     """

@@ -8,8 +8,9 @@ from __future__ import division
 import sys
 import copy
 import numpy as np
-from seism import integrate, s_filter, seism_psignal
+from seism import integrate
 from stools import max_osc_response, get_points, get_period, FAS
+from ptools import filter_data
 
 np.seterr(divide='ignore', invalid='ignore')
 
@@ -19,25 +20,6 @@ def update():
     """
     sys.stdout.write('-')
     sys.stdout.flush()
-
-def filter_data(psignal, fmin, fmax):
-    if not isinstance(psignal, seism_psignal):
-        print "[ERROR]: encounter error filting psignal."
-        return False
-    dt = psignal.dt
-    psignal.accel = s_filter(psignal.accel, dt, type='bandpass',
-                             family='butter', fmin=fmin, fmax=fmax,
-                             N=4, rp=0.1, rs=100)
-    psignal.velo = s_filter(psignal.velo, dt, type='bandpass',
-                            family='butter', fmin=fmin, fmax=fmax,
-                            N=4, rp=0.1, rs=100)
-    psignal.displ = s_filter(psignal.displ, dt, type='bandpass',
-                             family='butter', fmin=fmin, fmax=fmax,
-                             N=4, rp=0.1, rs=100)
-
-    psignal.data = np.c_[psignal.displ, psignal.velo, psignal.accel]
-
-    return psignal
 
 def S(p1, p2):
     # S(p1, p2) = 10*exp{-[(p1-p2)/min(p1, p2)]^2}

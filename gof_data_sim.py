@@ -1,28 +1,34 @@
 #!/usr/bin/env python
-# ===================================================================================
+"""
+# =============================================================================
 # The program processes data reference and simulation signals.
-# Including rotation, making equal dt, and synchronization of starting and ending time.
-# ===================================================================================
+# Including rotation, making equal dt, and synchronization
+# of starting and ending time.
+# =============================================================================
+"""
+from __future__ import division, print_function
 import os
+import math
 import numpy as np
 from scipy import interpolate
-from seism import *
-from stools import *
+from seism import seism_psignal, s_filter
+from stools import seism_cutting, seism_appendzeros
 # import matplotlib.pyplot as plt
 
 def scale_synthetics(station):
     # scales synthetics from meters to centimeters
     for i in range(0, len(station)):
         station[i].accel *= 100
-        station[i].velo  *= 100
+        station[i].velo *= 100
         station[i].displ *= -100
 
     return station
 # end of scale_data
 
-
 def get_azimuth():
-    """ get the azimuth for rotation from user. """
+    """
+    Get the azimuth for rotation from user.
+    """
     azimuth = ''
     while not azimuth:
         a = raw_input('== Enter azimuth for rotation (optional): ')
@@ -31,15 +37,16 @@ def get_azimuth():
         if not a:
             return azimuth
 
-        try :
+        try:
             azimuth = float(a)
         except ValueError:
-            print "[ERROR]: invalid azimuth."
+            print("[ERROR]: invalid azimuth.")
     return azimuth
 
-
 def rotate(station, azimuth):
-    """ station = [psignal_ns, psignal_ew, psignal_up] """
+    """
+    Station = [psignal_ns, psignal_ew, psignal_up]
+    """
     # checking instance
     if len(station) != 3:
         return station
@@ -62,16 +69,22 @@ def rotate(station, azimuth):
         return station
 
     # rotate data in North and East
-    matrix = np.array([(math.cos(math.radians(azimuth)), -math.sin(math.radians(azimuth))), (math.sin(math.radians(azimuth)), math.cos(math.radians(azimuth)))])
-    [psignal_ns.accel, psignal_ew.accel] = matrix.dot([psignal_ns.accel, psignal_ew.accel])
-    [psignal_ns.velo, psignal_ew.velo] = matrix.dot([psignal_ns.velo, psignal_ew.velo])
-    [psignal_ns.disp, psignal_ew.disp] = matrix.dot([psignal_ns.displ, psignal_ew.displ])
+    matrix = np.array([(math.cos(math.radians(azimuth)),
+                        -math.sin(math.radians(azimuth))),
+                       (math.sin(math.radians(azimuth)),
+                        math.cos(math.radians(azimuth)))])
+    [psignal_ns.accel, psignal_ew.accel] = matrix.dot([psignal_ns.accel,
+                                                       psignal_ew.accel])
+    [psignal_ns.velo, psignal_ew.velo] = matrix.dot([psignal_ns.velo,
+                                                     psignal_ew.velo])
+    [psignal_ns.disp, psignal_ew.disp] = matrix.dot([psignal_ns.displ,
+                                                     psignal_ew.displ])
 
     station = [psignal_ns, psignal_ew, psignal_up]
     return station
 
 # end of rotate
-# ===============================================================================================================
+# ============================================================================
 
 def get_dt():
     dt = ''
@@ -80,28 +93,30 @@ def get_dt():
         try:
             dt = float(d)
         except ValueError:
-            print "[ERROR]: invalid dt."
+            print("[ERROR]: invalid dt.")
     return dt
 # end of get_dt
 
 def get_fmax():
     fmax = ''
     while not fmax:
-        f =  raw_input("== Enter the maximum frequence for decimation: ")
+        f = raw_input("== Enter the maximum frequence for decimation: ")
         try:
             fmax = float(f)
         except ValueError:
-            print "[ERROR]: invalid fmax."
+            print("[ERROR]: invalid fmax.")
     return fmax
 # end of get_fmax
 
 def interp(data, samples, old_dt, new_dt):
-    """ call interpolate on given data """
+    """
+    Call interpolate on given data
+    """
     old_t = np.arange(0, samples*old_dt, old_dt)
     if old_t.size == samples+1:
         old_t = old_t[:-1]
 
-    f = interpolate.interp1d(old_t, data, 'linear', bounds_error = False)
+    f = interpolate.interp1d(old_t, data, 'linear', bounds_error=False)
 
     new_t = np.arange(0, samples*old_dt, new_dt)
     new_data = f(new_t)
@@ -124,15 +139,23 @@ def interp(data, samples, old_dt, new_dt):
 # end of interpolate
 
 def process_signal_dt(signal, dt, fmax):
-    """ processes signal with common dt and fmax."""
+    """
+    Processes signal with common dt and fmax.
+    """
     # call low_pass filter at fmax
-    signal.accel = s_filter(signal.accel, signal.dt, type = 'lowpass', family = 'butter', fmax = fmax, N = 4, rp = 0.1, rs = 100)
-    signal.velo  = s_filter(signal.velo,  signal.dt, type = 'lowpass', family = 'butter', fmax = fmax, N = 4, rp = 0.1, rs = 100)
-    signal.displ = s_filter(signal.displ, signal.dt, type = 'lowpass', family = 'butter', fmax = fmax, N = 4, rp = 0.1, rs = 100)
+    signal.accel = s_filter(signal.accel, signal.dt, type='lowpass',
+                            family='butter', fmax=fmax,
+                            N=4, rp=0.1, rs=100)
+    signal.velo = s_filter(signal.velo, signal.dt, type='lowpass',
+                           family='butter', fmax=fmax,
+                           N=4, rp=0.1, rs=100)
+    signal.displ = s_filter(signal.displ, signal.dt, type='lowpass',
+                            family='butter', fmax=fmax,
+                            N=4, rp=0.1, rs=100)
 
     # interpolate
     signal.accel = interp(signal.accel, signal.samples, signal.dt, dt)
-    signal.velo  = interp(signal.velo,  signal.samples, signal.dt, dt)
+    signal.velo = interp(signal.velo, signal.samples, signal.dt, dt)
     signal.displ = interp(signal.displ, signal.samples, signal.dt, dt)
 
     signal.samples = signal.accel.size
@@ -142,7 +165,9 @@ def process_signal_dt(signal, dt, fmax):
 # end of process
 
 def process_dt(station1, station2, dt, fmax):
-    """ process all signals in two stations to have common dt """
+    """
+    Process all signals in two stations to have common dt
+    """
     # dt = get_dt()
     # fmax = get_fmax()
 
@@ -154,20 +179,22 @@ def process_dt(station1, station2, dt, fmax):
     return station1, station2
 # end of process_dt
 
-# ===============================================================================================================
+# ============================================================================
 def get_earthq():
-    """get the earthquake start time"""
-    time =  raw_input("== Enter the earthquake start time (#:#:#.#): ")
+    """
+    Get the earthquake start time
+    """
+    time = raw_input("== Enter the earthquake start time (#:#:#.#): ")
     time = time.split(':')
     if len(time) < 3:
-        print "[ERROR]: invalid time format."
+        print("[ERROR]: invalid time format.")
         return get_earthq()
     else:
         for i in range(0, len(time)):
             try:
                 time[i] = float(time[i])
             except ValueError:
-                print "[ERROR]: invalid time format."
+                print("[ERROR]: invalid time format.")
                 return get_earthq()
 
     # time = [hour, min, sec, frac]
@@ -175,7 +202,9 @@ def get_earthq():
 # end of get_earthq
 
 def get_leading():
-    """get the simulation leading time"""
+    """
+    Get the simulation leading time
+    """
     lt = ''
     while not lt:
         t = raw_input("== Enter the simulation leading time (sec): ")
@@ -183,7 +212,7 @@ def get_leading():
             lt = float(t)
             return lt
         except ValueError:
-            print "[ERROR]: invalid leading time."
+            print("[ERROR]: invalid leading time.")
     # return lt
 # end of get_leading
 
@@ -217,16 +246,20 @@ def synchronize(station1, station2, stamp, eqtimestamp, leading):
         # synchronize the start time
         if start < sim_start:
             # data time < sim time < earthquake time; cutting data array
-            signal1 = seism_cutting('front', (sim_start - start), 20, signal1, False)
+            signal1 = seism_cutting('front', (sim_start - start),
+                                    20, signal1, False)
 
         elif start > eq_time:
             # sim time < earthquake time < data time; adding zeros in front
-            signal1 = seism_appendzeros('front', (start - eq_time), 20, signal1)
-            signal2 = seism_cutting('front', (eq_time - sim_start), 20, signal2, False)
+            signal1 = seism_appendzeros('front', (start - eq_time),
+                                        20, signal1)
+            signal2 = seism_cutting('front', (eq_time - sim_start),
+                                    20, signal2, False)
 
         else:
             # sim time < data time < earthquake time; adding zeros
-            signal1 = seism_appendzeros('front', (start - sim_start), 20, signal1)
+            signal1 = seism_appendzeros('front', (start - sim_start),
+                                        20, signal1)
 
 
         # synchronize the ending time

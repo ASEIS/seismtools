@@ -338,8 +338,10 @@ def print_bbp(station):
 
         # Write header
         out_fp.write("# Station: %s_%s\n" % (station.network, station.id))
+        out_fp.write("#    time= %s,%s\n" % (precord.date, precord.time))
         out_fp.write("#     lon= %s\n" % (station.longitude))
         out_fp.write("#     lat= %s\n" % (station.latitude))
+        out_fp.write("#   units= %s\n" % (data[5]))
         out_fp.write("#\n")
         out_fp.write("# Data fields are TAB-separated\n")
         out_fp.write("# Column 1: Time (s)\n")

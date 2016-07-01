@@ -11,7 +11,7 @@ from seism import seism_station
 
 destination = ''
 
-def get_filename():
+def get_parameters():
     """
     This function gets the list of files to process and creates a list.
     Additionally, it asks the user to enter a destination directory where
@@ -21,15 +21,23 @@ def get_filename():
     output_format = ''
     global destination
 
-    # ask user if filename is not provided in command-line
-    if len(sys.argv) == 1:
-        while not file_list:
-            file_list = raw_input('== Enter the file / directory name: ')
-        file_list = file_list.split()
+    # Check if user provided any parameters
+    if len(sys.argv) >= 2:
+        output_format = sys.argv[1]
+    if len(sys.argv) >= 3:
+        destination = sys.argv[2]
+    if len(sys.argv) >= 4:
+        file_list = sys.argv[3:]
 
-    # one or more filenames are given; get a list of them
-    else:
-        file_list = sys.argv[1:]
+    # Get the output format the user wants
+    while output_format != 'bbp' and output_format != 'her':
+        output_format = raw_input('== Enter output format (bbp/her): ')
+        output_format = output_format.lower()
+
+    while not file_list:
+        # ask user if filename is not provided in command-line
+        file_list = raw_input('== Enter the file / directory name: ')
+        file_list = file_list.split()
 
     while not destination:
         destination = raw_input('== Enter name of the directory to store outputs: ')
@@ -42,13 +50,11 @@ def get_filename():
             clear(os.path.join(destination, 'unprocessed.txt'))
         if os.path.exists(os.path.join(destination, 'warning.txt')):
             clear(os.path.join(destination, 'warning.txt'))
+
     # Set destination in smc module
     set_destination(destination)
 
-    # Get the output format the user wants
-    while output_format != 'bbp' and output_format != 'her':
-        output_format = raw_input('== Enter output format (bbp/her): ')
-        output_format = output_format.lower()
+    # All done!
     return file_list, output_format
 # end of get_filename
 
@@ -172,5 +178,5 @@ def clear(filename):
 # end of clear
 
 # Main function
-FILE_LIST, OUTPUT_FORMAT = get_filename()
+FILE_LIST, OUTPUT_FORMAT = get_parameters()
 read_list(FILE_LIST, OUTPUT_FORMAT)

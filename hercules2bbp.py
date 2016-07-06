@@ -6,18 +6,17 @@ from __future__ import division, print_function
 
 # Import python modules
 import os
-import sys
+import argparse
 
-def write_bbp_header(out_fp, file_type, file_unit,
-                     lon, lat, station, time):
+def write_bbp_header(out_fp, file_type, file_unit, args):
     """
     This function writes the bbp header
     """
     # Write header
-    out_fp.write("# Station: %s\n" % (station))
-    out_fp.write("#    time= %s\n" % (time))
-    out_fp.write("#     lon= %s\n" % (lon))
-    out_fp.write("#     lat= %s\n" % (lat))
+    out_fp.write("# Station: %s\n" % (args.station_name))
+    out_fp.write("#    time= %s\n" % (args.time))
+    out_fp.write("#     lon= %s\n" % (args.longitude))
+    out_fp.write("#     lat= %s\n" % (args.latitude))
     out_fp.write("#   units= %s\n" % (file_unit))
     out_fp.write("#\n")
     out_fp.write("# Data fields are TAB-separated\n")
@@ -34,26 +33,43 @@ def hercules2bbp_main():
     """
     Main function for hercules to bbp converter
     """
-    if len(sys.argv) < 3:
-        print("Usage: hercules2bbp input_hercules_file output_bbp_file_stem")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Converts a Hercules "
+                                     "file to BBP format, generating "
+                                     "displacement, velocity and acceleration "
+                                     "BBP files.")
+    parser.add_argument("-s", "--station-name", dest="station_name",
+                        default="NoName",
+                        help="provides the name for this station")
+    parser.add_argument("--lat", dest="latitude", type=float, default=0.0,
+                        help="provides the latitude for the station")
+    parser.add_argument("--lon", dest="longitude", type=float, default=0.0,
+                        help="provides the longitude for the station")
+    parser.add_argument("-t", "--time", default="00/00/00,0:0:0.0 UTC",
+                        help="provides timing information for this timeseries")
+    parser.add_argument("input_file", help="Hercules input timeseries")
+    parser.add_argument("output_stem",
+                        help="output BBP filename stem without the "
+                        " .{dis,vel,acc}.bbp extensions")
+    parser.add_argument("-d", dest="output_dir", default="",
+                        help="output directory for the BBP file")
+    args = parser.parse_args()
 
-    input_file = sys.argv[1]
-    output_file_dis = "%s.dis.bbp" % (sys.argv[2])
-    output_file_vel = "%s.vel.bbp" % (sys.argv[2])
-    output_file_acc = "%s.acc.bbp" % (sys.argv[2])
+    input_file = args.input_file
+    output_file_dis = "%s.dis.bbp" % (os.path.join(args.output_dir,
+                                                   args.output_stem))
+    output_file_vel = "%s.vel.bbp" % (os.path.join(args.output_dir,
+                                                   args.output_stem))
+    output_file_acc = "%s.acc.bbp" % (os.path.join(args.output_dir,
+                                                   args.output_stem))
 
     # Covert from Hercules to BBP format by selecting the velocity data
     ifile = open(input_file)
     o_dis_file = open(output_file_dis, 'w')
     o_vel_file = open(output_file_vel, 'w')
     o_acc_file = open(output_file_acc, 'w')
-    write_bbp_header(o_dis_file, "displacement", 'm', 0.0, 0.0,
-                     "NoName", "0:0:0.0")
-    write_bbp_header(o_vel_file, "velocity", 'm/s', 0.0, 0.0,
-                     "NoName", "0:0:0.0")
-    write_bbp_header(o_acc_file, "acceleration", 'm/s^2', 0.0, 0.0,
-                     "NoName", "0:0:0.0")
+    write_bbp_header(o_dis_file, "displacement", 'm', args)
+    write_bbp_header(o_vel_file, "velocity", 'm/s', args)
+    write_bbp_header(o_acc_file, "acceleration", 'm/s^2', args)
     for line in ifile:
         line = line.strip()
         # Skip comments
@@ -62,16 +78,19 @@ def hercules2bbp_main():
             # Write header
             if len(pieces) >= 10:
                 o_dis_file.write("# her header: # %s %s %s %s\n" %
-                                (pieces[0], pieces[1], pieces[2], pieces[3]))
+                                 (pieces[0], pieces[1], pieces[2], pieces[3]))
                 o_vel_file.write("# her header: # %s %s %s %s\n" %
-                                (pieces[0], pieces[4], pieces[5], pieces[6]))
+                                 (pieces[0], pieces[4], pieces[5], pieces[6]))
                 o_acc_file.write("# her header: # %s %s %s %s\n" %
-                                (pieces[0], pieces[7], pieces[8], pieces[9]))
+                                 (pieces[0], pieces[7], pieces[8], pieces[9]))
             else:
                 o_dis_file.write("# her header: %s\n" % (line))
             continue
         pieces = line.split()
         pieces = [float(piece) for piece in pieces]
+        # Write timeseries to files. Please not that Hercules files have
+        # the vertical component positive pointing down so we have to flip it
+        # here to match the BBP format in which vertical component points up
         o_dis_file.write("%1.9E %1.9E %1.9E %1.9E\n" %
                          (pieces[0], pieces[1], pieces[2], -1 * pieces[3]))
         o_vel_file.write("%1.9E %1.9E %1.9E %1.9E\n" %

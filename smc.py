@@ -317,9 +317,9 @@ def print_bbp(station):
             pass
 
     # Prepare to output
-    out_data = [['dis', dis_ns, dis_ew, dis_up, 'displacement', 'm'],
-                ['vel', vel_ns, vel_ew, vel_up, 'velocity', 'm/s'],
-                ['acc', acc_ns, acc_ew, acc_up, 'acceleration', 'm/s^2']]
+    out_data = [['dis', dis_ns, dis_ew, dis_up, 'displacement', 'cm'],
+                ['vel', vel_ns, vel_ew, vel_up, 'velocity', 'cm/s'],
+                ['acc', acc_ns, acc_ew, acc_up, 'acceleration', 'cm/s^2']]
 
     for data in out_data:
         filename = "%s.%s.bbp" % (filename_base, data[0])

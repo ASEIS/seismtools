@@ -100,7 +100,7 @@ def get_dt():
 def get_fmax():
     fmax = ''
     while not fmax:
-        f = raw_input("== Enter the maximum frequence for decimation: ")
+        f = raw_input("== Enter the maximum frequency for decimation: ")
         try:
             fmax = float(f)
         except ValueError:

@@ -7,7 +7,6 @@
 # =============================================================================
 """
 from __future__ import division, print_function
-import os
 import math
 import numpy as np
 from scipy import interpolate
@@ -55,6 +54,7 @@ def get_azimuth():
         except ValueError:
             print("[ERROR]: invalid azimuth.")
     return azimuth
+# end of get_azimuth
 
 def rotate(station, azimuth):
     """
@@ -71,13 +71,7 @@ def rotate(station, azimuth):
     psignal_ew = station[1]
     psignal_up = station[2]
 
-    # This is now done in scale_synthetics
-    # # rotate data in Up/Down
-    # psignal_up.accel *= -1
-    # psignal_up.velo *= -1
-    # psignal_up.displ *= -1
-
-    # azimuth = get_azimuth()
+    # Nothing to do
     if not azimuth:
         return station
 
@@ -95,8 +89,8 @@ def rotate(station, azimuth):
 
     station = [psignal_ns, psignal_ew, psignal_up]
     return station
-
 # end of rotate
+
 # ============================================================================
 
 def get_dt():
@@ -181,9 +175,6 @@ def process_dt(station1, station2, dt, fmax):
     """
     Process all signals in two stations to have common dt
     """
-    # dt = get_dt()
-    # fmax = get_fmax()
-
     # process signals in stations
     for i in range(0, 3):
         station1[i] = process_signal_dt(station1[i], dt, fmax)
@@ -229,7 +220,6 @@ def get_leading():
     # return lt
 # end of get_leading
 
-
 def synchronize(station1, station2, stamp, eqtimestamp, leading):
     """
     synchronize the stating time and ending time of data arrays in two signals
@@ -237,10 +227,6 @@ def synchronize(station1, station2, stamp, eqtimestamp, leading):
     """
     if not stamp:
         return station1, station2
-    # print stamp
-
-    # eq = get_earthq()
-    # lt = get_leading()
 
     # time in sec = hr*3600 + min*60 + sec + frac*0.1
     start = stamp[0]*3600 + stamp[1]*60 + stamp[2]
@@ -254,7 +240,6 @@ def synchronize(station1, station2, stamp, eqtimestamp, leading):
         samples2 = signal2.samples
 
         dt = signal1.dt # same dt of two signals
-        samples = signal1.samples # original samples
 
         # synchronize the start time
         if start < sim_start:
@@ -273,7 +258,6 @@ def synchronize(station1, station2, stamp, eqtimestamp, leading):
             # sim time < data time < earthquake time; adding zeros
             signal1 = seism_appendzeros('front', (start - sim_start),
                                         20, signal1)
-
 
         # synchronize the ending time
         data_time = dt * samples1 # total time of data signal
@@ -297,7 +281,6 @@ def synchronize(station1, station2, stamp, eqtimestamp, leading):
             seism_appendzeros('end', signal2.dt, 20, signal2)
         elif signal2.samples == signal1.samples+1:
             seism_appendzeros('end', signal1.dt, 20, signal1)
-
 
         station1[i] = signal1
         station2[i] = signal2

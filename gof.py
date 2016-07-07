@@ -14,7 +14,8 @@ from ptools import get_files, get_bands, read_stamp, check_data, read_file, \
 from gof_engine import print_scores, set_labels, set_mlabels, scores_matrix, \
     filter_data, print_matrix, parameter_to_list
 from gof_data_sim import get_dt, get_azimuth, get_leading, get_earthq, \
-    get_fmax, rotate, synchronize, scale_synthetics, process_dt
+    get_fmax, rotate, synchronize, scale_from_m_to_cm, process_dt, \
+    reverse_up_down
 # import matplotlib.pyplot as plt
 
 np.seterr(divide='ignore', invalid='ignore')
@@ -145,7 +146,8 @@ def process(file1, file2, station1, station2,
     """
 
     # scale synthetics to cm(/s/s)
-    station2 = scale_synthetics(station2)
+    station2 = scale_from_m_to_cm(station2)
+    station2 = reverse_up_down(station2)
 
     # rotate synthetics
     station2 = rotate(station2, azimuth)

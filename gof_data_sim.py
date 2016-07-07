@@ -15,12 +15,25 @@ from seism import seism_psignal, s_filter
 from stools import seism_cutting, seism_appendzeros
 # import matplotlib.pyplot as plt
 
-def scale_synthetics(station):
-    # scales synthetics from meters to centimeters
+def reverse_up_down(station):
+    """
+    reverse up down component
+    """
+    # station has 3 components [ns, ew, ud]
+    # only need to flip the 3rd one
+    station[2].accel *= -1
+    station[2].velo *= -1
+    station[2].displ *= -1
+
+    return station
+# end of reverse_up_down
+
+def scale_from_m_to_cm(station):
+    # scales timeseries from meters to centimeters
     for i in range(0, len(station)):
         station[i].accel *= 100
         station[i].velo *= 100
-        station[i].displ *= -100
+        station[i].displ *= 100
 
     return station
 # end of scale_data
@@ -288,7 +301,6 @@ def synchronize(station1, station2, stamp, eqtimestamp, leading):
 
         station1[i] = signal1
         station2[i] = signal2
-
 
     return station1, station2
 # end of synchronize

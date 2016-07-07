@@ -346,11 +346,11 @@ def print_bbp(station):
         out_fp.write("# Data fields are TAB-separated\n")
         out_fp.write("# Column 1: Time (s)\n")
         out_fp.write("# Column 2: N/S component ground "
-                     "%s (%s) (+ is 000)\n" % (data[4], data[5]))
+                     "%s (+ is 000)\n" % (data[4]))
         out_fp.write("# Column 3: E/W component ground "
-                     "%s (%s) (+ is 090)\n" % (data[4], data[5]))
+                     "%s (+ is 090)\n" % (data[4]))
         out_fp.write("# Column 4: U/D component ground "
-                     "%s (%s) (+ is upward)\n" % (data[4], data[5]))
+                     "%s (+ is upward)\n" % (data[4]))
         out_fp.write("#\n")
 
         # Write timeseries

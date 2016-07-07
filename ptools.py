@@ -600,7 +600,7 @@ def print_bbp(input_file, output_file, station):
                              "%s (+ is 090)" % (data[4]),
                              "# Column 4: U/D component ground "
                              "%s (+ is upward)" % (data[4]),
-                             ""]
+                             "#"]
         else:
             # Read header of input file
             input_dirname = os.path.dirname(input_file)

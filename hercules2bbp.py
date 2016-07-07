@@ -22,11 +22,11 @@ def write_bbp_header(out_fp, file_type, file_unit, args):
     out_fp.write("# Data fields are TAB-separated\n")
     out_fp.write("# Column 1: Time (s)\n")
     out_fp.write("# Column 2: N/S component ground "
-                 "%s (%s) (+ is 000)\n" % (file_type, file_unit))
+                 "%s (+ is 000)\n" % (file_type))
     out_fp.write("# Column 3: E/W component ground "
-                 "%s (%s) (+ is 090)\n" % (file_type, file_unit))
+                 "%s (+ is 090)\n" % (file_type))
     out_fp.write("# Column 4: U/D component ground "
-                 "%s (%s) (+ is upward)\n" % (file_type, file_unit))
+                 "%s (+ is upward)\n" % (file_type))
     out_fp.write("#\n")
 
 def hercules2bbp_main():

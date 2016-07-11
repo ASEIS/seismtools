@@ -204,9 +204,10 @@ def read_files(obs_file, input_files):
             if units == "m":
                 obs_data = scale_from_m_to_cm(obs_data)
         else:
-            # Hercule file, need to scale and flip up/down component
-            obs_data = scale_from_m_to_cm(obs_data)
-            obs_data = reverse_up_down(obs_data)
+            # In Hercule files, for observation files data is already in
+            # cm, so nothing to do here!
+            #obs_data = reverse_up_down(obs_data)
+            pass
 
     # reads signals
     stations = []

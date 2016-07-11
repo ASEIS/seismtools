@@ -114,9 +114,9 @@ def FAS(data, dt, points, fmin, fmax, s_factor):
     freq = freq[inif:endf]
     return freq, afs
 
-def get_points(samples1, samples2):
+def get_points(samples):
     # points is the least base-2 number that is greater than max samples
-    power = int(math.log(max(samples1, samples2), 2)) + 1
+    power = int(math.log(max(samples), 2)) + 1
     return 2**power
 # end of get_points
 
@@ -178,14 +178,16 @@ def max_osc_response(acc, dt, csi, period, ini_disp, ini_vel):
 
     return maxdisp, maxvel, maxacc
 
-def cal_acc_response(period, data1, data2, dt1, dt2):
+def cal_acc_response(period, data, delta_ts):
+    """
     # return the response for acceleration only
-    rsp1 = []
-    rsp2 = []
+    """
+    rsps = [[] for _ in delta_ts]
     for p in period:
-        rsp1.append(max_osc_response(data1, dt1, 0.05, p, 0, 0)[-1])
-        rsp2.append(max_osc_response(data2, dt2, 0.05, p, 0, 0)[-1])
-    return rsp1, rsp2
+        for rsp, timeseries, delta_t in zip(rsps, data, delta_ts):
+            rsp.append(max_osc_response(timeseries, delta_t, 0.05,
+                                        p, 0, 0)[-1])
+    return rsps
 # end of cal_acc_response
 
 def taper(flag, m, samples):

@@ -95,7 +95,7 @@ def cal_Sfs(signal1, signal2, fmin, fmax):
     Sfs = mean(S(FS1, FS2))
     """
     update()
-    points = get_points(signal1.samples, signal2.samples)
+    points = get_points([signal1.samples, signal2.samples])
     fs1 = FAS(signal1.velo, signal1.dt, points, fmin, fmax, 3)[-1]
     fs2 = FAS(signal2.velo, signal2.dt, points, fmin, fmax, 3)[-1]
     s = np.array([], float)

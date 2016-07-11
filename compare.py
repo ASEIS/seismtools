@@ -10,8 +10,8 @@ from compare_signals import compare_her, compare_txt, set_parameter
 
 def check_type(filename):
     """
-	checks the type of file being .her or .txt
-	"""
+    checks the type of file being .her or .txt
+    """
     try:
         with open(filename) as input_file:
             content = input_file.readlines()

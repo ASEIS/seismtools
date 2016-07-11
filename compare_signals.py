@@ -8,6 +8,7 @@
 from __future__ import division, print_function
 
 import os
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from seism import s_filter, seism_signal, seism_psignal
@@ -486,6 +487,11 @@ def simple_plot(parameter, filenames, stations):
                   'gold', 'blueviolet', 'grey', 'pink']
     orientation = ['N/S', 'E/W', 'Up/Down']
 
+    # Check number of input timeseries
+    if len(stations) > len(all_styles):
+        print("[ERROR]: Too many timeseries to plot!")
+        sys.exit(-1)
+
     delta_ts = [station[0].dt for station in stations]
     files = [os.path.basename(filename) for filename in filenames]
 
@@ -547,8 +553,8 @@ def simple_plot(parameter, filenames, stations):
                                      points,
                                      xfmin,
                                      xfmax,
-                                     3) for c_vel, delta_t in zip (c_vels,
-                                                                   delta_ts)])
+                                     3) for c_vel, delta_t in zip(c_vels,
+                                                                  delta_ts)])
             rsps = cal_acc_response(period, c_accs, delta_ts)
         else:
             freqs, fas_s = zip(*[FAS(vel,
@@ -556,8 +562,8 @@ def simple_plot(parameter, filenames, stations):
                                      points,
                                      xfmin,
                                      xfmax,
-                                     3) for vel, delta_t in zip (vels,
-                                                                 delta_ts)])
+                                     3) for vel, delta_t in zip(vels,
+                                                                delta_ts)])
             rsps = cal_acc_response(period, accs, delta_ts)
 
         axarr[i][0] = plt.subplot2grid((3, 4), (i, 0), colspan=2, rowspan=1)

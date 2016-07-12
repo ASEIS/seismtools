@@ -511,7 +511,7 @@ def simple_plot(parameter, filenames, stations):
 
     period = get_period(tmin, tmax)
 
-    f, axarr = plt.subplots(nrows=3, ncols=3, figsize=(12, 9))
+    f, axarr = plt.subplots(nrows=3, ncols=3, figsize=(14, 9))
     for i in range(0, 3):
         title = orientation[i]
 
@@ -519,6 +519,12 @@ def simple_plot(parameter, filenames, stations):
         samples = [signal.samples for signal in signals]
         vels = [signal.velo for signal in signals]
         accs = [signal.accel for signal in signals]
+
+        for sample, max_i, delta_t in zip(samples, max_is, delta_ts):
+            if sample - 1 < max_i:
+                print("[ERROR]: t_max has to be under %f" %
+                      ((sample - 1) * delta_t))
+                sys.exit(1)
 
         # filtering data
         if f_flag:
@@ -568,6 +574,7 @@ def simple_plot(parameter, filenames, stations):
 
         axarr[i][0] = plt.subplot2grid((3, 4), (i, 0), colspan=2, rowspan=1)
         axarr[i][0].set_title(title)
+        axarr[i][0].grid(True)
         styles = all_styles[0:len(times)]
         for timeseries, c_vel, style in zip(times, c_vels, styles):
             axarr[i][0].plot(timeseries, c_vel, style)
@@ -578,6 +585,7 @@ def simple_plot(parameter, filenames, stations):
 
         axarr[i][1] = plt.subplot2grid((3, 4), (i, 2), rowspan=1, colspan=1)
         axarr[i][1].set_title('Fourier Amplitude Spectra')
+        axarr[i][1].grid(True)
         for freq, fas, style in zip(freqs, fas_s, styles):
             axarr[i][1].plot(freq, fas, style)
 
@@ -591,6 +599,7 @@ def simple_plot(parameter, filenames, stations):
         axarr[i][2] = plt.subplot2grid((3, 4), (i, 3), rowspan=1, colspan=1)
         axarr[i][2].set_title("Response Spectra")
         axarr[i][2].set_xscale('log')
+        axarr[i][2].grid(True)
         for rsp, style in zip(rsps, styles):
             axarr[i][2].plot(period, rsp, style)
 

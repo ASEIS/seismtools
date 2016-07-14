@@ -1,8 +1,11 @@
 #!/usr/bin/env python
+"""
 # ==========================================================================
-# The program is to get filename\directory in various ways, and then processes
+# The program is to get filename/directory in various ways, and then processes
 # found V1/V2 files --> generate column acceleration .txt files and .her files.
 # ==========================================================================
+"""
+from __future__ import print_function
 import sys
 import os
 from smc import set_destination, load_smc_v1, load_smc_v2, \
@@ -119,19 +122,19 @@ def read_list(file_list, output_format):
             else:
                 try:
                     fp = open(f)
-                except IOError, e:
-                    print e
+                except IOError as e:
+                    print(e)
                     pass
                 lines = fp.read().split()
                 if not '#filelist' in lines[0]:
-                    print "[ERROR]: unable to recognize file type: " + f
+                    print("[ERROR]: unable to recognize file type: %s" % (f))
                 else:
                     for l in lines[1:]:
                         if not l in file_list:
                             file_list.append(l)
                         # file_list += lines[1:]
         else:
-            print "[ERROR]: no such file or directory: " + f
+            print("[ERROR]: no such file or directory: %s" % (f))
 # end of read_list
 
 def print_message(message, ftype):
@@ -173,7 +176,7 @@ def clear(filename):
     """
     try:
         open(filename, 'w').close()
-    except IOError, e:
+    except IOError as e:
         pass
 # end of clear
 

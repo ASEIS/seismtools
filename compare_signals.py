@@ -37,8 +37,8 @@ def set_parameter(para):
     # if paramters not given in command
     xtmin, xtmax = set_axis('time')
     xfmin, xfmax = set_axis('freq')
-    f_flag = set_flag('filter')
-    if f_flag:
+    filter_flag = set_flag('filter')
+    if filter_flag:
         fmin, fmax = set_bound('fas')
     else:
         # else setting plot limits as fmin and fmax
@@ -49,9 +49,10 @@ def set_parameter(para):
     if tmin == 0:
         tmin = 0.1
 
-    c_flag = set_flag('cut')
+    cut_flag = set_flag('cut')
 
-    para = [xtmin, xtmax, xfmin, xfmax, f_flag, fmin, fmax, tmin, tmax, c_flag]
+    para = [xtmin, xtmax, xfmin, xfmax, filter_flag,
+            fmin, fmax, tmin, tmax, cut_flag]
     return para
 # end of set_parameter
 
@@ -248,13 +249,12 @@ def plot_signals(parameter, filenames, signal1, signal2):
     xtmax = parameter[1]
     xfmin = parameter[2]
     xfmax = parameter[3]
-    f_flag = parameter[4]
+    filter_flag = parameter[4]
     fmin = parameter[5]
     fmax = parameter[6]
     tmin = parameter[7]
     tmax = parameter[8]
-
-    c_flag = parameter[9]
+    cut_flag = parameter[9]
 
     title = 'Acceleration ONLY: '
 
@@ -266,7 +266,7 @@ def plot_signals(parameter, filenames, signal1, signal2):
     dt2 = signal2.dt
 
     # filtering data
-    if f_flag:
+    if filter_flag:
         data1 = s_filter(data1, dt1, type='bandpass', family='ellip',
                          fmin=fmin, fmax=fmax, N=3, rp=0.1, rs=100)
         data2 = s_filter(data2, dt2, type='bandpass', family='ellip',
@@ -289,7 +289,7 @@ def plot_signals(parameter, filenames, signal1, signal2):
     # setting period for Response
     period = get_period(tmin, tmax)
 
-    if not c_flag:
+    if not cut_flag:
         # if user chooses not to cut; use origina/filted data for FAS and Response
         freq1, fas1 = FAS(data1, dt1, points, xfmin, xfmax, 3)
         freq2, fas2 = FAS(data2, dt2, points, xfmin, xfmax, 3)
@@ -351,12 +351,12 @@ def plot_stations(parameter, filenames, station1, station2):
     xtmax = parameter[1]
     xfmin = parameter[2]
     xfmax = parameter[3]
-    f_flag = parameter[4]
+    filter_flag = parameter[4]
     fmin = parameter[5]
     fmax = parameter[6]
     tmin = parameter[7]
     tmax = parameter[8]
-    c_flag = parameter[9]
+    cut_flag = parameter[9]
 
     min_i1 = int(xtmin/dt1)
     max_i1 = int(xtmax/dt1)
@@ -375,7 +375,7 @@ def plot_stations(parameter, filenames, station1, station2):
         (acc_rsp1, acc_rsp2,
          vel_rsp1, vel_rsp2,
          dis_rsp1, dis_rsp2) = [], [], [], [], [], []
-        if c_flag:
+        if cut_flag:
             acc1 = signal1.accel[min_i1:max_i1]
             acc2 = signal2.accel[min_i2:max_i2]
         else:
@@ -423,7 +423,7 @@ def plot_stations(parameter, filenames, station1, station2):
             data2 = signal2.data[:, i]
 
             # filtering data
-            if f_flag:
+            if filter_flag:
                 data1 = s_filter(data1, dt1, type='bandpass', family='ellip',
                                  fmin=fmin, fmax=fmax, N=3, rp=0.1, rs=100)
                 data2 = s_filter(data2, dt2, type='bandpass', family='ellip',
@@ -438,7 +438,7 @@ def plot_stations(parameter, filenames, station1, station2):
 
             points = get_points([samples1, samples2])
 
-            if not c_flag:
+            if not cut_flag:
                 # if user chooses not to cut; use original data to calculate FAS and Response
                 freq1, fas1 = FAS(data1, dt1, points, xfmin, xfmax, 3)
                 freq2, fas2 = FAS(data2, dt2, points, xfmin, xfmax, 3)
@@ -499,12 +499,12 @@ def simple_plot(parameter, filenames, stations):
     xtmax = parameter[1]
     xfmin = parameter[2]
     xfmax = parameter[3]
-    f_flag = parameter[4]
+    filter_flag = parameter[4]
     fmin = parameter[5]
     fmax = parameter[6]
     tmin = parameter[7]
     tmax = parameter[8]
-    c_flag = parameter[9]
+    cut_flag = parameter[9]
 
     min_is = [int(xtmin/delta_t) for delta_t in delta_ts]
     max_is = [int(xtmax/delta_t) for delta_t in delta_ts]
@@ -527,7 +527,7 @@ def simple_plot(parameter, filenames, stations):
                 sys.exit(1)
 
         # filtering data
-        if f_flag:
+        if filter_flag:
             vels = [s_filter(vel,
                              delta_t,
                              type='bandpass',
@@ -553,7 +553,7 @@ def simple_plot(parameter, filenames, stations):
         times = [np.arange(xtmin, xtmax, delta_t) for delta_t in delta_ts]
         points = get_points(samples)
 
-        if c_flag:
+        if cut_flag:
             freqs, fas_s = zip(*[FAS(c_vel,
                                      delta_t,
                                      points,
@@ -617,7 +617,8 @@ def compare_txt(parameter, file1, file2):
     signal2 = read_txt(file2)
 
     if (not isinstance(signal1, seism_signal)) or (not isinstance(signal2, seism_signal)):
-        print("[ERROR]: Invalid instance type: can only compare signal objects.")
+        print("[ERROR]: "
+              "Invalid instance type: can only compare signal objects.")
         return
 
     filenames = [file1, file2]

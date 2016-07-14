@@ -74,6 +74,9 @@ def adjust_para(para):
     # set filter flag
     if (para[4] in ['y', 'Y']) and len(para) == 10:
         para[4] = True
+        # Make sure fmin > 0
+        if para[5] == 0:
+            para[5] = 0.001
     elif (para[4] in ['n', 'N']) and len(para) == 8:
         para[4] = False
     else:

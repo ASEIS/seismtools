@@ -483,7 +483,7 @@ def simple_plot(parameter, filenames, stations):
     """
     plotting velocity for data and FAS only acceleration for Response
     """
-    all_styles = ['r', 'b', 'k', 'm', 'g', 'c', 'y', 'brown',
+    all_styles = ['k', 'r', 'b', 'm', 'g', 'c', 'y', 'brown',
                   'gold', 'blueviolet', 'grey', 'pink']
     orientation = ['N/S', 'E/W', 'Up/Down']
 

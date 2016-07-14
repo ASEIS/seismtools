@@ -507,7 +507,7 @@ def print_her(filename, station):
     # filename = 'processed-' + filename.split('/')[-1]
     try:
         out_f = open(filename, 'w')
-    except IOError, e:
+    except IOError as e:
         print(e)
     dis_ns = station[0].displ.tolist()
     vel_ns = station[0].velo.tolist()
@@ -636,7 +636,7 @@ def print_bbp(input_file, output_file, station):
         # Write output file
         try:
             out_fp = open(bbp_output_filename, 'w')
-        except IOError, e:
+        except IOError as e:
             print(e)
             continue
 

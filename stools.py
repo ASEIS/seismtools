@@ -1,13 +1,14 @@
 #!/usr/bin/env python
-# ===================================================================================
+"""
+# =============================================================================
 # The program contains general functions what may be used by other programs.
 # Including: filter; integral; derivative; FAS;
-# ===================================================================================
-from __future__ import division
+# =============================================================================
+"""
+from __future__ import division, print_function
 import numpy as np
 import math
 from scipy.signal import filtfilt, ellip, butter, kaiser
-# from scipy.fftpack import fft, fftshift
 from scipy.integrate import cumtrapz
 
 def integrate(data, dt):
@@ -39,11 +40,11 @@ def s_filter(*args, **kwargs):
         data = args[0]
         dt = args[1]
     else:
-        print "[ERROR]: filter missing data and dt."
+        print("[ERROR]: filter missing data and dt.")
         return data
 
     if not isinstance(data, np.ndarray):
-        print "[ERROR]: data input for filter is not an numpy array."
+        print("[ERROR]: data input for filter is not an numpy array.")
         return data
 
     # default values
@@ -216,9 +217,9 @@ def taper(flag, m, samples):
         window = np.append(window, 1)
 
     if window.size != samples:
-        print window.size
-        print samples
-        print "[ERROR]: taper and data do not have the same number of samples."
+        print(window.size)
+        print(samples)
+        print("[ERROR]: taper and data do not have the same number of samples.")
         window = np.ones(samples)
 
     return window
@@ -271,7 +272,7 @@ def seism_cutting(flag, t_diff, m, signal, signal_flag):
 
     num = int(t_diff/signal.dt)
     if num >= signal.samples:
-        print "[ERROR]: fail to cut signal."
+        print("[ERROR]: fail to cut signal.")
         return signal
 
     if flag == 'front' and num != 0:
@@ -324,7 +325,7 @@ def seism_cutting(flag, t_diff, m, signal, signal_flag):
 def scale_signal(signal, factor):
     """scale the data of given signal"""
     if not isinstance(signal.data, np.ndarray):
-        print "[ERROR]: error in scale_signal; data is not an numpy array."
+        print("[ERROR]: error in scale_signal; data is not an numpy array.")
         return signal
     signal.data = factor*signal.data
     return signal
@@ -332,7 +333,7 @@ def scale_signal(signal, factor):
 
 def correct_baseline(signal):
     if not isinstance(signal.data, np.ndarray):
-        print "[ERROR]: error in correct_baseline; data is not an numpy array."
+        print("[ERROR]: error in correct_baseline; data is not an numpy array.")
         return signal
 
     # make average on first 10% of samples; minus average

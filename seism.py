@@ -1,5 +1,8 @@
 #!/usr/bin/env python
-from __future__ import division
+"""
+Contains data structures for signal, record, functions to process V1/V2 files
+"""
+from __future__ import division, print_function
 
 __author__ = 'rtaborda'
 
@@ -24,26 +27,26 @@ class seism_signal(object):
 
     def set_samples(self, samples):
         if not isinstance(samples, int):
-            print "\nError with samples type.\n"
+            print("\nError with samples type.\n")
         self.samples = samples
     #end set_samples
 
     def set_dt(self, delta_t):
         if not isinstance(delta_t, float):
-            print "\nError with time-step (dt).\n"
+            print("\nError with time-step (dt).\n")
         self.dt = delta_t
     #end set_dt
 
     def set_data(self, data):
         # check if the data passed is a numpy array
         if not isinstance(data, np.ndarray):
-            print "\nError with signal data: not a numpy array.\n"
+            print("\nError with signal data: not a numpy array.\n")
         self.data = data
     #end set_data
 
     def set_type(self, stype):
         if not isinstance(stype, str) or stype not in self.record_type:
-            print "\nError with signal type (must be: a, v, or d).\n"
+            print("\nError with signal type (must be: a, v, or d).\n")
         self.type = stype
     #end set_type
 
@@ -178,35 +181,37 @@ class seism_record(seism_signal):
 
     def set_station(self, station_name):
         if not isinstance(station_name, str):
-            print "\n**Error with station name.**\n"
+            print("\n**Error with station name.**\n")
         self.station_name = station_name
     #end set_station
 
     def set_latitude(self, location_lati):
         # checking latitude format being float+S/N
         if not isinstance(location_lati, str):
-            print "\n**Error with location latitude (Invalid instance type).**\n"
+            print("\n**Error with location latitude "
+                  "(Invalid instance type).**\n")
         elif location_lati[-1] not in ["N", "S"]:
-            print "\nError with location latitude (Invalid format).\n"
+            print("\nError with location latitude (Invalid format).\n")
         else:
             try:
                 float(location_lati[0:-2])
             except ValueError:
-                print "\nError with location latitude (Invalid format).\n"
+                print("\nError with location latitude (Invalid format).\n")
         self.location_lati = location_lati
     #end set_latitude
 
     def set_longitude(self, location_longi):
         # checking longitude format being float+E/W
         if not isinstance(location_longi, str):
-            print "\n**Error with location longitude (Invalid instance type).**\n"
+            print("\n**Error with location longitude "
+                  "(Invalid instance type).**\n")
         elif location_longi[-1] not in ["E", "W"]:
-            print "\n**Error with location longitude (Invalid format).**\n"
+            print("\n**Error with location longitude (Invalid format).**\n")
         else:
             try:
                 float(location_longi[0:-2])
             except ValueError:
-                print "\n**Error with location longitude (Invalid format).**\n"
+                print("\n**Error with location longitude (Invalid format).**\n")
 
         self.location_longi = location_longi
     #end set_longitude
@@ -214,7 +219,7 @@ class seism_record(seism_signal):
     def set_depth(self, depth):
         # checking depth
         if not isinstance(depth, float):
-            print "\n**Error with depth.**\n"
+            print("\n**Error with depth.**\n")
         self.depth = depth
     #end set_depth
 
@@ -226,23 +231,23 @@ class seism_record(seism_signal):
         elif isinstance(orientation, int) and orientation <= 360 and orientation >= 0:
             self.orientation = orientation
         else:
-            print "[ERROR]: Invalid orientation."
+            print("[ERROR]: Invalid orientation.")
     #end set_orientation
 
     def set_date(self, date):
         # check the format of date string being #/#/#
         if not isinstance(date, str):
-            print "[ERROR]: invalid date."
+            print("[ERROR]: invalid date.")
         else:
             for x in date.split('/'):
                 if x.isdigit() == False:
-                    print "[ERROR]: invalid date."
+                    print("[ERROR]: invalid date.")
                     break
         self.date = date
 
     def set_time(self, time):
         if not isinstance(time, str):
-            print "[ERROR]: invalid date."
+            print("[ERROR]: invalid date.")
         self.time = time
 
     # the function is to split time string into hour, minute, seconds, fraction, and tzone
@@ -259,7 +264,7 @@ class seism_record(seism_signal):
             seconds = float(seconds)
             fraction = float(fraction)
         except ValueError:
-            print "[ERROR]: invalid start time."
+            print("[ERROR]: invalid start time.")
 
         self.hour = hour
         self.minute = minute
@@ -269,23 +274,24 @@ class seism_record(seism_signal):
 
     # to test with record object
     def print_attr(self):
-        print "==================================================================="
-        print "samples: " + str(self.samples)
-        print "dt: " + str(self.dt)
-        print "data type: " + self.type
-        print self.data
-        print "station name: " + self.station_name
-        print "station latitude: " + self.location_lati
-        print "station longitude: " + self.location_longi
-        print "depth: ??"
-        print "date: " + self.date
-        print "time: " + self.time
-        print "hour: " + str(self.hour)
-        print "minute: " + str(self.minute)
-        print "seconds: " + str(self.seconds)
-        print "fraction: " + str(self.fraction)
-        print "tzone: " + self.tzone
-        print "orientation: " + str(self.orientation)
+        print("================================="
+              "==================================")
+        print("samples: " + str(self.samples))
+        print("dt: " + str(self.dt))
+        print("data type: " + self.type)
+        print(self.data)
+        print("station name: " + self.station_name)
+        print("station latitude: " + self.location_lati)
+        print("station longitude: " + self.location_longi)
+        print("depth: ??")
+        print("date: " + self.date)
+        print("time: " + self.time)
+        print("hour: " + str(self.hour))
+        print("minute: " + str(self.minute))
+        print("seconds: " + str(self.seconds))
+        print("fraction: " + str(self.fraction))
+        print("tzone: " + self.tzone)
+        print("orientation: " + str(self.orientation))
     #end print_attr
 
     def process_ori(self):
@@ -404,31 +410,32 @@ class seism_psignal(seism_signal):
     def set_accel(self, accel):
         # check if the data passed is a numpy array
         if not isinstance(accel, np.ndarray):
-            print "[ERROR]: signal acceleration data - not a numpy array."
+            print("[ERROR]: signal acceleration data - not a numpy array.")
         self.accel = accel
     #end set_accel
 
     def set_velo(self, velo):
         if not isinstance(velo, np.ndarray):
-            print "[ERROR]: signal velocity data - not a numpy array."
+            print("[ERROR]: signal velocity data - not a numpy array.")
         self.velo = velo
     #end set_velo
 
     def set_displ(self, displ):
         if not isinstance(displ, np.ndarray):
-            print "[ERROR]: signal displacement data - not a numpy array."
+            print("[ERROR]: signal displacement data - not a numpy array.")
         self.displ = displ
     #end set_displ
 
     def print_attr(self):
-        print "===========================psignal========================================"
-        print "samples: " + str(self.samples)
-        print "dt: " + str(self.dt)
-        print "data type: " + self.type
-        print self.data
-        print self.accel
-        print self.velo
-        print self.displ
+        print("===========================psignal"
+              "========================================")
+        print("samples: " + str(self.samples))
+        print("dt: " + str(self.dt))
+        print("data type: " + self.type)
+        print(self.data)
+        print(self.accel)
+        print(self.velo)
+        print(self.displ)
 
 #end seism_psignal class
 
@@ -474,42 +481,43 @@ class seism_precord(seism_record):
     def set_accel(self, accel):
         # check if the data passed is a numpy array
         if not isinstance(accel, np.ndarray):
-            print "\n[ERROR]: signal acceleration data - not an numpy array.\n"
+            print("\n[ERROR]: signal acceleration data - not an numpy array.\n")
         self.accel = accel
     #end set_accel
 
     def set_velo(self, velo):
         if not isinstance(velo, np.ndarray):
-            print "\n[ERROR]: signal velocity data - not an numpy array.\n"
+            print("\n[ERROR]: signal velocity data - not an numpy array.\n")
         self.velo = velo
     #end set_velo
 
     def set_displ(self, displ):
         if not isinstance(displ, np.ndarray):
-            print "\n[ERROR]: signal displacement data - not an numpy array.\n"
+            print("\n[ERROR]: signal displacement data - not an numpy array.\n")
         self.displ = displ
     #end set_displ
 
     def print_attr(self):
-        print "=============================precord======================================"
-        print "samples: " + str(self.samples)
-        print "dt: " + str(self.dt)
-        print "data type: " + self.type
-        print "station name: " + self.station_name
-        print "station latitude: " + self.location_lati
-        print "station longitude: " + self.location_longi
-        print "depth: ??"
-        print "date: " + self.date
-        print "time: " + self.time
-        print "hour: " + str(self.hour)
-        print "minute: " + str(self.minute)
-        print "seconds: " + str(self.seconds)
-        print "fraction: " + str(self.fraction)
-        print "tzone: " + self.tzone
-        print "orientation: " + str(self.orientation)
-        print self.accel
-        print self.velo
-        print self.displ
+        print("=============================precord"
+              "======================================")
+        print("samples: " + str(self.samples))
+        print("dt: " + str(self.dt))
+        print("data type: " + self.type)
+        print("station name: " + self.station_name)
+        print("station latitude: " + self.location_lati)
+        print("station longitude: " + self.location_longi)
+        print("depth: ??")
+        print("date: " + self.date)
+        print("time: " + self.time)
+        print("hour: " + str(self.hour))
+        print("minute: " + str(self.minute))
+        print("seconds: " + str(self.seconds))
+        print("fraction: " + str(self.fraction))
+        print("tzone: " + self.tzone)
+        print("orientation: " + str(self.orientation))
+        print(self.accel)
+        print(self.velo)
+        print(self.displ)
 #end seism_precord class
 
 # ==========================Class for Station==============================
@@ -562,18 +570,19 @@ class seism_station(object):
 
     def set_list(self, record_list):
         if len(record_list) != 3:
-            print "[ERROR]: The program handles stations with three channels ONLY. "
+            print("[ERROR]: The program handles stations "
+                  "with three channels ONLY. ")
             return False
 
         if not all(isinstance(record, seism_signal) for record in record_list):
-            print "[ERROR]: list in station does not contain seism signals."
+            print("[ERROR]: list in station does not contain seism signals.")
             return False
 
         if all(isinstance(record, seism_record) for record in record_list):
             if not (record_list[0].orientation
                     != record_list[1].orientation
                     != record_list[2].orientation):
-                print "[ERROR]: conflict orientations."
+                print("[ERROR]: conflict orientations.")
                 return False
 
         self.list = record_list
@@ -597,7 +606,7 @@ class seism_station(object):
                 == self.list[2].station_name):
                 self.name = self.list[0].station_name
             else:
-                print "[ERROR]: channels have different station names."
+                print("[ERROR]: channels have different station names.")
                 return
         return
     # end of set_name

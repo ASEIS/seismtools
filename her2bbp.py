@@ -1,12 +1,48 @@
 #!/usr/bin/env python
 """
-Utility to convert Hercules time history files to BBP format
+Utility to convert Hercules .her time history files to BBP format
 """
 from __future__ import division, print_function
 
 # Import python modules
 import os
+import sys
 import argparse
+
+def parse_her_header(filename):
+    """
+    This function parses the her file header
+    to try to figure out what units to use
+    """
+    # Default unit is meters
+    unit = "m"
+
+    try:
+        input_file = open(filename, 'r')
+        for line in input_file:
+            line = line.strip()
+            if line.startswith("#"):
+                # Header line, look into it
+                pieces = line.split()
+                if len(pieces) != 11:
+                    # Not the line we are looking for
+                    continue
+                if pieces[2].find("(m)") > 0:
+                    # It's meters!
+                    unit = "m"
+                    break
+                if pieces[2].find("(cm)") > 0:
+                    # It's cm!
+                    unit = "cm"
+                    break
+            continue
+    except IOError:
+        print("[ERROR]: Unable to read file: %s" % (filename))
+        sys.exit(1)
+    input_file.close()
+
+    # Return units
+    return unit
 
 def write_bbp_header(out_fp, file_type, file_unit, args):
     """
@@ -29,11 +65,11 @@ def write_bbp_header(out_fp, file_type, file_unit, args):
                  "%s (+ is upward)\n" % (file_type))
     out_fp.write("#\n")
 
-def hercules2bbp_main():
+def her2bbp_main():
     """
-    Main function for hercules to bbp converter
+    Main function for her to bbp converter
     """
-    parser = argparse.ArgumentParser(description="Converts a Hercules "
+    parser = argparse.ArgumentParser(description="Converts a Hercules .her"
                                      "file to BBP format, generating "
                                      "displacement, velocity and acceleration "
                                      "BBP files.")
@@ -62,14 +98,19 @@ def hercules2bbp_main():
     output_file_acc = "%s.acc.bbp" % (os.path.join(args.output_dir,
                                                    args.output_stem))
 
-    # Covert from Hercules to BBP format by selecting the velocity data
+    # Try to get the units used in the her file
+    units = {"m": ["m", "m/s", "m/s^2"],
+             "cm": ["cm", "cm/s", "cm/s^2"]}
+    unit = parse_her_header(input_file)
+
+    # Covert from her to BBP format
     ifile = open(input_file)
     o_dis_file = open(output_file_dis, 'w')
     o_vel_file = open(output_file_vel, 'w')
     o_acc_file = open(output_file_acc, 'w')
-    write_bbp_header(o_dis_file, "displacement", 'm', args)
-    write_bbp_header(o_vel_file, "velocity", 'm/s', args)
-    write_bbp_header(o_acc_file, "acceleration", 'm/s^2', args)
+    write_bbp_header(o_dis_file, "displacement", units[unit][0], args)
+    write_bbp_header(o_vel_file, "velocity", units[unit][1], args)
+    write_bbp_header(o_acc_file, "acceleration", units[unit][2], args)
     for line in ifile:
         line = line.strip()
         # Skip comments
@@ -106,5 +147,5 @@ def hercules2bbp_main():
 
 # ============================ MAIN ==============================
 if __name__ == "__main__":
-    hercules2bbp_main()
+    her2bbp_main()
 # end of main program

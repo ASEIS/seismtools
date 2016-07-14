@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 # ==============================================================================
-# The program is to plot a comparison among bbp files
+# The program is to plot a simple comparison among timeseries files
 # ==============================================================================
 """
 from __future__ import division, print_function
@@ -11,9 +11,9 @@ import sys
 from ptools import read_file
 from compare_signals import simple_plot, set_parameter
 
-def bbp_compare_main():
+def simple_compare_main():
     """
-    Main function for bbp_compare
+    Main function for simple_compare
     """
     num_lines = 0
 
@@ -43,7 +43,7 @@ def bbp_compare_main():
         remaining = num_lines
         while remaining:
             input_file = raw_input("==> Enter input file %d: " %
-                                   (num_lines - remaining))
+                                   (num_lines - remaining + 1))
             filenames.append(input_file)
             remaining = remaining - 1
 
@@ -59,5 +59,5 @@ def bbp_compare_main():
 
 # ============================ MAIN ==============================
 if __name__ == "__main__":
-    bbp_compare_main()
+    simple_compare_main()
 # end of main program

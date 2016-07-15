@@ -23,16 +23,12 @@ def set_parameter(para):
     # if given by user in command line
     if para:
         para = adjust_para(para)
-        if not para:
-            return []
         if len(para) == 10:
             return para
         elif len(para) == 8:
             para.insert(5, para[2])
             para.insert(6, para[3])
             return para
-        else:
-            return []
 
     # if paramters not given in command
     xtmin, xtmax = set_axis('time')
@@ -74,12 +70,18 @@ def adjust_para(para):
     # set filter flag
     if (para[4] in ['y', 'Y']) and len(para) == 10:
         para[4] = True
-        # Make sure fmin > 0
+        # Make sure fmin/fmax > 0
+        if para[5] < 0 or para[6] < 0:
+            print("[ERROR]: fmin/fmax must be > 0!")
+            return []
         if para[5] == 0:
             para[5] = 0.001
+        if para[6] == 0:
+            para[6] = 0.002
     elif (para[4] in ['n', 'N']) and len(para) == 8:
         para[4] = False
     else:
+        print("[ERROR]: Invalid value for filter flag!")
         return []
 
     # set cut flag
@@ -88,6 +90,7 @@ def adjust_para(para):
     elif para[-1] in ['n', 'N']:
         para[-1] = False
     else:
+        print("[ERROR]: Invalid value for cutting flag!")
         return []
 
     # correct tmin

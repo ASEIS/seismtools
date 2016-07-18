@@ -591,7 +591,7 @@ def simple_plot(parameter, filenames, stations):
 
         axarr[i][1] = plt.subplot2grid((3, 4), (i, 2), rowspan=1, colspan=1)
         axarr[i][1].set_title('Fourier Amplitude Spectra')
-        axarr[i][1].grid(True)
+        axarr[i][1].grid(True, which='both')
         axarr[i][1].set_xscale('log')
         axarr[i][1].set_yscale('log')
         for freq, fas, style in zip(freqs, fas_s, styles):

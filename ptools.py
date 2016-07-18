@@ -329,8 +329,8 @@ def read_file_bbp2(filename):
             ew_comp = np.append(ew_comp, pieces[2])
             ud_comp = np.append(ud_comp, pieces[3])
     except IOError:
-        print("[ERROR]: error reading bbp file.")
-        return np.array([]), np.array([]), np.array([]), np.array([])
+        print("[ERROR]: error reading bbp file: %s" % (filename))
+        sys.exit(1)
 
     # All done!
     return time, ns_comp, ew_comp, ud_comp

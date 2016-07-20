@@ -122,8 +122,9 @@ def load_smc_v2(filename):
         fp = open(filename, 'r')
     except IOError as e:
         print(e)
-        # return
+        return False
 
+    # Read data
     channels = fp.read()
     fp.close()
 
@@ -164,6 +165,9 @@ def load_smc_v2(filename):
         orientation = tmp[2]
         if orientation.isdigit():
             orientation = int(orientation)
+        elif orientation.upper() not in ["UP", "DOWN"]:
+            print("[ERROR]: Invalid orientation!")
+            return False
         # location = channels[i][7][36:].strip()
 
         # if 'Depth' in location:

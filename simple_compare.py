@@ -16,6 +16,7 @@ def simple_compare_main():
     Main function for simple_compare
     """
     num_lines = 0
+    output_file = ''
 
     # Parse command line
     if len(sys.argv) == 1:
@@ -31,15 +32,22 @@ def simple_compare_main():
         # First argument is number of timeseries
         num_lines = int(sys.argv[1])
 
+    if len(sys.argv) < 3:
+        while not output_file:
+            output_file = raw_input("==> Output filename: ")
+    else:
+        # Second argument is output filename
+        output_file = sys.argv[2]
+
     filenames = []
     # Get input files
-    if len(sys.argv) >= num_lines + 2:
+    if len(sys.argv) >= num_lines + 3:
         # User provided all input file names
-        filenames = sys.argv[2:(num_lines + 2)]
-        para = sys.argv[(num_lines + 2):]
+        filenames = sys.argv[3:(num_lines + 3)]
+        para = sys.argv[(num_lines + 3):]
     else:
         # Need to ask user
-        para = sys.argv[2:]
+        para = sys.argv[3:]
         remaining = num_lines
         while remaining:
             input_file = raw_input("==> Enter input file %d: " %
@@ -55,7 +63,7 @@ def simple_compare_main():
     filenames = [os.path.basename(filename) for filename in filenames]
 
     # Create plot
-    simple_plot(parameter, filenames, stations)
+    simple_plot(parameter, filenames, stations, output_file=output_file)
 
 # ============================ MAIN ==============================
 if __name__ == "__main__":

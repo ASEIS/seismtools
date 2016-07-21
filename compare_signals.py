@@ -485,7 +485,7 @@ def plot_stations(parameter, filenames, station1, station2):
         plt.show()
 # end of plot_stations
 
-def simple_plot(parameter, filenames, stations):
+def simple_plot(parameter, filenames, stations, output_file=''):
     """
     plotting velocity for data and FAS only acceleration for Response
     """
@@ -586,7 +586,7 @@ def simple_plot(parameter, filenames, stations):
             axarr[i][0].plot(timeseries, c_vel, style)
 
         if i == 0:
-            plt.legend(files, prop={'size':10})
+            plt.legend(files, prop={'size':8})
         plt.xlim(xtmin, xtmax)
 
         axarr[i][1] = plt.subplot2grid((3, 4), (i, 2), rowspan=1, colspan=1)
@@ -613,7 +613,14 @@ def simple_plot(parameter, filenames, stations):
 
         plt.xlim(tmin, tmax)
     f.tight_layout()
-    plt.show()
+    # All done
+    if not output_file:
+        # Show plot
+        plt.show()
+    else:
+        # Save plot
+        plt.savefig(output_file, format='png',
+                    transparent=False, dpi=300)
 # end of simple_plot
 
 def compare_txt(parameter, file1, file2):

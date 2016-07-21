@@ -345,6 +345,9 @@ def read_file_bbp(filename):
     base_file = os.path.basename(filename)
 
     base_tokens = base_file.split('.')[0:-2]
+    if not base_tokens:
+        print("[ERROR]: Invalid BBP filename: %s" % (filename))
+        sys.exit(1)
     dis_tokens = list(base_tokens)
     vel_tokens = list(base_tokens)
     acc_tokens = list(base_tokens)

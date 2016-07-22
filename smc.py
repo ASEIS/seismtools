@@ -1,5 +1,8 @@
 #!/usr/bin/env python
-from __future__ import division
+"""
+Several utility functions for parsing and writing data from smc files
+"""
+from __future__ import division, print_function
 import os
 import numpy as np
 from seism import seism_record, seism_station, seism_precord
@@ -22,8 +25,8 @@ def load_smc_v1(filename):
     # loads station into a string
     try:
         fp = open(filename, 'r')
-    except IOError, e:
-        print e
+    except IOError as e:
+        print(e)
         # return
 
     channels = fp.read()
@@ -47,7 +50,7 @@ def load_smc_v1(filename):
         # check this is the uncorrected acceleration data
         ctype = channels[i][0][0:24].lower()
         if ctype != "uncorrected accelerogram":
-            print "[ERROR]: processing uncorrected accelerogram ONLY."
+            print("[ERROR]: processing uncorrected accelerogram ONLY.")
             return False
         else:
             dtype = 'a'
@@ -92,7 +95,7 @@ def load_smc_v1(filename):
         # get number of samples and dt
         tmp = channels[i][27].split()
         samples = int(tmp[0])
-        dt = 1/int(tmp[4])
+        delta_t = 1/int(tmp[4])
 
         # get signals' data
         tmp = channels[i][28:]
@@ -101,7 +104,7 @@ def load_smc_v1(filename):
             signal += s
         data = read_data(signal)
 
-        record = seism_record(samples, dt, data, dtype, station_name,
+        record = seism_record(samples, delta_t, data, dtype, station_name,
                               location_lati, location_longi, depth=depth,
                               orientation=orientation,
                               date=date, time=time)
@@ -117,10 +120,11 @@ def load_smc_v2(filename):
     # loads station into a string
     try:
         fp = open(filename, 'r')
-    except IOError, e:
-        print e
-        # return
+    except IOError as e:
+        print(e)
+        return False
 
+    # Read data
     channels = fp.read()
     fp.close()
 
@@ -143,7 +147,7 @@ def load_smc_v2(filename):
         # check this is the uncorrected acceleration data
         ctype = (tmp[0] + " " + tmp[1]).lower()
         if ctype != "corrected accelerogram":
-            print "[ERROR]: processing corrected accelerogram ONLY."
+            print("[ERROR]: processing corrected accelerogram ONLY.")
             return False
 
         # get network code and station id
@@ -161,6 +165,9 @@ def load_smc_v2(filename):
         orientation = tmp[2]
         if orientation.isdigit():
             orientation = int(orientation)
+        elif orientation.upper() not in ["UP", "DOWN"]:
+            print("[ERROR]: Invalid orientation!")
+            return False
         # location = channels[i][7][36:].strip()
 
         # if 'Depth' in location:
@@ -188,7 +195,7 @@ def load_smc_v2(filename):
         # get number of samples and dt
         tmp = channels[i][45].split()
         samples = int(tmp[0])
-        dt = float(tmp[8])
+        delta_t = float(tmp[8])
 
         # get signals' data
         tmp = channels[i][45:]
@@ -222,7 +229,7 @@ def load_smc_v2(filename):
         d_data = read_data(d_signal)
         data = np.c_[d_data, v_data, a_data]
 
-        precord = seism_precord(samples, dt, data, 'c', station_name,
+        precord = seism_precord(samples, delta_t, data, 'c', station_name,
                                 accel=a_data, displ=d_data, velo=v_data,
                                 orientation=orientation, date=date,
                                 time=time, depth=depth,
@@ -277,8 +284,8 @@ def print_smc(station):
                                                str(record.dt))
         try:
             f = open(os.path.join(destination, filename), 'w')
-        except IOError, e:
-            print e
+        except IOError as e:
+            print(e)
             # return
 
         f.write(header)
@@ -288,7 +295,8 @@ def print_smc(station):
             for d in np.nditer(record.accel):
                 f.write(descriptor.format(float(d)))
         f.close()
-        print "*Generated .txt file at: " + os.path.join(destination, filename)
+        print("*Generated .txt file at: %s" %
+              (os.path.join(destination, filename)))
 #end of print_smc
 
 def print_bbp(station):
@@ -325,8 +333,8 @@ def print_bbp(station):
         filename = "%s.%s.bbp" % (filename_base, data[0])
         try:
             out_fp = open(os.path.join(destination, filename), 'w')
-        except IOError, e:
-            print e
+        except IOError as e:
+            print(e)
             continue
 
         # Start with time = 0.0
@@ -361,7 +369,8 @@ def print_bbp(station):
 
         # All done, close file
         out_fp.close()
-        print "*Generated .bbp file at: " + os.path.join(destination, filename)
+        print("*Generated .bbp file at: %s" %
+              (os.path.join(destination, filename)))
 
 def print_her(station):
     """
@@ -373,8 +382,8 @@ def print_her(station):
 
     try:
         f = open(os.path.join(destination, filename), 'w')
-    except IOError, e:
-        print e
+    except IOError as e:
+        print(e)
         # return
 
     dis_ns = []
@@ -432,5 +441,6 @@ def print_her(station):
                                                       acc_ns, acc_ew, acc_up):
         f.write(descriptor.format(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9))
     f.close()
-    print "*Generated .her file at: " + os.path.join(destination, filename)
+    print("*Generated .her file at: %s" %
+          (os.path.join(destination, filename)))
 #end of print_her

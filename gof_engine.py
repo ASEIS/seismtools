@@ -4,7 +4,7 @@
 # then calculates signals' scores with different sample rates;
 # and generate 3D matrix for scores.
 # =============================================================================
-from __future__ import division
+from __future__ import division, print_function
 import sys
 import copy
 import numpy as np
@@ -231,7 +231,7 @@ def scores_matrix(station1, station2, thebands):
     # generating local copy of the bands
     bands = copy.copy(thebands)
 
-    print "...Generating main matrix..."
+    print("...Generating main matrix...")
     bands.insert(0, bands[len(bands)-1])
 
     # # Optional plotting for checking
@@ -417,8 +417,8 @@ def print_matrix(path, matrix):
     CA_T = s[:, 3]
     try:
         f = open(path, 'w')
-    except IOError, e:
-        print e
+    except IOError as e:
+        print(e)
         # return
 
     # printing summary matrix
@@ -468,8 +468,8 @@ def print_scores(filenames, coord, path, parameter, matrix):
 
     try:
         f = open(path, 'a')
-    except IOError, e:
-        print e
+    except IOError as e:
+        print(e)
 
     file1 = filenames[0].split('/')[-1]
     file2 = filenames[1].split('/')[-1]

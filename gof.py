@@ -1,9 +1,11 @@
 #!/usr/bin/env python
+"""
 # ==============================================================================
 # The program is to read two .her files; process their signals;
 # calculate their scores with different sample rates;
 # and generate 3D matrix for scores.
 # ==============================================================================
+"""
 from __future__ import division, print_function
 import os
 import copy
@@ -271,7 +273,7 @@ def main_gof():
             f = open(s_path, 'w')
             m = open(m_path, 'w')
             u = open(os.path.join(outdir, "unprocessed.txt"), 'w')
-        except IOError, e:
+        except IOError as e:
             print(e)
 
         # prepares formats for output files

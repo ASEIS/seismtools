@@ -329,8 +329,8 @@ def read_file_bbp2(filename):
             ew_comp = np.append(ew_comp, pieces[2])
             ud_comp = np.append(ud_comp, pieces[3])
     except IOError:
-        print("[ERROR]: error reading bbp file.")
-        return np.array([]), np.array([]), np.array([]), np.array([])
+        print("[ERROR]: error reading bbp file: %s" % (filename))
+        sys.exit(1)
 
     # All done!
     return time, ns_comp, ew_comp, ud_comp
@@ -345,6 +345,9 @@ def read_file_bbp(filename):
     base_file = os.path.basename(filename)
 
     base_tokens = base_file.split('.')[0:-2]
+    if not base_tokens:
+        print("[ERROR]: Invalid BBP filename: %s" % (filename))
+        sys.exit(1)
     dis_tokens = list(base_tokens)
     vel_tokens = list(base_tokens)
     acc_tokens = list(base_tokens)
@@ -507,7 +510,7 @@ def print_her(filename, station):
     # filename = 'processed-' + filename.split('/')[-1]
     try:
         out_f = open(filename, 'w')
-    except IOError, e:
+    except IOError as e:
         print(e)
     dis_ns = station[0].displ.tolist()
     vel_ns = station[0].velo.tolist()
@@ -636,7 +639,7 @@ def print_bbp(input_file, output_file, station):
         # Write output file
         try:
             out_fp = open(bbp_output_filename, 'w')
-        except IOError, e:
+        except IOError as e:
             print(e)
             continue
 

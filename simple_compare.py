@@ -33,11 +33,13 @@ def simple_compare_main():
         num_lines = int(sys.argv[1])
 
     if len(sys.argv) < 3:
-        while not output_file:
-            output_file = raw_input("==> Output filename: ")
+        output_file = raw_input("==> Output filename: ")
     else:
         # Second argument is output filename
         output_file = sys.argv[2]
+    # Allow user to specify screen output by using -
+    if output_file == "-":
+        output_file = ""
 
     filenames = []
     # Get input files

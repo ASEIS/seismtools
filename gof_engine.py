@@ -1,10 +1,13 @@
 #!/usr/bin/env python
+"""
 # =============================================================================
 # The program receives two stations, each contains three signals,
 # then calculates signals' scores with different sample rates;
 # and generate 3D matrix for scores.
 # =============================================================================
+"""
 from __future__ import division, print_function
+
 import sys
 import copy
 import numpy as np

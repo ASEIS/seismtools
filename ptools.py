@@ -130,73 +130,47 @@ def filter_data(psignal, fmin, fmax):
     return psignal
 # end of filter_data
 
-def get_files():
+def read_filelist(filelist):
     """
-    This function parses the parameters specified by the user in the
-    command-line. If there's a single argument we treat it as a file
-    containing a list of files to be processed. If there are two
-    arguments we treat them as two input files to be compared.
+    This function reads the filelist provided by the user
     """
-    file1 = ''
-    file2 = ''
-    filelist = ''
     list1 = []
     list2 = []
     coor_x = []
     coor_y = []
 
-    if len(sys.argv) == 2:
-        filelist = sys.argv[1]
-    elif len(sys.argv) == 3:
-        file1 = sys.argv[1]
-        file2 = sys.argv[2]
-    else:
-        print("Error: please provide two files to compare or file list!")
+    try:
+        input_file = open(filelist, 'r')
+    except IOError:
+        print("[ERROR]: error loading filelist.")
         sys.exit(-1)
 
-    # if received two files from user
-    if file1 and file2:
-        return file1, file2
+    for line in input_file:
+        if not '#' in line:
+            line = line.split()
 
-    # if received a file containing a list of files
-    if filelist:
-        try:
-            input_file = open(filelist, 'r')
-        except IOError:
-            print("[ERROR]: error loading filelist.")
-            return False
-
-        for line in input_file:
-            if not '#' in line:
-                line = line.split()
-
-                if len(line) == 2:
-                    # not containing coordinates
-                    list1.append(line[0])
-                    list2.append(line[1])
+            if len(line) == 2:
+                # not containing coordinates
+                list1.append(line[0])
+                list2.append(line[1])
+                coor_x.append(0.0)
+                coor_y.append(0.0)
+            elif len(line) == 4:
+                # containing coordinates
+                list1.append(line[0])
+                list2.append(line[1])
+                try:
+                    coor_x.append(float(line[2]))
+                    coor_y.append(float(line[3]))
+                except ValueError:
                     coor_x.append(0.0)
                     coor_y.append(0.0)
 
-                elif len(line) == 4:
-                    # containing coordinates
-                    list1.append(line[0])
-                    list2.append(line[1])
-                    try:
-                        coor_x.append(float(line[2]))
-                        coor_y.append(float(line[3]))
-                    except ValueError:
-                        coor_x.append(0.0)
-                        coor_y.append(0.0)
+    # Close the input file
+    input_file.close()
 
-        # Close the input file
-        input_file.close()
-
-        return list1, list2, coor_x, coor_y
-
-    # if encounter other inputs
-    print("[ERROR]: Invalid inputs.")
-    return False
-# end of get_files
+    return list1, list2, coor_x, coor_y
+# end of read_filelist
 
 def get_bands():
     """

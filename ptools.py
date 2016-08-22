@@ -134,8 +134,7 @@ def read_filelist(filelist):
     """
     This function reads the filelist provided by the user
     """
-    list1 = []
-    list2 = []
+    station_list = []
     coor_x = []
     coor_y = []
 
@@ -148,20 +147,21 @@ def read_filelist(filelist):
     for line in input_file:
         if not '#' in line:
             line = line.split()
+            # Get station name and make substitution
+            station_name = line[0]
+            station_name = station_name.replace(".", "_")
 
-            if len(line) == 2:
+            if len(line) == 1:
                 # not containing coordinates
-                list1.append(line[0])
-                list2.append(line[1])
+                station_list.append(station_name)
                 coor_x.append(0.0)
                 coor_y.append(0.0)
-            elif len(line) == 4:
+            elif len(line) == 3:
                 # containing coordinates
-                list1.append(line[0])
-                list2.append(line[1])
+                station_list.append(station_name)
                 try:
-                    coor_x.append(float(line[2]))
-                    coor_y.append(float(line[3]))
+                    coor_x.append(float(line[1]))
+                    coor_y.append(float(line[2]))
                 except ValueError:
                     coor_x.append(0.0)
                     coor_y.append(0.0)
@@ -169,7 +169,7 @@ def read_filelist(filelist):
     # Close the input file
     input_file.close()
 
-    return list1, list2, coor_x, coor_y
+    return station_list, coor_x, coor_y
 # end of read_filelist
 
 def get_bands():

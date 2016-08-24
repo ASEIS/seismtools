@@ -491,7 +491,7 @@ def print_scores(filenames, coord, path, parameter, matrix):
                 for k in range(0, len(matrix[i])-2):
                     # append BB...Bn
                     scores.append(col[k])
-        d = '{:>12}'*2 + '{:>12.2f}'*(len(scores)-2) + '\n'
+        d = '{:>12} '*2 + '{:>12.2f}'*(len(scores)-2) + '\n'
 
     # print the parameters used to get scores
     elif parameter:

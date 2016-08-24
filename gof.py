@@ -132,7 +132,7 @@ def find_station(input_directory, station_name):
     Looks into input_directory for data belonging to a station whose name
     matches station_name
     """
-    filelist = glob.glob("%s/%s*.vel.bbp" % (input_directory, station_name))
+    filelist = glob.glob("%s/%s[-,_,.]*.vel.bbp" % (input_directory, station_name))
     # Check if we found anything
     if not filelist:
         return None

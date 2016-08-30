@@ -496,7 +496,7 @@ def print_scores(filenames, coord, path, parameter, matrix):
     # print the parameters used to get scores
     elif parameter:
         scores = scores[:5] + parameter
-        d = '{:>12}'*2 + '{:>12.4f}'*(len(scores)-2) + '\n'
+        d = '{:>12} '*2 + '{:>12.4f}'*(len(scores)-2) + '\n'
 
     # if require to print the parameters used to get scores
     # if parameter:

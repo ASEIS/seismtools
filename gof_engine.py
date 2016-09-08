@@ -1,10 +1,13 @@
 #!/usr/bin/env python
+"""
 # =============================================================================
 # The program receives two stations, each contains three signals,
 # then calculates signals' scores with different sample rates;
 # and generate 3D matrix for scores.
 # =============================================================================
+"""
 from __future__ import division, print_function
+
 import sys
 import copy
 import numpy as np
@@ -488,12 +491,12 @@ def print_scores(filenames, coord, path, parameter, matrix):
                 for k in range(0, len(matrix[i])-2):
                     # append BB...Bn
                     scores.append(col[k])
-        d = '{:>12}'*2 + '{:>12.2f}'*(len(scores)-2) + '\n'
+        d = '{:>12} '*2 + '{:>12.2f}'*(len(scores)-2) + '\n'
 
     # print the parameters used to get scores
     elif parameter:
         scores = scores[:5] + parameter
-        d = '{:>12}'*2 + '{:>12.4f}'*(len(scores)-2) + '\n'
+        d = '{:>12} '*2 + '{:>12.4f}'*(len(scores)-2) + '\n'
 
     # if require to print the parameters used to get scores
     # if parameter:
